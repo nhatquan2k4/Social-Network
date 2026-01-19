@@ -5,6 +5,9 @@ import authRoutes from './routes/authRoutes';
 import cookieParser from 'cookie-parser';
 import userRoutes from './routes/userRoutes';
 import { protectedRoute } from './middlewares/authMiddleware';
+import friendRoutes from './routes/friendRoutes';
+import messageRoutes from './routes/messageRoutes';
+import conversationRoutes from './routes/conversationRoutes';
 
 dotenv.config();
 
@@ -20,8 +23,10 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 
 // private routes
-app.use(protectedRoute);
 app.use('/api/users', userRoutes);
+app.use('/api/friends', friendRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/conversations', conversationRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello World!');

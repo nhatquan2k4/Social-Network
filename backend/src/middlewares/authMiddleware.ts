@@ -16,27 +16,27 @@ export const protectedRoute = async ( req: Request, res: Response, next: NextFun
             .json({ message: 'Khong tim thay access token. Vui long dang nhap' });
         }
 
-
         // xac nhan token hop le
-        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string, async (err, decodedUser: any) => {
-            if (err) {
-                return res
-                .status(403)
-                .json({ message: 'Access token het han hoac khong hop le' });
-            }
-
-            // tim user
-            const user = await User.findById(decodedUser.userId).select('-hashedPassword');
-            if (!user) {
-                return res
-                .status(404)
-                .json({ message: 'Nguoi dung khong ton tai' });
-            }
+        let decoded: any;
+        try {
+            decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string);
+        } catch (err) {
+            return res
+            .status(403)
+            .json({ message: 'Access token het han hoac khong hop le' });
+        }
+        
+        // tim user
+        const user = await User.findById(decoded.userId).select('-hashedPassword');
+        if (!user) {
+            return res
+            .status(404)
+            .json({ message: 'Nguoi dung khong ton tai' });
+        }
 
         // tra user ve req de su dung o cac middleware sau
         req.user = user as any;
         next();
-        });
     } catch (error) {
         console.error('Loi khi xac minh JWT trong authMiddleware', error);
         return res

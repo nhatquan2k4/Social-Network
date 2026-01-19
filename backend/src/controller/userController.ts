@@ -1,7 +1,10 @@
-import express, { Request, Response } from 'express';
+import { Request, Response } from 'express';
+import { UserService } from '../services/userService';
+
+const userService = new UserService();
 
 export const authMe = async (req: Request, res: Response) => {
-    try{
+    try {
         const user = req.user;
         if (!user) {
             return res.status(404).json({ message: 'Nguoi dung khong ton tai' });
