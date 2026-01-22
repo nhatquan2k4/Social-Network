@@ -5,50 +5,75 @@ import type { Types } from 'mongoose';
 const conversationService = new ConversationService();
 
 export const createConversation = async (req: Request, res: Response) => {
-    try {
-        const { type, name, memberIds } = req.body;
-        const userId = req.user!._id;
+  try {
+    const { type, name, memberIds, recipientId } = req.body;
+    const userId = req.user!._id;
 
-        if (
-            !type ||
-            (type === 'group' && !name) ||
-            !memberIds ||
-            !Array.isArray(memberIds) ||
-            memberIds.length === 0
-        ) {
-            return res
-                .status(400)
-                .json({ message: 'Tên nhóm và danh sách thành viên là bắt buộc' });
-        }
-
-        const conversation = await conversationService.createConversation(
-            userId,
-            type,
-            memberIds,
-            name
-        );
-
-        return res.status(201).json({ conversation });
-    } catch (error: any) {
-        console.error('Lỗi khi tạo conversation', error);
-        if (error.message === 'Conversation type khong hop le') {
-            return res.status(400).json({ message: error.message });
-        }
-        return res.status(500).json({ message: 'Lỗi hệ thống' });
+    // Validation cho direct conversation
+    if (type === "direct") {
+      const targetId = recipientId || (memberIds && memberIds[0]);
+      if (!targetId) {
+        return res.status(400).json({
+          message:
+            "Cần cung cấp recipientId hoặc memberIds cho direct conversation",
+        });
+      }
+      const conversation = await conversationService.createConversation(
+        userId,
+        type,
+        [targetId],
+        name,
+      );
+      return res.status(201).json({ conversation });
     }
+
+    // Validation cho group conversation
+    if (type === "group") {
+      if (
+        !name ||
+        !memberIds ||
+        !Array.isArray(memberIds) ||
+        memberIds.length === 0
+      ) {
+        return res.status(400).json({
+          message:
+            "Tên nhóm và danh sách thành viên là bắt buộc cho group conversation",
+        });
+      }
+      const conversation = await conversationService.createConversation(
+        userId,
+        type,
+        memberIds,
+        name,
+      );
+      return res.status(201).json({ conversation });
+    }
+
+    return res.status(400).json({ message: "Type không hợp lệ" });
+  } catch (error: any) {
+    console.error("Lỗi khi tạo conversation", error);
+    if (error.message === "Conversation type khong hop le") {
+      return res.status(400).json({ message: error.message });
+    }
+    return res.status(500).json({ message: "Lỗi hệ thống" });
+  }
 };
 
 export const getConversations = async (req: Request, res: Response) => {
-    try {
-        const userId = req.user!._id;
+  try {
+    const userId = req.user!._id;
+    const { recipientId } = req.query;
 
-        const conversations = await conversationService.getConversations(userId);
+    const conversations = await conversationService.getConversations(
+      userId,
+      recipientId as string | undefined,
+    );
 
-        return res.status(200).json({ conversations });
-    } catch (error) {
-        console.error('Lỗi xảy ra khi lấy conversations', error);
-        return res.status(500).json({ message: 'Lỗi hệ thống' });
-    }
+    return res.status(200).json({ conversations });
+  } catch (error) {
+    console.error("Lỗi xảy ra khi lấy conversations", error);
+    return res.status(500).json({ message: "Lỗi hệ thống" });
+  }
 };
 
 export const getMessages = async (req: Request, res: Response) => {

@@ -52,41 +52,43 @@ const lastMessageSchema = new mongoose.Schema({
 }
 );
 
-const conversationSchema = new mongoose.Schema({
+const conversationSchema = new mongoose.Schema(
+  {
     type: {
-        type: String,
-        enum: ["single", "group"],
-        required: true,
+      type: String,
+      enum: ["direct", "group"],
+      required: true,
     },
     participants: {
-        type: [participantSchema],
-        ref: "User",
+      type: [participantSchema],
+      ref: "User",
     },
     group: {
-        type: groupSchema,
+      type: groupSchema,
     },
     lastMessageAt: {
-        type: Date
+      type: Date,
     },
     seenBy: [
-        {
+      {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        }
+      },
     ],
     lastMessage: {
-        type: lastMessageSchema,
-        default: null,
+      type: lastMessageSchema,
+      default: null,
     },
     unreadCounts: {
-        type: Map,
-        of: Number,
-        default: {},
+      type: Map,
+      of: Number,
+      default: {},
     },
-},
-{
+  },
+  {
     timestamps: true,
-});
+  },
+);
 
 
 conversationSchema.index({ 
