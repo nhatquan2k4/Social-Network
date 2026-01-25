@@ -1,56 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:frontend/core/routes/app_routes.dart';
 
-void main() => runApp(const MyApp());
+import 'package:frontend/presentation/screens/auth/login_screen.dart';
+import 'package:frontend/presentation/screens/friends/friends_screen.dart';
+
+import 'package:frontend/presentation/providers/auth_provider.dart';
+import 'package:frontend/data/repositories/auth_repository_impl.dart';
+import 'package:frontend/data/services/api_service.dart';
+import 'package:frontend/data/services/local_storage_service.dart';
+import 'package:frontend/domain/usecases/login_usecase.dart';
+
+import 'package:frontend/presentation/providers/messages_provider.dart';
+import 'package:frontend/domain/usecases/friend_usecase.dart';
+import 'package:frontend/data/repositories/friend_repository_impl.dart';
+
+import 'package:frontend/presentation/providers/chat_provider.dart';
+import 'package:frontend/domain/usecases/message_usecase.dart';
+import 'package:frontend/domain/usecases/conversation_usecase.dart';
+import 'package:frontend/data/repositories/message_repository_impl.dart';
+import 'package:frontend/data/repositories/conversation_repository_impl.dart';
+
+void main() {
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const String appTitle = 'Flutter layout demo';
-    return MaterialApp(
-      title: appTitle,
-      home: Scaffold(
-        appBar: AppBar(title: const Text(appTitle)),
-        body: const Center(child: Text('Hello World')),
-      ),
-    );
-  }
-}
+    final apiService = ApiService();
+    final localStorageService = LocalStorageService();
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => MessagesProvider(
+            GetFriendsUseCase(FriendRepositoryImpl(apiService)),
+          ),
+        ),
 
-class TitleSection extends StatelessWidget {
-  const TitleSection({super.key, required this.name, required this.location});
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(
+            LoginUseCase(AuthRepositoryImpl(apiService, localStorageService)),
+          ),
+        ),
 
-  final String name;
-  final String location;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(32),
-      child: Row(
-        children: [
-          Expanded(
-            /*1*/
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                /*2*/
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Text(location, style: TextStyle(color: Colors.grey[500])),
-              ],
+        ChangeNotifierProvider(
+          create: (_) => ChatProvider(
+            getMessagesUseCase: GetMessagesUseCase(
+              MessageRepositoryImpl(apiService),
+            ),
+            sendMessageUseCase: SendMessageUseCase(
+              MessageRepositoryImpl(apiService),
+            ),
+            createConversationUseCase: CreateConversationUseCase(
+              ConversationRepositoryImpl(apiService),
             ),
           ),
-          /*3*/
-          Icon(Icons.star, color: Colors.red[500]),
-          const Text('41'),
-        ],
+        ),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        initialRoute: AppRoutes.login,
+        routes: {
+          AppRoutes.login: (context) => const LoginScreen(),
+          AppRoutes.messages: (context) => const MessagesScreen(),
+        },
       ),
     );
   }

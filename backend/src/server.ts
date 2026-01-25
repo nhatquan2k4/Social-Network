@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 import connectDB from "./libs/db";
 import authRoutes from "./routes/authRoutes";
 import cookieParser from "cookie-parser";
@@ -16,6 +17,14 @@ dotenv.config();
 const app = express();
 
 const PORT = process.env.PORT || 5001;
+
+// CORS middleware - PHẢI ĐẶT TRƯỚC CÁC MIDDLEWARE KHÁC
+app.use(cors({
+  origin: true, // Cho phép tất cả origins trong development
+  credentials: true, // Cho phép gửi cookies
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+}));
 
 // middleware
 app.use(express.json());

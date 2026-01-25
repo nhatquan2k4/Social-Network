@@ -1,0 +1,26 @@
+# Auto detect text files and normalize line endings to LF
+* text=auto
+
+# Force LF for specific file types
+*.dart text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.g.dart text eol=lf
+*.lock text eol=lf
+
+# Flutter/Generated files
+*.cmake text eol=lf
+*.cc text eol=lf
+*.h text eol=lf
+*.swift text eol=lf
+*.frag text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.ttf binary
+*.otf binary
