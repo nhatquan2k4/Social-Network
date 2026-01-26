@@ -8,8 +8,10 @@ import { protectedRoute } from "./middlewares/authMiddleware";
 import friendRoutes from "./routes/friendRoutes";
 import messageRoutes from "./routes/messageRoutes";
 import conversationRoutes from "./routes/conversationRoutes";
+import postRoutes from "./routes/Post/postRoutes";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
+import commentRoutes from "./routes/Post/commentRoutes";
 
 dotenv.config();
 
@@ -32,6 +34,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/conversations", conversationRoutes);
+app.use("/api/posts", postRoutes);
+app.use("/api/comments", commentRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");

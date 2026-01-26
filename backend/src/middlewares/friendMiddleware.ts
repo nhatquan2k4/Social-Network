@@ -15,6 +15,11 @@ export const checkFriendship = async (
   try {
     const me = req.user!._id.toString();
 
+    // Bỏ qua kiểm tra friendship cho group conversation
+    if (req.body?.type === "group") {
+      return next();
+    }
+
     // Lấy recipientId từ body, query, hoặc memberIds[0] nếu type là direct
     let recipientId = req.body?.recipientId ?? req.query?.recipientId ?? null;
 

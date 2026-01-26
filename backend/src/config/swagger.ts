@@ -209,6 +209,59 @@ const options: swaggerJsdoc.Options = {
             },
           },
         },
+        Post: {
+          type: "object",
+          properties: {
+            _id: {
+              type: "string",
+              description: "Post ID",
+            },
+            userId: {
+              type: "string",
+              description: "Author user ID",
+            },
+            content: {
+              type: "string",
+              description: "Post content",
+              maxLength: 2000,
+            },
+            media: {
+              type: "array",
+              items: {
+                type: "string",
+              },
+              description: "Array of media URLs",
+            },
+            privacy: {
+              type: "string",
+              enum: ["public", "friends", "private"],
+              description: "Post privacy setting",
+            },
+            reactions: {
+              type: "object",
+              additionalProperties: {
+                type: "number",
+              },
+              description: "Reaction counts by type",
+            },
+            commentsCount: {
+              type: "number",
+              description: "Number of comments",
+            },
+            sharesCount: {
+              type: "number",
+              description: "Number of shares",
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+            },
+          },
+        },
         Error: {
           type: "object",
           properties: {
@@ -226,7 +279,7 @@ const options: swaggerJsdoc.Options = {
       },
     ],
   },
-  apis: ["./src/routes/*.ts", "./src/controller/*.ts"],
+  apis: ["./src/routes/*.ts", "./src/routes/Post/*.ts", "./src/controller/*.ts", "./src/controller/Post/*.ts"],
 };
 
 export const swaggerSpec = swaggerJsdoc(options);
