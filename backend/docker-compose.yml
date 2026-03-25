@@ -4,7 +4,7 @@ services:
     container_name: social-network-mongodb
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "27018:27017"
     environment:
       MONGO_INITDB_DATABASE: social_network
     volumes:
@@ -26,7 +26,7 @@ services:
     environment:
       PORT: 3001
       ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET:-replace_with_a_strong_secret}
-      MONGODB_CONNECTIONSTRING: mongodb://mongodb:27017/social_network
+      MONGODB_CONNECTIONSTRING: mongodb://mongodb:27018/social_network
     depends_on:
       mongodb:
         condition: service_healthy
