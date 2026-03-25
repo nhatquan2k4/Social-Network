@@ -2,7 +2,11 @@ import mongoose from 'mongoose';
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_CONNECTIONSTRING as string);
+    const connectionString =
+      process.env.MONGODB_CONNECTIONSTRING ||
+      'mongodb://localhost:27017/social_network';
+
+    await mongoose.connect(connectionString);
     console.log('Lien ket Database thanh cong');
   } catch (error) {
     console.error('Loi ket noi Database', error);
