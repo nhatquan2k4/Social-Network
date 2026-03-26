@@ -1,16 +1,16 @@
-import message from "../models/message"
-
 export const updateConversationAfterCreateMessage = async (
   conversationId: any,
   message: any,
   senderId: any
 ) => {
+  const fallbackContent = message.content || (Array.isArray(message.media) && message.media.length > 0 ? "[Image]" : null);
+
   conversationId.set({
     seenBy:[],
     lastMessageAt: message.createdAt,
     lastMessage: {
       _id: message._id,
-      content: message.content,
+      content: fallbackContent,
       senderId,
       createdAt: message.createdAt,
     },

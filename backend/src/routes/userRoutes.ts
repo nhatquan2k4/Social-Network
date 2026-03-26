@@ -1,8 +1,16 @@
 import express from 'express';
-import { authMe } from '../controller/userController';
+import multer from 'multer';
+import { authMe, updateMyAvatar } from '../controller/userController';
 import { protectedRoute } from '../middlewares/authMiddleware';
 
 const router = express.Router();
+const upload = multer({
+	storage: multer.memoryStorage(),
+	limits: {
+		fileSize: Number(process.env.MEDIA_MAX_FILE_SIZE || "5242880"),
+		files: 1,
+	},
+});
 
 /**
  * @swagger
@@ -33,5 +41,35 @@ const router = express.Router();
  *               $ref: '#/components/schemas/Error'
  */
 router.get('/me', protectedRoute, authMe);
+
+/**
+ * @swagger
+ * /api/users/me/avatar:
+ *   patch:
+ *     summary: Cap nhat avatar nguoi dung hien tai
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - avatar
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Cap nhat avatar thanh cong
+ *       400:
+ *         description: Du lieu upload khong hop le
+ *       401:
+ *         description: Chua xac thuc
+ */
+router.patch('/me/avatar', protectedRoute, upload.array('avatar', 1), updateMyAvatar);
 
 export default router;

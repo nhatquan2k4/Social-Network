@@ -21,26 +21,23 @@ const router = express.Router();
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - type
- *               - participantIds
- *             properties:
- *               type:
- *                 type: string
- *                 enum: [direct, group]
- *                 description: Loại cuộc trò chuyện
- *                 example: direct
- *               participantIds:
- *                 type: array
- *                 items:
- *                   type: string
- *                 description: Danh sách ID người tham gia
- *                 example: ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012"]
- *               groupName:
- *                 type: string
- *                 description: Tên nhóm (bắt buộc nếu type là group)
- *                 example: Nhóm học tập
+ *             oneOf:
+ *               - $ref: '#/components/schemas/ConversationDirectCreateRequest'
+ *               - $ref: '#/components/schemas/ConversationGroupCreateRequest'
+ *           examples:
+ *             direct:
+ *               summary: Tao direct conversation
+ *               value:
+ *                 type: direct
+ *                 recipientId: 507f1f77bcf86cd799439011
+ *             group:
+ *               summary: Tao group conversation
+ *               value:
+ *                 type: group
+ *                 name: Nhom hoc tap
+ *                 memberIds:
+ *                   - 507f1f77bcf86cd799439011
+ *                   - 507f1f77bcf86cd799439012
  *     responses:
  *       201:
  *         description: Tạo cuộc trò chuyện thành công

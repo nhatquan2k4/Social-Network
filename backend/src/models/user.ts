@@ -30,6 +30,12 @@ const userSchema = new mongoose.Schema({
         avatarPublicId: {
             type: String,
         },
+        avatarBucket: {
+            type: String,
+        },
+        avatarObjectKey: {
+            type: String,
+        },
         bio: {
             type: String,
             maxlength: 500,

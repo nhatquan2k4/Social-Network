@@ -6,11 +6,19 @@ const friendService = new FriendService();
 export const sendFriendRequest = async (req: Request, res: Response) => {
     try {
         const { to, message } = req.body;
+
+        if (!to) {
+            return res.status(400).json({ message: 'Thieu to' });
+        }
+
         const from = req.user!._id;
         const request = await friendService.sendFriendRequest(from, to, message);
         return res.status(200).json({ message: 'Da gui loi moi ket ban', request });
     } catch (error: any) {
         console.error('Loi khi gui loi moi ket ban', error);
+        if (error.message === 'Thieu to') {
+            return res.status(400).json({ message: error.message });
+        }
         if (error.message === 'Khong the gui loi moi ket ban voi chinh ban than') {
             return res.status(400).json({ message: error.message });
         }
@@ -26,7 +34,12 @@ export const sendFriendRequest = async (req: Request, res: Response) => {
 
 export const acceptFriendRequest = async (req: Request, res: Response) => {
     try {
-        const { requestId } = req.body;
+        const requestId = req.params.requestId || req.body?.requestId;
+
+        if (!requestId) {
+            return res.status(400).json({ message: 'Thieu requestId' });
+        }
+
         const userId = req.user!._id;
 
         const newFriend = await friendService.acceptFriendRequest(requestId, userId);
@@ -37,6 +50,9 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
         });
     } catch (error: any) {
         console.error('Loi khi chap nhan loi moi ket ban', error);
+        if (error?.name === 'CastError') {
+            return res.status(400).json({ message: 'requestId khong hop le' });
+        }
         if (error.message === 'Khong tim thay loi moi ket ban') {
             return res.status(404).json({ message: error.message });
         }

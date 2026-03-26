@@ -2,16 +2,19 @@ import { FriendRepository } from '../repositories/friendRepository';
 import { FriendRequestRepository } from '../repositories/friendRequestRepository';
 import { UserRepository } from '../repositories/userRepository';
 import { Types } from 'mongoose';
+import { NotificationService } from './notificationService';
 
 export class FriendService {
     private friendRepository: FriendRepository;
     private friendRequestRepository: FriendRequestRepository;
     private userRepository: UserRepository;
+    private notificationService: NotificationService;
 
     constructor() {
         this.friendRepository = new FriendRepository();
         this.friendRequestRepository = new FriendRequestRepository();
         this.userRepository = new UserRepository();
+        this.notificationService = new NotificationService();
     }
 
     async sendFriendRequest(from: Types.ObjectId, to: string, message?: string) {
@@ -48,6 +51,20 @@ export class FriendService {
 
         // Tao friend request
         const request = await this.friendRequestRepository.create(from, to as any, message);
+
+        await this.notificationService.createNotification({
+            recipientId: new Types.ObjectId(to),
+            actorId: from,
+            type: 'FRIEND_REQUEST',
+            title: 'Loi moi ket ban moi',
+            body: 'Ban vua nhan duoc mot loi moi ket ban.',
+            entityType: 'friend_request',
+            entityId: request._id.toString(),
+            metadata: {
+                requestId: request._id.toString(),
+            },
+        });
+
         return request;
     }
 
@@ -66,6 +83,16 @@ export class FriendService {
 
         // Xoa friend request
         await this.friendRequestRepository.deleteById(requestId);
+
+        await this.notificationService.createNotification({
+            recipientId: request.from,
+            actorId: request.to,
+            type: 'FRIEND_ACCEPTED',
+            title: 'Loi moi ket ban duoc chap nhan',
+            body: 'Loi moi ket ban cua ban da duoc chap nhan.',
+            entityType: 'friend_request',
+            entityId: requestId,
+        });
 
         // Lay thong tin nguoi gui
         const from = await this.userRepository.findByIdWithFields(

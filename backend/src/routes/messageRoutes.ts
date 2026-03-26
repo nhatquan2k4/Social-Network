@@ -1,13 +1,153 @@
 import express from 'express';
+import multer from 'multer';
 import { protectedRoute } from '../middlewares/authMiddleware';
 import { checkFriendship, checkGroupMembership } from '../middlewares/friendMiddleware';
 import {
+    sendDirectTextMessage,
+    sendDirectMediaMessage,
+    sendGroupTextMessage,
+    sendGroupMediaMessage,
     sendDirectMessage,
     sendGroupMessage
 } from '../controller/messageController';
 
 
 const router = express.Router();
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: Number(process.env.MEDIA_MAX_FILE_SIZE || "5242880"),
+        files: Number(process.env.MEDIA_MAX_FILES || "10"),
+    },
+});
+
+/**
+ * @swagger
+ * /api/messages/direct/text:
+ *   post:
+ *     summary: Gui tin nhan chu truc tiep cho ban be
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - recipientId
+ *               - conversationId
+ *               - content
+ *             properties:
+ *               recipientId:
+ *                 type: string
+ *               conversationId:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Gui tin nhan thanh cong
+ */
+router.post("/direct/text", protectedRoute, checkFriendship, sendDirectTextMessage);
+
+/**
+ * @swagger
+ * /api/messages/direct/media:
+ *   post:
+ *     summary: Gui anh truc tiep cho ban be
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - recipientId
+ *               - conversationId
+ *               - files
+ *             properties:
+ *               recipientId:
+ *                 type: string
+ *               conversationId:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               files:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       201:
+ *         description: Gui anh thanh cong
+ */
+router.post("/direct/media", protectedRoute, upload.array("files", Number(process.env.MEDIA_MAX_FILES || "10")), checkFriendship, sendDirectMediaMessage);
+
+/**
+ * @swagger
+ * /api/messages/group/text:
+ *   post:
+ *     summary: Gui tin nhan chu trong nhom
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - conversationId
+ *               - content
+ *             properties:
+ *               conversationId:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Gui tin nhan thanh cong
+ */
+router.post("/group/text", protectedRoute, checkGroupMembership, sendGroupTextMessage);
+
+/**
+ * @swagger
+ * /api/messages/group/media:
+ *   post:
+ *     summary: Gui anh trong nhom
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - conversationId
+ *               - files
+ *             properties:
+ *               conversationId:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               files:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       201:
+ *         description: Gui anh thanh cong
+ */
+router.post("/group/media", protectedRoute, upload.array("files", Number(process.env.MEDIA_MAX_FILES || "10")), checkGroupMembership, sendGroupMediaMessage);
 
 /**
  * @swagger
@@ -22,22 +162,25 @@ const router = express.Router();
  *       content:
  *         application/json:
  *           schema:
+ *             $ref: '#/components/schemas/DirectMessageRequest'
+ *         multipart/form-data:
+ *           schema:
  *             type: object
  *             required:
- *               - receiverId
+ *               - recipientId
+ *               - conversationId
  *             properties:
- *               receiverId:
+ *               recipientId:
  *                 type: string
- *                 description: ID người nhận (phải là bạn bè)
- *                 example: 507f1f77bcf86cd799439011
+ *               conversationId:
+ *                 type: string
  *               content:
  *                 type: string
- *                 description: Nội dung tin nhắn
- *                 example: Xin chào, bạn khỏe không?
- *               imgUrl:
- *                 type: string
- *                 description: URL hình ảnh (tùy chọn)
- *                 example: https://example.com/image.jpg
+ *               files:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
  *     responses:
  *       201:
  *         description: Gửi tin nhắn thành công
@@ -76,7 +219,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post("/direct", protectedRoute, checkFriendship, sendDirectMessage);
+router.post("/direct", protectedRoute, upload.array("files", Number(process.env.MEDIA_MAX_FILES || "10")), checkFriendship, sendDirectMessage);
 
 /**
  * @swagger
@@ -91,22 +234,22 @@ router.post("/direct", protectedRoute, checkFriendship, sendDirectMessage);
  *       content:
  *         application/json:
  *           schema:
+ *             $ref: '#/components/schemas/GroupMessageRequest'
+ *         multipart/form-data:
+ *           schema:
  *             type: object
  *             required:
  *               - conversationId
  *             properties:
  *               conversationId:
  *                 type: string
- *                 description: ID cuộc trò chuyện nhóm
- *                 example: 507f1f77bcf86cd799439011
  *               content:
  *                 type: string
- *                 description: Nội dung tin nhắn
- *                 example: Xin chào mọi người!
- *               imgUrl:
- *                 type: string
- *                 description: URL hình ảnh (tùy chọn)
- *                 example: https://example.com/image.jpg
+ *               files:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
  *     responses:
  *       201:
  *         description: Gửi tin nhắn thành công
@@ -145,6 +288,6 @@ router.post("/direct", protectedRoute, checkFriendship, sendDirectMessage);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post("/group", protectedRoute, checkGroupMembership, sendGroupMessage);
+router.post("/group", protectedRoute, upload.array("files", Number(process.env.MEDIA_MAX_FILES || "10")), checkGroupMembership, sendGroupMessage);
 
 export default router;

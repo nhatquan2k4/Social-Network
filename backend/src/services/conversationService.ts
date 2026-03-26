@@ -1,6 +1,7 @@
 import { ConversationRepository } from '../repositories/conversationRepository';
 import { MessageRepository } from '../repositories/messageRepository';
 import { Types } from 'mongoose';
+import { buildMediaUrl } from '../config/minio';
 
 interface PopulatedUser {
     _id: Types.ObjectId;
@@ -15,6 +16,39 @@ export class ConversationService {
   constructor() {
     this.conversationRepository = new ConversationRepository();
     this.messageRepository = new MessageRepository();
+  }
+
+  private enrichMessageMedia(message: any) {
+    const plain = typeof message.toObject === "function" ? message.toObject() : message;
+
+    const media = (plain.media || []).map((item: any) => ({
+      ...item,
+      mediaUrl: buildMediaUrl(item.bucket, item.objectKey),
+    }));
+
+    if (media.length > 0) {
+      return {
+        ...plain,
+        media,
+      };
+    }
+
+    if (plain.imgUrl) {
+      return {
+        ...plain,
+        media: [
+          {
+            bucket: "",
+            objectKey: "",
+            mimeType: "image/*",
+            size: 0,
+            mediaUrl: plain.imgUrl,
+          },
+        ],
+      };
+    }
+
+    return plain;
   }
 
   async createConversation(
@@ -138,7 +172,7 @@ export class ConversationService {
       messages.pop();
     }
 
-    messages = messages.reverse();
+    messages = messages.reverse().map((message: any) => this.enrichMessageMedia(message));
 
     return { messages, nextCursor };
   }

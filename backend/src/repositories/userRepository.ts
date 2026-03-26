@@ -27,4 +27,22 @@ export class UserRepository {
     async findByIdWithFields(userId: string | Types.ObjectId, fields: string) {
         return await User.findById(userId).select(fields).lean();
     }
+
+    async updateAvatar(
+        userId: string | Types.ObjectId,
+        avatarData: { avatarUrl: string; avatarPublicId: string; avatarBucket: string; avatarObjectKey: string },
+    ) {
+        return await User.findByIdAndUpdate(
+            userId,
+            {
+                $set: {
+                    avatarUrl: avatarData.avatarUrl,
+                    avatarPublicId: avatarData.avatarPublicId,
+                    avatarBucket: avatarData.avatarBucket,
+                    avatarObjectKey: avatarData.avatarObjectKey,
+                },
+            },
+            { new: true },
+        ).select('-hashedPassword');
+    }
 }
