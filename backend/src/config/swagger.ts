@@ -35,6 +35,29 @@ const options: swaggerJsdoc.Options = {
         },
       },
       schemas: {
+        MediaItem: {
+          type: "object",
+          properties: {
+            bucket: {
+              type: "string",
+              description: "Bucket name in MinIO",
+            },
+            objectKey: {
+              type: "string",
+              description: "Object path in bucket",
+            },
+            mimeType: {
+              type: "string",
+            },
+            size: {
+              type: "number",
+            },
+            mediaUrl: {
+              type: "string",
+              description: "Runtime-composed URL for client consumption",
+            },
+          },
+        },
         User: {
           type: "object",
           properties: {
@@ -58,6 +81,14 @@ const options: swaggerJsdoc.Options = {
             avatarUrl: {
               type: "string",
               description: "Avatar URL",
+            },
+            avatarBucket: {
+              type: "string",
+              description: "Avatar bucket",
+            },
+            avatarObjectKey: {
+              type: "string",
+              description: "Avatar object key",
             },
             bio: {
               type: "string",
@@ -96,9 +127,230 @@ const options: swaggerJsdoc.Options = {
               type: "string",
               description: "Message content",
             },
-            imgUrl: {
+            media: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/MediaItem",
+              },
+            },
+            createdAt: {
               type: "string",
-              description: "Image URL",
+              format: "date-time",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+            },
+          },
+        },
+        DirectMessageRequest: {
+          type: "object",
+          required: ["recipientId", "conversationId"],
+          example: {
+            recipientId: "507f1f77bcf86cd799439011",
+            conversationId: "507f1f77bcf86cd799439012",
+            content: "Hello my friends",
+            media: [],
+          },
+          properties: {
+            recipientId: {
+              type: "string",
+              description: "ID nguoi nhan (phai la ban be)",
+              example: "507f1f77bcf86cd799439011",
+            },
+            conversationId: {
+              type: "string",
+              description: "ID direct conversation",
+              example: "507f1f77bcf86cd799439012",
+            },
+            content: {
+              type: "string",
+              description: "Noi dung tin nhan. Co the bo trong neu co media",
+              example: "Xin chao ban",
+            },
+            media: {
+              type: "array",
+              description: "Danh sach media metadata da upload qua /api/media/upload",
+              items: {
+                type: "object",
+                required: ["bucket", "objectKey", "mimeType", "size"],
+                properties: {
+                  bucket: {
+                    type: "string",
+                    example: "social-messages",
+                  },
+                  objectKey: {
+                    type: "string",
+                    example: "message/69c.../abc_image.jpg",
+                  },
+                  mimeType: {
+                    type: "string",
+                    example: "image/jpeg",
+                  },
+                  size: {
+                    type: "number",
+                    example: 124532,
+                  },
+                },
+              },
+            },
+          },
+        },
+        GroupMessageRequest: {
+          type: "object",
+          required: ["conversationId"],
+          example: {
+            conversationId: "507f1f77bcf86cd799439011",
+            content: "Xin chao moi nguoi",
+            media: [],
+          },
+          properties: {
+            conversationId: {
+              type: "string",
+              description: "ID cuoc tro chuyen nhom",
+              example: "507f1f77bcf86cd799439011",
+            },
+            content: {
+              type: "string",
+              description: "Noi dung tin nhan. Co the bo trong neu co media",
+              example: "Xin chao moi nguoi",
+            },
+            media: {
+              type: "array",
+              description: "Danh sach media metadata da upload qua /api/media/upload",
+              items: {
+                type: "object",
+                required: ["bucket", "objectKey", "mimeType", "size"],
+                properties: {
+                  bucket: {
+                    type: "string",
+                    example: "social-messages",
+                  },
+                  objectKey: {
+                    type: "string",
+                    example: "message/69c.../abc_image.jpg",
+                  },
+                  mimeType: {
+                    type: "string",
+                    example: "image/jpeg",
+                  },
+                  size: {
+                    type: "number",
+                    example: 124532,
+                  },
+                },
+              },
+            },
+          },
+        },
+        Post: {
+          type: "object",
+          properties: {
+            _id: {
+              type: "string",
+              description: "Post ID",
+            },
+            authorId: {
+              type: "string",
+              description: "Author user ID",
+            },
+            content: {
+              type: "string",
+              description: "Post content",
+            },
+            media: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/MediaItem",
+              },
+            },
+            likesCount: {
+              type: "number",
+            },
+            commentsCount: {
+              type: "number",
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+            },
+          },
+        },
+        PostComment: {
+          type: "object",
+          properties: {
+            _id: {
+              type: "string",
+            },
+            parentCommentId: {
+              type: "string",
+              nullable: true,
+            },
+            authorId: {
+              $ref: "#/components/schemas/User",
+            },
+            content: {
+              type: "string",
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+            },
+            children: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/PostComment",
+              },
+            },
+          },
+        },
+        Notification: {
+          type: "object",
+          properties: {
+            _id: {
+              type: "string",
+            },
+            recipientId: {
+              type: "string",
+            },
+            actorId: {
+              $ref: "#/components/schemas/User",
+            },
+            type: {
+              type: "string",
+              enum: ["FRIEND_REQUEST", "FRIEND_ACCEPTED", "POST_LIKED", "POST_COMMENTED", "COMMENT_REPLIED"],
+            },
+            title: {
+              type: "string",
+            },
+            body: {
+              type: "string",
+            },
+            entityType: {
+              type: "string",
+            },
+            entityId: {
+              type: "string",
+            },
+            metadata: {
+              type: "object",
+              nullable: true,
+            },
+            isRead: {
+              type: "boolean",
+            },
+            readAt: {
+              type: "string",
+              format: "date-time",
+              nullable: true,
             },
             createdAt: {
               type: "string",
@@ -119,7 +371,7 @@ const options: swaggerJsdoc.Options = {
             },
             type: {
               type: "string",
-              enum: ["single", "group"],
+              enum: ["direct", "group"],
               description: "Conversation type",
             },
             participants: {
@@ -180,6 +432,51 @@ const options: swaggerJsdoc.Options = {
             updatedAt: {
               type: "string",
               format: "date-time",
+            },
+          },
+        },
+        ConversationDirectCreateRequest: {
+          type: "object",
+          required: ["type", "recipientId"],
+          properties: {
+            type: {
+              type: "string",
+              enum: ["direct"],
+              example: "direct",
+            },
+            recipientId: {
+              type: "string",
+              description: "ID nguoi nhan trong direct conversation",
+              example: "507f1f77bcf86cd799439011",
+            },
+            name: {
+              type: "string",
+              description: "Khong bat buoc voi direct conversation",
+              nullable: true,
+            },
+          },
+        },
+        ConversationGroupCreateRequest: {
+          type: "object",
+          required: ["type", "name", "memberIds"],
+          properties: {
+            type: {
+              type: "string",
+              enum: ["group"],
+              example: "group",
+            },
+            name: {
+              type: "string",
+              description: "Ten nhom",
+              example: "Nhom hoc tap",
+            },
+            memberIds: {
+              type: "array",
+              description: "Danh sach userId thanh vien (khong gom user hien tai)",
+              items: {
+                type: "string",
+              },
+              example: ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012"],
             },
           },
         },

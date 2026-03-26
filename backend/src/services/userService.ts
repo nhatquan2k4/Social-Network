@@ -15,4 +15,15 @@ export class UserService {
         }
         return user;
     }
+
+    async updateAvatar(
+        userId: Types.ObjectId,
+        avatarData: { avatarUrl: string; avatarPublicId: string; avatarBucket: string; avatarObjectKey: string },
+    ) {
+        const user = await this.userRepository.updateAvatar(userId, avatarData);
+        if (!user) {
+            throw new Error('Nguoi dung khong ton tai');
+        }
+        return user;
+    }
 }

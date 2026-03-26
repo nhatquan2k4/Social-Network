@@ -3,14 +3,34 @@ services:
     image: mongo:7
     container_name: social-network-mongodb
     restart: unless-stopped
+    command: ["--port", "27018"]
     ports:
-      - "27018:27017"
+      - "27018:27018"
     environment:
       MONGO_INITDB_DATABASE: social_network
     volumes:
       - mongodb_data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongosh", "--port", "27018", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: social-network-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,9 +47,29 @@ services:
       PORT: 3001
       ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET:-replace_with_a_strong_secret}
       MONGODB_CONNECTIONSTRING: mongodb://mongodb:27018/social_network
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio}
+      MINIO_PORT: ${MINIO_PORT:-9000}
+      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET_POSTS: ${MINIO_BUCKET_POSTS:-social-posts}
+      MINIO_BUCKET_MESSAGES: ${MINIO_BUCKET_MESSAGES:-social-messages}
+      MINIO_BUCKET_AVATARS: ${MINIO_BUCKET_AVATARS:-social-avatars}
+      MINIO_PUBLIC_BASE_URL: ${MINIO_PUBLIC_BASE_URL:-http://localhost:9000}
+      MEDIA_MAX_FILE_SIZE: ${MEDIA_MAX_FILE_SIZE:-5242880}
+      MEDIA_MAX_FILES: ${MEDIA_MAX_FILES:-10}
+      MEDIA_POST_MAX_DIMENSION: ${MEDIA_POST_MAX_DIMENSION:-1920}
+      MEDIA_MESSAGE_MAX_DIMENSION: ${MEDIA_MESSAGE_MAX_DIMENSION:-1280}
+      MEDIA_AVATAR_MAX_DIMENSION: ${MEDIA_AVATAR_MAX_DIMENSION:-512}
+      MEDIA_POST_QUALITY: ${MEDIA_POST_QUALITY:-82}
+      MEDIA_MESSAGE_QUALITY: ${MEDIA_MESSAGE_QUALITY:-78}
+      MEDIA_AVATAR_QUALITY: ${MEDIA_AVATAR_QUALITY:-80}
     depends_on:
       mongodb:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
 volumes:
   mongodb_data:
+  minio_data:

@@ -2,6 +2,14 @@ import { ConversationRepository } from '../repositories/conversationRepository';
 import { MessageRepository } from '../repositories/messageRepository';
 import { Types } from 'mongoose';
 import { updateConversationAfterCreateMessage } from '../utils/messageHelper';
+import { buildMediaUrl } from '../config/minio';
+
+interface MessageMediaInput {
+    bucket: string;
+    objectKey: string;
+    mimeType: string;
+    size: number;
+}
 
 export class MessageService {
     private conversationRepository: ConversationRepository;
@@ -12,12 +20,70 @@ export class MessageService {
         this.messageRepository = new MessageRepository();
     }
 
+    private sanitizeMedia(media?: MessageMediaInput[]) {
+        if (!Array.isArray(media) || media.length === 0) {
+            return undefined;
+        }
+
+        const cleaned = media
+            .filter((item: any) => item && typeof item === 'object')
+            .map((item: any) => ({
+                bucket: typeof item.bucket === 'string' ? item.bucket.trim() : '',
+                objectKey: typeof item.objectKey === 'string' ? item.objectKey.trim() : '',
+                mimeType: typeof item.mimeType === 'string' ? item.mimeType.trim() : '',
+                size: Number(item.size),
+            }))
+            .filter((item) => item.bucket && item.objectKey && item.mimeType && Number.isFinite(item.size) && item.size > 0);
+
+        return cleaned.length > 0 ? cleaned : undefined;
+    }
+
+    private enrichMessageMedia(message: any) {
+        const plain = typeof message.toObject === 'function' ? message.toObject() : message;
+
+        const media = (plain.media || []).map((item: MessageMediaInput) => ({
+            ...item,
+            mediaUrl: buildMediaUrl(item.bucket, item.objectKey)
+        }));
+
+        if (media.length > 0) {
+            return {
+                ...plain,
+                media,
+            };
+        }
+
+        if (plain.imgUrl) {
+            return {
+                ...plain,
+                media: [
+                    {
+                        bucket: '',
+                        objectKey: '',
+                        mimeType: 'image/*',
+                        size: 0,
+                        mediaUrl: plain.imgUrl,
+                    },
+                ],
+            };
+        }
+
+        return plain;
+    }
+
     async sendDirectMessage(
         senderId: Types.ObjectId,
         recipientId: string,
-        content: string,
-        conversationId?: string
+        content?: string,
+        conversationId?: string,
+        media?: MessageMediaInput[]
     ) {
+        const safeMedia = this.sanitizeMedia(media);
+
+        if (!content && !safeMedia) {
+            throw new Error('Thieu noi dung hoac media');
+        }
+
         let conversation;
 
         if (conversationId) {
@@ -43,21 +109,29 @@ export class MessageService {
         const message = await this.messageRepository.create({
             conversationId: conversation._id,
             senderId,
-            content
+            content,
+            media: safeMedia,
         });
 
         // Cap nhat conversation
         await updateConversationAfterCreateMessage(conversation, message, senderId);
         await conversation.save();
 
-        return message;
+        return this.enrichMessageMedia(message);
     }
 
     async sendGroupMessage(
         senderId: Types.ObjectId,
         conversationId: string,
-        content: string
+        content?: string,
+        media?: MessageMediaInput[]
     ) {
+        const safeMedia = this.sanitizeMedia(media);
+
+        if (!content && !safeMedia) {
+            throw new Error('Thieu noi dung hoac media');
+        }
+
         const conversation = await this.conversationRepository.findById(conversationId);
 
         if (!conversation) {
@@ -68,13 +142,14 @@ export class MessageService {
         const message = await this.messageRepository.create({
             conversationId: conversation._id,
             senderId,
-            content
+            content,
+            media: safeMedia,
         });
 
         // Cap nhat conversation
         await updateConversationAfterCreateMessage(conversation, message, senderId);
         await conversation.save();
 
-        return message;
+        return this.enrichMessageMedia(message);
     }
 }

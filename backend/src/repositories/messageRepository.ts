@@ -5,7 +5,13 @@ export class MessageRepository {
     async create(messageData: {
         conversationId: Types.ObjectId;
         senderId: Types.ObjectId;
-        content: string;
+        content?: string;
+        media?: Array<{
+            bucket: string;
+            objectKey: string;
+            mimeType: string;
+            size: number;
+        }>;
     }) {
         return await Message.create(messageData);
     }

@@ -26,9 +26,9 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - toUserId
+ *               - to
  *             properties:
- *               toUserId:
+ *               to:
  *                 type: string
  *                 description: ID người dùng nhận lời mời
  *                 example: 507f1f77bcf86cd799439011
