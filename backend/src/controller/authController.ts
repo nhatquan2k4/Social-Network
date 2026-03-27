@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { AuthService } from '../services/authService';
 
 const authService = new AuthService();
+const isProduction = process.env.NODE_ENV === 'production';
 
 export const register = async (req: Request, res: Response) => {
     try {
@@ -46,8 +47,8 @@ export const login = async (req: Request, res: Response) => {
         // Gui refresh token qua cookie
         res.cookie('refreshToken', result.refreshToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: 'none',
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
             maxAge: result.refreshTokenTTL * 1000
         });
 
@@ -78,8 +79,8 @@ export const logout = async (req: Request, res: Response) => {
 
         res.clearCookie('refreshToken', {
             httpOnly: true,
-            secure: true,
-            sameSite: 'none'
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax'
         });
 
         return res.status(204).json({ message: 'Dang xuat thanh cong' });

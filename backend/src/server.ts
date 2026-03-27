@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import connectDB from "./libs/db";
 import authRoutes from "./routes/authRoutes";
 import cookieParser from "cookie-parser";
+import cors, { CorsOptions } from "cors";
 import userRoutes from "./routes/userRoutes";
 import { protectedRoute } from "./middlewares/authMiddleware";
 import friendRoutes from "./routes/friendRoutes";
@@ -21,7 +22,36 @@ const app = express();
 
 const PORT = process.env.PORT || 5001;
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:8080",
+  "http://127.0.0.1:8080",
+  ...(process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
+    : []),
+];
+
+const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
+
+const corsOptions: CorsOptions = {
+  origin: (origin, callback) => {
+    // Allow non-browser clients and local tools without Origin header.
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin) || localDevOriginPattern.test(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+};
+
 // middleware
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 

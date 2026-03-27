@@ -21,6 +21,9 @@ class ApiService {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          options.baseUrl = ApiConstants.baseUrl;
+          logger.i('REQUEST => ${options.baseUrl}${options.path}');
+
           // Lấy token từ local storage
           final token = await _localStorage.getToken();
 
@@ -42,6 +45,7 @@ class ApiService {
             'ERROR[${error.response?.statusCode}] => ${error.requestOptions.uri}',
           );
           logger.e('Error: ${error.response?.data}');
+          logger.e('Dio type: ${error.type}, message: ${error.message}');
           return handler.next(error);
         },
       ),
