@@ -1,5 +1,13 @@
+import 'package:flutter/foundation.dart';
+
 class ApiConstants {
-  static const String baseUrl = 'http://localhost:5001/api';
+  static String get baseUrl {
+    // Android emulator cannot reach host services via localhost.
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:3001/api';
+    }
+    return 'http://localhost:3001/api';
+  }
 
   static const String login = '/auth/login';
   static const String friends = '/friends';
