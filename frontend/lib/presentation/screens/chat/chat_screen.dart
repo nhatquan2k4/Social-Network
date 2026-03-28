@@ -30,22 +30,45 @@ class _ChatScreenState extends State<ChatScreen> {
 
   String? _currentUserId;
 
+  MockConversation? get _conversation {
+    return _chatStore.conversationById(widget.friend.id);
+  }
+
+  bool get _isGroup {
+    return _conversation?.isGroup ?? false;
+  }
+
   String get _avatarAssetPath {
-    return _chatStore.conversationById(widget.friend.id)?.avatarAssetPath ??
-        'assets/images/logo1.jpg';
+    return _conversation?.avatarAssetPath ?? 'assets/images/logo1.jpg';
   }
 
   Color get _avatarBgColor {
-    return _chatStore.conversationById(widget.friend.id)?.avatarColor ??
-        const Color(0xFF7A6256);
+    return _conversation?.avatarColor ?? const Color(0xFF7A6256);
   }
 
   bool get _isBlocked {
-    return _chatStore.conversationById(widget.friend.id)?.isBlocked ?? false;
+    if (_isGroup) return false;
+    return _conversation?.isBlocked ?? false;
   }
 
   bool get _isRestricted {
-    return _chatStore.conversationById(widget.friend.id)?.isRestricted ?? false;
+    if (_isGroup) return false;
+    return _conversation?.isRestricted ?? false;
+  }
+
+  String get _friendDisplayName {
+    return _chatStore.nicknameForFriend(
+      widget.friend.id,
+      widget.friend.displayName,
+    );
+  }
+
+  String get _subtitleText {
+    if (_isGroup) {
+      final count = (_conversation?.memberNames.length ?? 0) + 1;
+      return '$count thành viên';
+    }
+    return 'Đang hoạt động';
   }
 
   @override
@@ -127,20 +150,20 @@ class _ChatScreenState extends State<ChatScreen> {
                 backgroundColor: _avatarBgColor,
                 foregroundImage: AssetImage(_avatarAssetPath),
                 child: Text(
-                  widget.friend.displayName[0].toUpperCase(),
+                  _friendDisplayName[0].toUpperCase(),
                   style: const TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
             ),
             const SizedBox(width: 9),
             GestureDetector(
-              onTap: _openUserProfile,
+              onTap: _isGroup ? _showGroupMembersSheet : _openUserProfile,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    widget.friend.displayName,
+                    _friendDisplayName,
                     style: const TextStyle(
                       fontSize: 19,
                       fontWeight: FontWeight.w700,
@@ -148,9 +171,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       height: 1.05,
                     ),
                   ),
-                  const Text(
-                    'Đang hoạt động',
-                    style: TextStyle(
+                  Text(
+                    _subtitleText,
+                    style: const TextStyle(
                       fontSize: 12,
                       color: Color(0xFF87878D),
                       height: 1.1,
@@ -200,6 +223,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 (m) => _DisplayMessage(
                                   content: m.content,
                                   isMe: m.senderId == _currentUserId,
+                                  isSystem: false,
                                 ),
                               )
                               .toList()
@@ -209,6 +233,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 (m) => _DisplayMessage(
                                   content: m.content,
                                   isMe: m.isMe,
+                                  isSystem: m.isSystem,
                                 ),
                               )
                               .toList();
@@ -220,15 +245,21 @@ class _ChatScreenState extends State<ChatScreen> {
                     return ListView.builder(
                       controller: _scrollController,
                       padding: const EdgeInsets.fromLTRB(10, 4, 10, 6),
-                      itemCount: displayMessages.length,
+                      itemCount: displayMessages.length + (_isGroup ? 1 : 0),
                       itemBuilder: (context, index) {
-                        final message = displayMessages[index];
+                        if (_isGroup && index == 0) {
+                          return _buildGroupIntroCard();
+                        }
+
+                        final messageIndex = _isGroup ? index - 1 : index;
+                        final message = displayMessages[messageIndex];
 
                         return MessageBubble(
                           content: message.content,
                           isMe: message.isMe,
-                          showAvatar: !message.isMe,
-                          friendName: widget.friend.displayName,
+                          isSystem: message.isSystem,
+                          showAvatar: !message.isMe && !message.isSystem,
+                          friendName: _friendDisplayName,
                           friendAvatarAssetPath: _avatarAssetPath,
                           friendAvatarColor: _avatarBgColor,
                         );
@@ -270,13 +301,95 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Widget _buildGroupIntroCard() {
+    final conversation = _conversation;
+    final members = conversation?.memberNames ?? const <String>[];
+    final createdAt = conversation?.createdAt ?? DateTime.now();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 34,
+            backgroundColor: _avatarBgColor,
+            foregroundImage: AssetImage(_avatarAssetPath),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            members.join(', '),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF222225),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Đã tạo vào ${_formatClock(createdAt)} hôm nay',
+            style: const TextStyle(fontSize: 11, color: Color(0xFF7F7F84)),
+          ),
+          const SizedBox(height: 9),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _miniAction(
+                icon: Icons.link,
+                label: 'Liên kết mời',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Đã sao chép liên kết mời nhóm'),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 18),
+              _miniAction(
+                icon: Icons.person_add_alt_1,
+                label: 'Thêm người',
+                onTap: _showGroupMembersSheet,
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+        ],
+      ),
+    );
+  }
+
+  Widget _miniAction({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Icon(icon, size: 20, color: const Color(0xFF1C1D22)),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: Color(0xFF1F1F23),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSafetyBanner({
     required bool isBlocked,
     required bool isRestricted,
   }) {
     final title = isBlocked
-        ? 'Bạn đã chặn ${widget.friend.displayName}'
-        : 'Bạn đã hạn chế ${widget.friend.displayName}';
+        ? 'Bạn đã chặn $_friendDisplayName'
+        : 'Bạn đã hạn chế $_friendDisplayName';
 
     return Container(
       width: double.infinity,
@@ -353,6 +466,90 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  String _formatClock(DateTime time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  Future<void> _showGroupMembersSheet() async {
+    final members = _conversation?.memberNames ?? const <String>[];
+    if (members.isEmpty) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFFF4F4F6),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCFCFD4),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Thành viên nhóm (${members.length + 1})',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1F1F23),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  leading: const CircleAvatar(
+                    radius: 18,
+                    foregroundImage: AssetImage(
+                      MockChatStore.currentUserAvatarAssetPath,
+                    ),
+                  ),
+                  title: Text(
+                    '${MockChatStore.currentUserDisplayName} (bạn)',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                ...members.map(
+                  (name) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    leading: CircleAvatar(
+                      radius: 18,
+                      backgroundColor: const Color(0xFFD5D5DA),
+                      child: Text(
+                        name.isNotEmpty ? name[0] : '?',
+                        style: const TextStyle(color: Color(0xFF3A3A40)),
+                      ),
+                    ),
+                    title: Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _openUserProfile() {
     final media = _chatStore.mediaForConversation(widget.friend.id);
     final extraMedia = _chatStore.extraMediaCountForConversation(
@@ -363,7 +560,7 @@ class _ChatScreenState extends State<ChatScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => ChatUserProfileScreen(
-          displayName: widget.friend.displayName,
+          displayName: _friendDisplayName,
           conversationId: widget.friend.id,
           avatarAssetPath: _avatarAssetPath,
           avatarColor: _avatarBgColor,
@@ -381,7 +578,7 @@ class _ChatScreenState extends State<ChatScreen> {
       isScrollControlled: true,
       builder: (_) {
         return _ChatBlockBottomSheet(
-          displayName: widget.friend.displayName,
+          displayName: _friendDisplayName,
           avatarAssetPath: _avatarAssetPath,
           onConfirm: () {
             _chatStore.setBlocked(widget.friend.id, true);
@@ -398,7 +595,7 @@ class _ChatScreenState extends State<ChatScreen> {
       barrierColor: Colors.black.withValues(alpha: 0.42),
       builder: (_) {
         return _ChatUnblockDialog(
-          displayName: widget.friend.displayName,
+          displayName: _friendDisplayName,
           onConfirm: () {
             _chatStore.setBlocked(widget.friend.id, false);
             Navigator.pop(context);
@@ -412,8 +609,13 @@ class _ChatScreenState extends State<ChatScreen> {
 class _DisplayMessage {
   final String content;
   final bool isMe;
+  final bool isSystem;
 
-  const _DisplayMessage({required this.content, required this.isMe});
+  const _DisplayMessage({
+    required this.content,
+    required this.isMe,
+    required this.isSystem,
+  });
 }
 
 class _ChatBlockBottomSheet extends StatelessWidget {

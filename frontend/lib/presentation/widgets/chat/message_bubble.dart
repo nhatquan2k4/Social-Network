@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class MessageBubble extends StatelessWidget {
   final String content;
   final bool isMe;
+  final bool isSystem;
   final bool showAvatar;
   final String friendName;
   final String friendAvatarAssetPath;
@@ -12,6 +13,7 @@ class MessageBubble extends StatelessWidget {
     super.key,
     required this.content,
     required this.isMe,
+    this.isSystem = false,
     this.showAvatar = true,
     required this.friendName,
     this.friendAvatarAssetPath = 'assets/images/logo1.jpg',
@@ -20,6 +22,31 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isSystem) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8E8EC),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              content,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF5D5D64),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     final maxWidth = MediaQuery.of(context).size.width * 0.705;
 
     return Padding(

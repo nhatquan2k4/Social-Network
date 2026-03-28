@@ -6,6 +6,13 @@ class MockChatStore extends ChangeNotifier {
   static final MockChatStore instance = MockChatStore._();
 
   final DateTime _now = DateTime.now();
+  static const String currentUserId = 'self';
+  static const String currentUserDisplayName = 'Hoàng Tú';
+  static const String currentUserUsername = 'hoangtu_01';
+  static const String currentUserAvatarAssetPath = 'assets/images/image 74.png';
+
+  final Map<String, String> _selfNicknames = {};
+  final Map<String, String> _friendNicknames = {};
 
   late final List<MockConversation> _conversations =
       _buildInitialConversations();
@@ -21,8 +28,15 @@ class MockChatStore extends ChangeNotifier {
       if (c.isDeleted || c.isHidden) return false;
       if (normalized.isEmpty) return true;
 
+      final selfNickname = _selfNicknames[c.id]?.toLowerCase() ?? '';
+      final friendNickname = _friendNicknames[c.id]?.toLowerCase() ?? '';
+      final memberText = c.memberNames.join(' ').toLowerCase();
+
       return c.username.toLowerCase().contains(normalized) ||
-          c.lastPreviewText.toLowerCase().contains(normalized);
+          c.lastPreviewText.toLowerCase().contains(normalized) ||
+          memberText.contains(normalized) ||
+          selfNickname.contains(normalized) ||
+          friendNickname.contains(normalized);
     }).toList();
 
     filtered.sort((a, b) {
@@ -39,6 +53,169 @@ class MockChatStore extends ChangeNotifier {
     final conversation = _findById(conversationId);
     if (conversation == null) return [];
     return List<MockChatMessage>.from(conversation.messages);
+  }
+
+  List<MockConversation> groupSuggestions({
+    required String excludeConversationId,
+  }) {
+    return _conversations.where((c) {
+      return !c.isDeleted &&
+          !c.isHidden &&
+          !c.isGroup &&
+          c.id != excludeConversationId;
+    }).toList();
+  }
+
+  MockConversation createGroupConversation({
+    required List<String> memberConversationIds,
+    String? groupName,
+    String? groupAvatarAssetPath,
+  }) {
+    final now = DateTime.now();
+    final uniqueMembers = memberConversationIds.toSet().toList();
+    final members = uniqueMembers
+        .map(_findById)
+        .whereType<MockConversation>()
+        .toList();
+
+    final generatedName = members
+        .map((m) => _displayNameFromUsername(m.username))
+        .take(3)
+        .join(', ');
+    final displayName = (groupName ?? '').trim().isEmpty
+        ? generatedName
+        : groupName!.trim();
+
+    final avatarPath = (groupAvatarAssetPath ?? '').trim().isNotEmpty
+        ? groupAvatarAssetPath!.trim()
+        : (members.isNotEmpty
+              ? members.first.avatarAssetPath
+              : currentUserAvatarAssetPath);
+
+    final avatarColor = members.isNotEmpty
+        ? members.first.avatarColor
+        : const Color(0xFF6C7E92);
+
+    final initialMessages = <MockChatMessage>[
+      MockChatMessage(
+        content:
+            '${_formatDateTime(now)} • $currentUserDisplayName đã tạo nhóm này',
+        isMe: false,
+        sentAt: now,
+        isSystem: true,
+      ),
+    ];
+
+    if ((groupName ?? '').trim().isNotEmpty) {
+      initialMessages.add(
+        MockChatMessage(
+          content:
+              '${_formatDateTime(now)} • $currentUserDisplayName đã đặt tên nhóm là "${groupName!.trim()}"',
+          isMe: false,
+          sentAt: now,
+          isSystem: true,
+        ),
+      );
+    }
+
+    if ((groupAvatarAssetPath ?? '').trim().isNotEmpty) {
+      initialMessages.add(
+        MockChatMessage(
+          content:
+              '${_formatDateTime(now)} • $currentUserDisplayName đã đổi ảnh nhóm',
+          isMe: false,
+          sentAt: now,
+          isSystem: true,
+        ),
+      );
+    }
+
+    final conversation = MockConversation(
+      id: 'group_${now.microsecondsSinceEpoch}',
+      username: displayName,
+      avatarColor: avatarColor,
+      avatarAssetPath: avatarPath,
+      isOnline: false,
+      messages: initialMessages,
+      lastMessageAt: now,
+      mediaAssets: members.expand((m) => m.mediaAssets.take(3)).toList(),
+      extraMediaCount: 0,
+      isGroup: true,
+      memberIds: members.map((m) => m.id).toList(),
+      memberNames: members
+          .map((m) => _displayNameFromUsername(m.username))
+          .toList(),
+      createdAt: now,
+    );
+
+    _conversations.add(conversation);
+    notifyListeners();
+    return conversation;
+  }
+
+  String nicknameForSelf(String conversationId) {
+    return _selfNicknames[conversationId] ?? currentUserDisplayName;
+  }
+
+  String nicknameForFriend(String conversationId, String fallbackName) {
+    return _friendNicknames[conversationId] ?? fallbackName;
+  }
+
+  void setNicknameForSelf(
+    String conversationId,
+    String value, {
+    String actorName = currentUserDisplayName,
+  }) {
+    final changed = _setNickname(
+      store: _selfNicknames,
+      conversationId: conversationId,
+      value: value,
+    );
+
+    if (!changed) return;
+
+    final now = DateTime.now();
+    final normalized = value.trim();
+    final actionText = normalized.isEmpty
+        ? '$actorName đã xóa biệt danh của $currentUserDisplayName'
+        : '$actorName đã đặt biệt danh của $currentUserDisplayName là "$normalized"';
+
+    _appendSystemMessage(
+      conversationId: conversationId,
+      sentAt: now,
+      content: '${_formatDateTime(now)} • $actionText',
+    );
+
+    notifyListeners();
+  }
+
+  void setNicknameForFriend(
+    String conversationId,
+    String value, {
+    String actorName = currentUserDisplayName,
+    required String friendDisplayName,
+  }) {
+    final changed = _setNickname(
+      store: _friendNicknames,
+      conversationId: conversationId,
+      value: value,
+    );
+
+    if (!changed) return;
+
+    final now = DateTime.now();
+    final normalized = value.trim();
+    final actionText = normalized.isEmpty
+        ? '$actorName đã xóa biệt danh của $friendDisplayName'
+        : '$actorName đã đặt biệt danh của $friendDisplayName là "$normalized"';
+
+    _appendSystemMessage(
+      conversationId: conversationId,
+      sentAt: now,
+      content: '${_formatDateTime(now)} • $actionText',
+    );
+
+    notifyListeners();
   }
 
   MockConversation? conversationById(String id) {
@@ -79,6 +256,25 @@ class MockChatStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _appendSystemMessage({
+    required String conversationId,
+    required DateTime sentAt,
+    required String content,
+  }) {
+    final conversation = _findById(conversationId);
+    if (conversation == null) return;
+
+    conversation.messages.add(
+      MockChatMessage(
+        content: content,
+        isMe: false,
+        sentAt: sentAt,
+        isSystem: true,
+      ),
+    );
+    conversation.lastMessageAt = sentAt;
+  }
+
   void togglePin(String conversationId) {
     final conversation = _findById(conversationId);
     if (conversation == null) return;
@@ -103,23 +299,48 @@ class MockChatStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void muteFor(String conversationId, Duration duration) {
+  void muteFor(
+    String conversationId,
+    Duration duration, {
+    String actorName = currentUserDisplayName,
+  }) {
     final conversation = _findById(conversationId);
     if (conversation == null) return;
 
+    final now = DateTime.now();
     conversation.muteUntilTurnedOn = false;
-    conversation.mutedStartedAt = DateTime.now();
-    conversation.mutedUntil = DateTime.now().add(duration);
+    conversation.mutedStartedAt = now;
+    conversation.mutedUntil = now.add(duration);
+
+    _appendSystemMessage(
+      conversationId: conversationId,
+      sentAt: now,
+      content:
+          '${_formatDateTime(now)} • $actorName đã tắt thông báo đoạn chat trong ${_formatDuration(duration)}',
+    );
+
     notifyListeners();
   }
 
-  void muteUntilTurnedOn(String conversationId) {
+  void muteUntilTurnedOn(
+    String conversationId, {
+    String actorName = currentUserDisplayName,
+  }) {
     final conversation = _findById(conversationId);
     if (conversation == null) return;
 
+    final now = DateTime.now();
     conversation.muteUntilTurnedOn = true;
-    conversation.mutedStartedAt = DateTime.now();
+    conversation.mutedStartedAt = now;
     conversation.mutedUntil = null;
+
+    _appendSystemMessage(
+      conversationId: conversationId,
+      sentAt: now,
+      content:
+          '${_formatDateTime(now)} • $actorName đã tắt thông báo đoạn chat cho đến khi bật lại',
+    );
+
     notifyListeners();
   }
 
@@ -127,13 +348,29 @@ class MockChatStore extends ChangeNotifier {
     clearMuteState(conversationId);
   }
 
-  void clearMuteState(String conversationId) {
+  void clearMuteState(
+    String conversationId, {
+    String actorName = currentUserDisplayName,
+  }) {
     final conversation = _findById(conversationId);
     if (conversation == null) return;
+
+    final wasMuted = conversation.isMuted;
+    final now = DateTime.now();
 
     conversation.muteUntilTurnedOn = false;
     conversation.mutedStartedAt = null;
     conversation.mutedUntil = null;
+
+    if (wasMuted) {
+      _appendSystemMessage(
+        conversationId: conversationId,
+        sentAt: now,
+        content:
+            '${_formatDateTime(now)} • $actorName đã bật lại thông báo cho đoạn chat',
+      );
+    }
+
     notifyListeners();
   }
 
@@ -467,6 +704,49 @@ class MockChatStore extends ChangeNotifier {
       conversation.mutedUntil = null;
     }
   }
+
+  bool _setNickname({
+    required Map<String, String> store,
+    required String conversationId,
+    required String value,
+  }) {
+    final trimmed = value.trim();
+    final current = store[conversationId] ?? '';
+    if (current == trimmed) return false;
+
+    if (trimmed.isEmpty) {
+      store.remove(conversationId);
+    } else {
+      store[conversationId] = trimmed;
+    }
+
+    return true;
+  }
+
+  String _formatDateTime(DateTime time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    final day = time.day.toString().padLeft(2, '0');
+    final month = time.month.toString().padLeft(2, '0');
+    final year = time.year.toString();
+    return '$hour:$minute $day/$month/$year';
+  }
+
+  String _formatDuration(Duration duration) {
+    if (duration.inMinutes < 60) return '${duration.inMinutes} phút';
+    if (duration.inHours < 24) return '${duration.inHours} giờ';
+    return '${duration.inDays} ngày';
+  }
+
+  String _displayNameFromUsername(String username) {
+    final normalized = username.replaceAll(RegExp(r'[._]'), ' ').trim();
+    final parts = normalized.split(RegExp(r'\s+'));
+    return parts
+        .where((e) => e.isNotEmpty)
+        .take(2)
+        .map((e) => e[0].toUpperCase() + e.substring(1))
+        .join(' ');
+  }
 }
 
 class MockConversation {
@@ -489,6 +769,10 @@ class MockConversation {
   DateTime? mutedUntil;
   final List<String> mediaAssets;
   final int extraMediaCount;
+  final bool isGroup;
+  final List<String> memberIds;
+  final List<String> memberNames;
+  final DateTime createdAt;
 
   MockConversation({
     required this.id,
@@ -509,12 +793,17 @@ class MockConversation {
     this.unreadCount = 0,
     this.mutedStartedAt,
     this.mutedUntil,
-  });
+    this.isGroup = false,
+    this.memberIds = const [],
+    this.memberNames = const [],
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? lastMessageAt;
 
   MockChatMessage get lastMessage => messages.last;
 
   String get lastPreviewText {
     final message = lastMessage;
+    if (message.isSystem) return message.content;
     return message.isMe ? 'Bạn: ${message.content}' : message.content;
   }
 
@@ -528,11 +817,13 @@ class MockChatMessage {
   final String content;
   final bool isMe;
   final DateTime sentAt;
+  final bool isSystem;
 
   const MockChatMessage({
     required this.content,
     required this.isMe,
     required this.sentAt,
+    this.isSystem = false,
   });
 }
 

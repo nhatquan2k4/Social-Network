@@ -140,6 +140,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final item = items[index];
+                    final friendDisplayName = item.isGroup
+                        ? item.username
+                        : _chatStore.nicknameForFriend(item.id, item.username);
                     final timeLabel = _chatStore.formatRelativeTime(
                       item.lastMessageAt,
                     );
@@ -204,21 +207,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                           ),
                           child: Row(
                             children: [
-                              CircleAvatar(
-                                radius: 24,
-                                backgroundColor: item.avatarColor,
-                                foregroundImage: AssetImage(
-                                  item.avatarAssetPath,
-                                ),
-                                child: Text(
-                                  item.username[0].toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 17,
-                                  ),
-                                ),
-                              ),
+                              _conversationAvatar(item),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -228,7 +217,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                       children: [
                                         Expanded(
                                           child: Text(
-                                            item.username,
+                                            friendDisplayName,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
@@ -248,7 +237,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                               color: Color(0xFF8D8D93),
                                             ),
                                           ),
-                                        if (item.isOnline)
+                                        if (item.isOnline && !item.isGroup)
                                           Container(
                                             width: 7,
                                             height: 7,
@@ -403,17 +392,65 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   void _openChat(MockConversation conversation) {
     _chatStore.markConversationRead(conversation.id);
+    final friendDisplayName = conversation.isGroup
+        ? conversation.username
+        : _chatStore.nicknameForFriend(conversation.id, conversation.username);
 
     final friend = FriendEntity(
       id: conversation.id,
       username: conversation.username,
-      displayName: conversation.username,
+      displayName: friendDisplayName,
     );
 
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ChatScreen(friend: friend, conversationId: null),
+      ),
+    );
+  }
+
+  Widget _conversationAvatar(MockConversation conversation) {
+    if (!conversation.isGroup) {
+      return CircleAvatar(
+        radius: 24,
+        backgroundColor: conversation.avatarColor,
+        foregroundImage: AssetImage(conversation.avatarAssetPath),
+        child: Text(
+          conversation.username[0].toUpperCase(),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: 17,
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      width: 48,
+      height: 48,
+      child: Stack(
+        children: [
+          Positioned(
+            left: 0,
+            bottom: 0,
+            child: CircleAvatar(
+              radius: 17,
+              backgroundColor: conversation.avatarColor,
+              foregroundImage: AssetImage(conversation.avatarAssetPath),
+            ),
+          ),
+          const Positioned(
+            right: 0,
+            top: 0,
+            child: CircleAvatar(
+              radius: 17,
+              backgroundColor: Color(0xFFD8D8DE),
+              child: Icon(Icons.group, size: 16, color: Color(0xFF66666C)),
+            ),
+          ),
+        ],
       ),
     );
   }
