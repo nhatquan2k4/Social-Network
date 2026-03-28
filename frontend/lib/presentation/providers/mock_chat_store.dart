@@ -13,6 +13,10 @@ class MockChatStore extends ChangeNotifier {
   List<MockConversation> visibleConversations(String query) {
     final normalized = query.trim().toLowerCase();
 
+    for (final conversation in _conversations) {
+      _refreshMuteState(conversation);
+    }
+
     final filtered = _conversations.where((c) {
       if (c.isDeleted || c.isHidden) return false;
       if (normalized.isEmpty) return true;
@@ -37,7 +41,20 @@ class MockChatStore extends ChangeNotifier {
     return List<MockChatMessage>.from(conversation.messages);
   }
 
-  MockConversation? conversationById(String id) => _findById(id);
+  MockConversation? conversationById(String id) {
+    final conversation = _findById(id);
+    if (conversation == null) return null;
+    _refreshMuteState(conversation);
+    return conversation;
+  }
+
+  List<String> mediaForConversation(String conversationId) {
+    return _findById(conversationId)?.mediaAssets ?? const [];
+  }
+
+  int extraMediaCountForConversation(String conversationId) {
+    return _findById(conversationId)?.extraMediaCount ?? 0;
+  }
 
   void markConversationRead(String conversationId) {
     final conversation = _findById(conversationId);
@@ -86,6 +103,64 @@ class MockChatStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  void muteFor(String conversationId, Duration duration) {
+    final conversation = _findById(conversationId);
+    if (conversation == null) return;
+
+    conversation.muteUntilTurnedOn = false;
+    conversation.mutedStartedAt = DateTime.now();
+    conversation.mutedUntil = DateTime.now().add(duration);
+    notifyListeners();
+  }
+
+  void muteUntilTurnedOn(String conversationId) {
+    final conversation = _findById(conversationId);
+    if (conversation == null) return;
+
+    conversation.muteUntilTurnedOn = true;
+    conversation.mutedStartedAt = DateTime.now();
+    conversation.mutedUntil = null;
+    notifyListeners();
+  }
+
+  void unmute(String conversationId) {
+    clearMuteState(conversationId);
+  }
+
+  void clearMuteState(String conversationId) {
+    final conversation = _findById(conversationId);
+    if (conversation == null) return;
+
+    conversation.muteUntilTurnedOn = false;
+    conversation.mutedStartedAt = null;
+    conversation.mutedUntil = null;
+    notifyListeners();
+  }
+
+  void setRestricted(String conversationId, bool value) {
+    final conversation = _findById(conversationId);
+    if (conversation == null) return;
+
+    if (conversation.isBlocked && value) {
+      return;
+    }
+
+    conversation.isRestricted = value;
+    notifyListeners();
+  }
+
+  void setBlocked(String conversationId, bool value) {
+    final conversation = _findById(conversationId);
+    if (conversation == null) return;
+
+    conversation.isBlocked = value;
+    if (value) {
+      // Blocked conversations are treated as restricted as well.
+      conversation.isRestricted = true;
+    }
+    notifyListeners();
+  }
+
   String formatRelativeTime(DateTime time) {
     final diff = DateTime.now().difference(time);
 
@@ -99,6 +174,27 @@ class MockChatStore extends ChangeNotifier {
   }
 
   List<MockConversation> _buildInitialConversations() {
+    const mediaPool = [
+      'assets/images/image 74.png',
+      'assets/images/image 75.png',
+      'assets/images/image 76.png',
+      'assets/images/image 77.png',
+      'assets/images/image 78.png',
+      'assets/images/image 79.png',
+      'assets/images/image 80.png',
+      'assets/images/image 81.png',
+      'assets/images/image 82.png',
+      'assets/images/image 83.png',
+      'assets/images/image 84.png',
+      'assets/images/image 85.png',
+      'assets/images/image 86.png',
+      'assets/images/image 87.png',
+      'assets/images/image 88.png',
+      'assets/images/image 89.png',
+      'assets/images/image 90.png',
+      'assets/images/image 92.png',
+    ];
+
     const base = [
       _SeedConversation(
         'keociiu',
@@ -275,6 +371,10 @@ class MockChatStore extends ChangeNotifier {
         (s, c) => s + c * 17,
       );
       final unread = unreadHash % 6;
+      final media = List<String>.generate(
+        16,
+        (i) => mediaPool[(index + i) % mediaPool.length],
+      );
 
       return MockConversation(
         id: conversationId,
@@ -285,6 +385,8 @@ class MockChatStore extends ChangeNotifier {
         isPinned: seed.lastActiveMinutes <= 2,
         unreadCount: unread,
         messages: messages,
+        mediaAssets: media,
+        extraMediaCount: 23,
         lastMessageAt: _now.subtract(Duration(minutes: seed.lastActiveMinutes)),
       );
     });
@@ -356,6 +458,15 @@ class MockChatStore extends ChangeNotifier {
     }
     return null;
   }
+
+  void _refreshMuteState(MockConversation conversation) {
+    if (!conversation.muteUntilTurnedOn &&
+        conversation.mutedUntil != null &&
+        conversation.mutedUntil!.isBefore(DateTime.now())) {
+      conversation.mutedStartedAt = null;
+      conversation.mutedUntil = null;
+    }
+  }
 }
 
 class MockConversation {
@@ -369,8 +480,15 @@ class MockConversation {
   bool isPinned;
   bool isHidden;
   bool isDeleted;
+  bool isRestricted;
+  bool isBlocked;
+  bool muteUntilTurnedOn;
   int unreadCount;
   DateTime lastMessageAt;
+  DateTime? mutedStartedAt;
+  DateTime? mutedUntil;
+  final List<String> mediaAssets;
+  final int extraMediaCount;
 
   MockConversation({
     required this.id,
@@ -380,10 +498,17 @@ class MockConversation {
     required this.isOnline,
     required this.messages,
     required this.lastMessageAt,
+    required this.mediaAssets,
+    this.extraMediaCount = 0,
     this.isPinned = false,
     this.isHidden = false,
     this.isDeleted = false,
+    this.isRestricted = false,
+    this.isBlocked = false,
+    this.muteUntilTurnedOn = false,
     this.unreadCount = 0,
+    this.mutedStartedAt,
+    this.mutedUntil,
   });
 
   MockChatMessage get lastMessage => messages.last;
@@ -391,6 +516,11 @@ class MockConversation {
   String get lastPreviewText {
     final message = lastMessage;
     return message.isMe ? 'Bạn: ${message.content}' : message.content;
+  }
+
+  bool get isMuted {
+    return muteUntilTurnedOn ||
+        (mutedUntil != null && mutedUntil!.isAfter(DateTime.now()));
   }
 }
 

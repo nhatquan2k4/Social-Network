@@ -5,6 +5,7 @@ import 'package:frontend/domain/entities/friend_entity.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/screens/chat/chat_screen.dart';
 import 'package:frontend/presentation/widgets/common/bottom_nav.dart';
+import 'package:frontend/presentation/widgets/common/bell_status_icon.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -142,6 +143,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     final timeLabel = _chatStore.formatRelativeTime(
                       item.lastMessageAt,
                     );
+                    final muteStartedLabel = _formatMuteMoment(
+                      item.mutedStartedAt,
+                    );
+                    final muteEndsLabel = item.muteUntilTurnedOn
+                        ? 'đến khi bật lại'
+                        : _formatMuteMoment(item.mutedUntil);
 
                     return Slidable(
                       key: ValueKey(item.id),
@@ -279,6 +286,61 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 6),
+                                  if (item.isMuted)
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFEFF3F8),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          const Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              BellStatusIcon(
+                                                isMuted: true,
+                                                size: 12,
+                                                color: Color(0xFF5F6F82),
+                                              ),
+                                              SizedBox(width: 4),
+                                              Text(
+                                                'Đang tắt',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Color(0xFF4B5D73),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          if (muteStartedLabel != null)
+                                            Text(
+                                              'BĐ: $muteStartedLabel',
+                                              style: const TextStyle(
+                                                fontSize: 9.5,
+                                                color: Color(0xFF6C7A8A),
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          if (muteEndsLabel != null)
+                                            Text(
+                                              'KT: $muteEndsLabel',
+                                              style: const TextStyle(
+                                                fontSize: 9.5,
+                                                color: Color(0xFF6C7A8A),
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
                                   if (item.unreadCount > 0)
                                     Container(
                                       padding: const EdgeInsets.symmetric(
@@ -361,5 +423,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), duration: const Duration(seconds: 1)),
     );
+  }
+
+  String? _formatMuteMoment(DateTime? moment) {
+    if (moment == null) return null;
+    final day = moment.day.toString().padLeft(2, '0');
+    final month = moment.month.toString().padLeft(2, '0');
+    final hour = moment.hour.toString().padLeft(2, '0');
+    final minute = moment.minute.toString().padLeft(2, '0');
+    return '$hour:$minute $day/$month';
   }
 }

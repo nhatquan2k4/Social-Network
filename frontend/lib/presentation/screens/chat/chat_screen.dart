@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/domain/entities/friend_entity.dart';
 import 'package:frontend/data/services/local_storage_service.dart';
+import 'package:frontend/domain/entities/friend_entity.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/widgets/common/state_widgets.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:provider/provider.dart';
+
+import '../../../core/utils/logger.dart';
 import '../../providers/chat_provider.dart';
-import '../profile/chat_user_profile_screen.dart';
 import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/message_input.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
-import '../../../core/utils/logger.dart';
+import '../profile/chat_user_profile_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final FriendEntity friend;
@@ -26,6 +27,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final LocalStorageService _localStorage = LocalStorageService();
   final MockChatStore _chatStore = MockChatStore.instance;
+
   String? _currentUserId;
 
   String get _avatarAssetPath {
@@ -36,6 +38,14 @@ class _ChatScreenState extends State<ChatScreen> {
   Color get _avatarBgColor {
     return _chatStore.conversationById(widget.friend.id)?.avatarColor ??
         const Color(0xFF7A6256);
+  }
+
+  bool get _isBlocked {
+    return _chatStore.conversationById(widget.friend.id)?.isBlocked ?? false;
+  }
+
+  bool get _isRestricted {
+    return _chatStore.conversationById(widget.friend.id)?.isRestricted ?? false;
   }
 
   @override
@@ -49,7 +59,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final token = await _localStorage.getToken();
     if (token != null) {
       try {
-        Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+        final decodedToken = JwtDecoder.decode(token);
         setState(() {
           _currentUserId =
               decodedToken['userId'] ??
@@ -66,19 +76,20 @@ class _ChatScreenState extends State<ChatScreen> {
     final chatProvider = context.read<ChatProvider>();
     chatProvider.setConversation(widget.conversationId, widget.friend.id);
     _chatStore.markConversationRead(widget.friend.id);
+
     if (widget.conversationId != null) {
       chatProvider.loadMessages();
     }
   }
 
   void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
+    if (!_scrollController.hasClients) return;
+
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
@@ -153,115 +164,247 @@ class _ChatScreenState extends State<ChatScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add, size: 28, color: Color(0xFF2F2F34)),
-            onPressed: () {
-              // TODO: Show add actions
-            },
+            onPressed: () {},
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Message list
-          Expanded(
-            child: Consumer<ChatProvider>(
-              builder: (context, chatProvider, child) {
-                if (chatProvider.isLoading) {
-                  return const LoadingIndicator(
-                    message: 'Đang tải tin nhắn...',
-                  );
-                }
+      body: AnimatedBuilder(
+        animation: _chatStore,
+        builder: (context, _) {
+          final isBlocked = _isBlocked;
+          final isRestricted = _isRestricted;
 
-                if (chatProvider.error != null) {
-                  return ErrorDisplay(
-                    message: chatProvider.error!,
-                    onRetry: () => chatProvider.loadMessages(),
-                  );
-                }
+          return Column(
+            children: [
+              Expanded(
+                child: Consumer<ChatProvider>(
+                  builder: (context, chatProvider, child) {
+                    if (chatProvider.isLoading) {
+                      return const LoadingIndicator(
+                        message: 'Đang tải tin nhắn...',
+                      );
+                    }
 
-                final messages = chatProvider.allMessages;
-                final hasServerMessages = messages.isNotEmpty;
-                final displayMessages = hasServerMessages
-                    ? messages
-                          .map(
-                            (m) => _DisplayMessage(
-                              content: m.content,
-                              isMe: m.senderId == _currentUserId,
-                            ),
-                          )
-                          .toList()
-                    : _chatStore
-                          .conversationMessages(widget.friend.id)
-                          .map(
-                            (m) => _DisplayMessage(
-                              content: m.content,
-                              isMe: m.isMe,
-                            ),
-                          )
-                          .toList();
+                    if (chatProvider.error != null) {
+                      return ErrorDisplay(
+                        message: chatProvider.error!,
+                        onRetry: () => chatProvider.loadMessages(),
+                      );
+                    }
 
-                // Scroll to bottom after messages load
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _scrollToBottom();
-                });
+                    final messages = chatProvider.allMessages;
+                    final hasServerMessages = messages.isNotEmpty;
+                    final displayMessages = hasServerMessages
+                        ? messages
+                              .map(
+                                (m) => _DisplayMessage(
+                                  content: m.content,
+                                  isMe: m.senderId == _currentUserId,
+                                ),
+                              )
+                              .toList()
+                        : _chatStore
+                              .conversationMessages(widget.friend.id)
+                              .map(
+                                (m) => _DisplayMessage(
+                                  content: m.content,
+                                  isMe: m.isMe,
+                                ),
+                              )
+                              .toList();
 
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.fromLTRB(10, 4, 10, 6),
-                  itemCount: displayMessages.length,
-                  itemBuilder: (context, index) {
-                    final message = displayMessages[index];
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _scrollToBottom();
+                    });
 
-                    return MessageBubble(
-                      content: message.content,
-                      isMe: message.isMe,
-                      showAvatar: !message.isMe,
-                      friendName: widget.friend.displayName,
-                      friendAvatarAssetPath: _avatarAssetPath,
-                      friendAvatarColor: _avatarBgColor,
+                    return ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.fromLTRB(10, 4, 10, 6),
+                      itemCount: displayMessages.length,
+                      itemBuilder: (context, index) {
+                        final message = displayMessages[index];
+
+                        return MessageBubble(
+                          content: message.content,
+                          isMe: message.isMe,
+                          showAvatar: !message.isMe,
+                          friendName: widget.friend.displayName,
+                          friendAvatarAssetPath: _avatarAssetPath,
+                          friendAvatarColor: _avatarBgColor,
+                        );
+                      },
                     );
                   },
-                );
-              },
+                ),
+              ),
+              Consumer<ChatProvider>(
+                builder: (context, chatProvider, child) {
+                  return MessageInput(
+                    controller: _messageController,
+                    isSending: chatProvider.isSending,
+                    onSend: (message) async {
+                      if (widget.conversationId == null) {
+                        _chatStore.appendOutgoingMessage(
+                          conversationId: widget.friend.id,
+                          content: message,
+                        );
+                        setState(() {});
+                      } else {
+                        await chatProvider.sendMessage(message);
+                      }
+                      _messageController.clear();
+                      _scrollToBottom();
+                    },
+                  );
+                },
+              ),
+              if (isBlocked || isRestricted)
+                _buildSafetyBanner(
+                  isBlocked: isBlocked,
+                  isRestricted: isRestricted,
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSafetyBanner({
+    required bool isBlocked,
+    required bool isRestricted,
+  }) {
+    final title = isBlocked
+        ? 'Bạn đã chặn ${widget.friend.displayName}'
+        : 'Bạn đã hạn chế ${widget.friend.displayName}';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF2F2F4),
+        border: Border(top: BorderSide(color: Color(0xFFD8D8DD))),
+      ),
+      child: Column(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14.5,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1D1D22),
             ),
           ),
-
-          // Message input
-          Consumer<ChatProvider>(
-            builder: (context, chatProvider, child) {
-              return MessageInput(
-                controller: _messageController,
-                isSending: chatProvider.isSending,
-                onSend: (message) async {
-                  if (widget.conversationId == null) {
-                    _chatStore.appendOutgoingMessage(
-                      conversationId: widget.friend.id,
-                      content: message,
-                    );
-                    setState(() {});
+          const SizedBox(height: 3),
+          const Text(
+            'Họ sẽ không biết khi nào bạn online hoặc đọc tin nhắn của họ',
+            style: TextStyle(fontSize: 12, color: Color(0xFF7A7A80)),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (!isBlocked)
+                _pillAction(
+                  label: 'Chặn',
+                  textColor: const Color(0xFFE60000),
+                  onTap: () => _showBlockBottomSheet(context),
+                ),
+              if (!isBlocked) const SizedBox(width: 10),
+              _pillAction(
+                label: isBlocked ? 'Bỏ chặn' : 'Bỏ hạn chế',
+                onTap: () {
+                  if (isBlocked) {
+                    _showUnblockDialog(context);
                   } else {
-                    await chatProvider.sendMessage(message);
+                    _chatStore.setRestricted(widget.friend.id, false);
                   }
-                  _messageController.clear();
-                  _scrollToBottom();
                 },
-              );
-            },
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
+  Widget _pillAction({
+    required String label,
+    Color textColor = const Color(0xFF1D1D22),
+    required VoidCallback onTap,
+  }) {
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        elevation: 0,
+        backgroundColor: const Color(0xFFE9E9EB),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+        padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 9),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
   void _openUserProfile() {
+    final media = _chatStore.mediaForConversation(widget.friend.id);
+    final extraMedia = _chatStore.extraMediaCountForConversation(
+      widget.friend.id,
+    );
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ChatUserProfileScreen(
           displayName: widget.friend.displayName,
+          conversationId: widget.friend.id,
           avatarAssetPath: _avatarAssetPath,
           avatarColor: _avatarBgColor,
+          mediaAssets: media,
+          extraMediaCount: extraMedia,
         ),
       ),
+    );
+  }
+
+  Future<void> _showBlockBottomSheet(BuildContext context) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) {
+        return _ChatBlockBottomSheet(
+          displayName: widget.friend.displayName,
+          avatarAssetPath: _avatarAssetPath,
+          onConfirm: () {
+            _chatStore.setBlocked(widget.friend.id, true);
+            Navigator.pop(context);
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _showUnblockDialog(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.42),
+      builder: (_) {
+        return _ChatUnblockDialog(
+          displayName: widget.friend.displayName,
+          onConfirm: () {
+            _chatStore.setBlocked(widget.friend.id, false);
+            Navigator.pop(context);
+          },
+        );
+      },
     );
   }
 }
@@ -271,4 +414,191 @@ class _DisplayMessage {
   final bool isMe;
 
   const _DisplayMessage({required this.content, required this.isMe});
+}
+
+class _ChatBlockBottomSheet extends StatelessWidget {
+  final String displayName;
+  final String avatarAssetPath;
+  final VoidCallback onConfirm;
+
+  const _ChatBlockBottomSheet({
+    required this.displayName,
+    required this.avatarAssetPath,
+    required this.onConfirm,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(22, 10, 22, 22),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF4F4F6),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 44,
+            height: 3,
+            decoration: BoxDecoration(
+              color: const Color(0xFFCCCCD1),
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+          const SizedBox(height: 14),
+          CircleAvatar(
+            radius: 44,
+            foregroundImage: AssetImage(avatarAssetPath),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Chặn $displayName?',
+            style: const TextStyle(fontSize: 19.5, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Mọi tài khoản khác mà họ có thể sở hữu hoặc tạo trong tương lai\nđều bị chặn. Bạn có thể bỏ chặn họ bất cứ lúc nào.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              color: Color(0xFF737378),
+              height: 1.6,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const _ChatBlockPoint(
+            icon: Icons.hide_source,
+            text:
+                'Họ sẽ không thể nhắn tin cho bạn hay tìm thấy\nđược trang cá nhân/nội dung của bạn.',
+          ),
+          const SizedBox(height: 12),
+          const _ChatBlockPoint(
+            icon: Icons.notifications_off_outlined,
+            text: 'Họ sẽ không được thông báo là bạn đã chặn họ.',
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onConfirm,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1689F6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 13),
+              ),
+              child: const Text('Chặn', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF10D0D),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 13),
+              ),
+              child: const Text('Hủy', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChatBlockPoint extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _ChatBlockPoint({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 23),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 16.5, height: 1.45),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ChatUnblockDialog extends StatelessWidget {
+  final String displayName;
+  final VoidCallback onConfirm;
+
+  const _ChatUnblockDialog({
+    required this.displayName,
+    required this.onConfirm,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: const Color(0xFFF4F4F6),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 20, 22, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Bỏ chặn $displayName?',
+              style: const TextStyle(
+                fontSize: 19.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'Từ giờ, $displayName và các tài khoản khác mà\nhọ sở hữu hoặc tạo có thể yêu cầu theo dõi và nhắn tin\ncho bạn trên Mochi. Họ sẽ không được thông báo là bạn\nđã bỏ chặn họ.',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF707077),
+                height: 1.7,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: onConfirm,
+              child: const Text(
+                'Bỏ chặn',
+                style: TextStyle(
+                  color: Color(0xFFE60000),
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Hủy',
+                style: TextStyle(
+                  color: Color(0xFF1E1E23),
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
