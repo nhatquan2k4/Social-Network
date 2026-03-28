@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/domain/entities/friend_entity.dart';
 import 'package:frontend/data/services/local_storage_service.dart';
+import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/widgets/common/state_widgets.dart';
 import 'package:provider/provider.dart';
 import '../../providers/chat_provider.dart';
+import '../profile/chat_user_profile_screen.dart';
 import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/message_input.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -23,48 +25,18 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _messageController = TextEditingController();
   final LocalStorageService _localStorage = LocalStorageService();
+  final MockChatStore _chatStore = MockChatStore.instance;
   String? _currentUserId;
 
-  static const List<String> _topics = [
-    'đi cafe',
-    'đi ăn tối',
-    'làm đồ án',
-    'tập gym',
-    'xem phim',
-    'đi dạo',
-    'học nhóm',
-    'chụp ảnh',
-    'đi biển',
-    'test app',
-    'review code',
-    'deploy bản mới',
-    'đi mua đồ',
-    'ăn khuya',
-    'đổi lịch họp',
-    'sắp xếp công việc',
-    'đặt vé xe',
-    'lên kế hoạch tuần',
-    'update task',
-    'đi chơi cuối tuần',
-  ];
+  String get _avatarAssetPath {
+    return _chatStore.conversationById(widget.friend.id)?.avatarAssetPath ??
+        'assets/images/logo1.jpg';
+  }
 
-  static const List<String> _openers = [
-    'nay rảnh không',
-    'tối nay ổn không',
-    'mình bàn chút nha',
-    'mai mình gặp nhau nhé',
-    'có kế hoạch gì chưa',
-    'mình vừa nghĩ ra cái này',
-  ];
-
-  static const List<String> _responses = [
-    'ok luôn nè',
-    'được đó, nghe hợp lý á',
-    'để mình sắp xếp tí nha',
-    'quá ổn, chốt luôn',
-    'mình thích ý này',
-    'nghe vui ghê đó',
-  ];
+  Color get _avatarBgColor {
+    return _chatStore.conversationById(widget.friend.id)?.avatarColor ??
+        const Color(0xFF7A6256);
+  }
 
   @override
   void initState() {
@@ -93,6 +65,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void _loadMessages() {
     final chatProvider = context.read<ChatProvider>();
     chatProvider.setConversation(widget.conversationId, widget.friend.id);
+    _chatStore.markConversationRead(widget.friend.id);
     if (widget.conversationId != null) {
       chatProvider.loadMessages();
     }
@@ -140,7 +113,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 border: Border.all(color: const Color(0xFFCFCFD3), width: 1),
               ),
               child: CircleAvatar(
-                backgroundColor: const Color(0xFF7A6256),
+                backgroundColor: _avatarBgColor,
+                foregroundImage: AssetImage(_avatarAssetPath),
                 child: Text(
                   widget.friend.displayName[0].toUpperCase(),
                   style: const TextStyle(color: Colors.white, fontSize: 16),
@@ -148,28 +122,31 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             const SizedBox(width: 9),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  widget.friend.displayName,
-                  style: const TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF222225),
-                    height: 1.05,
+            GestureDetector(
+              onTap: _openUserProfile,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    widget.friend.displayName,
+                    style: const TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF222225),
+                      height: 1.05,
+                    ),
                   ),
-                ),
-                const Text(
-                  'Đang hoạt động',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF87878D),
-                    height: 1.1,
+                  const Text(
+                    'Đang hoạt động',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF87878D),
+                      height: 1.1,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -212,7 +189,8 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                           )
                           .toList()
-                    : _buildMockMessagesForFriend(widget.friend)
+                    : _chatStore
+                          .conversationMessages(widget.friend.id)
                           .map(
                             (m) => _DisplayMessage(
                               content: m.content,
@@ -238,6 +216,8 @@ class _ChatScreenState extends State<ChatScreen> {
                       isMe: message.isMe,
                       showAvatar: !message.isMe,
                       friendName: widget.friend.displayName,
+                      friendAvatarAssetPath: _avatarAssetPath,
+                      friendAvatarColor: _avatarBgColor,
                     );
                   },
                 );
@@ -252,7 +232,15 @@ class _ChatScreenState extends State<ChatScreen> {
                 controller: _messageController,
                 isSending: chatProvider.isSending,
                 onSend: (message) async {
-                  await chatProvider.sendMessage(message);
+                  if (widget.conversationId == null) {
+                    _chatStore.appendOutgoingMessage(
+                      conversationId: widget.friend.id,
+                      content: message,
+                    );
+                    setState(() {});
+                  } else {
+                    await chatProvider.sendMessage(message);
+                  }
                   _messageController.clear();
                   _scrollToBottom();
                 },
@@ -264,41 +252,18 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  List<_MockChatMessage> _buildMockMessagesForFriend(FriendEntity friend) {
-    final index = _friendIndex(friend.id);
-    final topic = _topics[index % _topics.length];
-    final opener = _openers[index % _openers.length];
-    final response = _responses[(index + 2) % _responses.length];
-    final altResponse = _responses[(index + 4) % _responses.length];
-
-    return [
-      _MockChatMessage('$opener, mình $topic nha?', false),
-      _MockChatMessage('$response ${friend.displayName}', true),
-      _MockChatMessage('mình tính khoảng ${18 + (index % 4)}h bắt đầu', false),
-      _MockChatMessage(
-        'ok, để mình chuẩn bị trước\nrồi nhắn lại cho $topic nhé',
-        true,
+  void _openUserProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatUserProfileScreen(
+          displayName: widget.friend.displayName,
+          avatarAssetPath: _avatarAssetPath,
+          avatarColor: _avatarBgColor,
+        ),
       ),
-      _MockChatMessage('nhớ mang thêm nước nha :))', false),
-      _MockChatMessage('yên tâm, mình có mang rồi nè', true),
-      _MockChatMessage('nếu mưa thì mình đổi sang kế hoạch B', false),
-      _MockChatMessage('được luôn, $altResponse', true),
-      _MockChatMessage('thế mình chốt vậy nha', false),
-      _MockChatMessage('ok chốt! gặp bạn sau nha', true),
-    ];
+    );
   }
-
-  int _friendIndex(String id) {
-    final value = id.replaceFirst('mock_', '');
-    return int.tryParse(value) ?? 0;
-  }
-}
-
-class _MockChatMessage {
-  final String content;
-  final bool isMe;
-
-  const _MockChatMessage(this.content, this.isMe);
 }
 
 class _DisplayMessage {

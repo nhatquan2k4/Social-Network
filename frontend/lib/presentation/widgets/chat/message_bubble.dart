@@ -5,6 +5,8 @@ class MessageBubble extends StatelessWidget {
   final bool isMe;
   final bool showAvatar;
   final String friendName;
+  final String friendAvatarAssetPath;
+  final Color friendAvatarColor;
 
   const MessageBubble({
     super.key,
@@ -12,6 +14,8 @@ class MessageBubble extends StatelessWidget {
     required this.isMe,
     this.showAvatar = true,
     required this.friendName,
+    this.friendAvatarAssetPath = 'assets/images/logo1.jpg',
+    this.friendAvatarColor = const Color(0xFF7A6256),
   });
 
   @override
@@ -37,7 +41,8 @@ class MessageBubble extends StatelessWidget {
                 border: Border.all(color: const Color(0xFFCACBD1), width: 1),
               ),
               child: CircleAvatar(
-                backgroundColor: const Color(0xFF7A6256),
+                backgroundColor: friendAvatarColor,
+                foregroundImage: AssetImage(friendAvatarAssetPath),
                 child: Text(
                   friendName[0].toUpperCase(),
                   style: const TextStyle(color: Colors.white, fontSize: 12),

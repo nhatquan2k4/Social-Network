@@ -155,14 +155,106 @@ class BottomNav extends StatelessWidget {
                   ),
                 ),
               ),
-            Icon(
-              icon,
-              size: isChatTab ? 31 : 34,
-              color: isSelected ? _activeColor : _inactiveColor,
-            ),
+            if (!isChatTab)
+              Icon(
+                icon,
+                size: 34,
+                color: isSelected ? _activeColor : _inactiveColor,
+              ),
+            if (isChatTab)
+              _LucideSendIcon(
+                size: 29,
+                color: isSelected ? _activeColor : _inactiveColor,
+              ),
           ],
         ),
       ),
     );
+  }
+}
+
+class _LucideSendIcon extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  const _LucideSendIcon({required this.size, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _LucideSendPainter(color: color)),
+    );
+  }
+}
+
+class _LucideSendPainter extends CustomPainter {
+  final Color color;
+
+  const _LucideSendPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scaleX = size.width / 24.0;
+    final scaleY = size.height / 24.0;
+
+    final stroke = Paint()
+      ..style = PaintingStyle.stroke
+      ..color = color
+      ..strokeWidth = 2.0 * scaleX
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final body = Path()
+      ..moveTo(14.536 * scaleX, 21.686 * scaleY)
+      ..cubicTo(
+        14.804 * scaleX,
+        22.212 * scaleY,
+        15.593 * scaleX,
+        22.191 * scaleY,
+        15.748 * scaleX,
+        21.662 * scaleY,
+      )
+      ..lineTo(22.248 * scaleX, 2.662 * scaleY)
+      ..cubicTo(
+        22.412 * scaleX,
+        2.182 * scaleY,
+        21.951 * scaleX,
+        1.721 * scaleY,
+        21.471 * scaleX,
+        1.885 * scaleY,
+      )
+      ..lineTo(2.471 * scaleX, 8.385 * scaleY)
+      ..cubicTo(
+        1.942 * scaleX,
+        8.54 * scaleY,
+        1.921 * scaleX,
+        9.329 * scaleY,
+        2.447 * scaleX,
+        9.597 * scaleY,
+      )
+      ..lineTo(10.377 * scaleX, 12.777 * scaleY)
+      ..cubicTo(
+        10.856 * scaleX,
+        12.97 * scaleY,
+        11.297 * scaleX,
+        13.41 * scaleY,
+        11.488 * scaleX,
+        13.889 * scaleY,
+      )
+      ..close();
+
+    final tail = Path()
+      ..moveTo(21.854 * scaleX, 2.147 * scaleY)
+      ..lineTo(10.914 * scaleX, 13.086 * scaleY);
+
+    canvas.drawPath(body, stroke);
+    canvas.drawPath(tail, stroke);
+  }
+
+  @override
+  bool shouldRepaint(covariant _LucideSendPainter oldDelegate) {
+    return oldDelegate.color != color;
   }
 }
