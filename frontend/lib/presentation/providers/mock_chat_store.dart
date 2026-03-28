@@ -145,6 +145,7 @@ class MockChatStore extends ChangeNotifier {
       memberNames: members
           .map((m) => _displayNameFromUsername(m.username))
           .toList(),
+      adminMemberIds: const [currentUserId],
       createdAt: now,
     );
 
@@ -156,6 +157,7 @@ class MockChatStore extends ChangeNotifier {
   List<MockConversation> addableMembersForGroup(String groupConversationId) {
     final group = _findById(groupConversationId);
     if (group == null || !group.isGroup) return const [];
+    if (!isCurrentUserGroupAdmin(groupConversationId)) return const [];
 
     return _conversations.where((c) {
       return !c.isDeleted &&
@@ -166,6 +168,131 @@ class MockChatStore extends ChangeNotifier {
     }).toList();
   }
 
+  bool isCurrentUserGroupAdmin(String groupConversationId) {
+    final group = _findById(groupConversationId);
+    if (group == null || !group.isGroup) return false;
+    return group.adminMemberIds.contains(currentUserId);
+  }
+
+  bool isGroupMemberAdmin(String groupConversationId, String memberId) {
+    final group = _findById(groupConversationId);
+    if (group == null || !group.isGroup) return false;
+    return group.adminMemberIds.contains(memberId);
+  }
+
+  int groupAdminCount(String groupConversationId) {
+    final group = _findById(groupConversationId);
+    if (group == null || !group.isGroup) return 0;
+    return group.adminMemberIds.length;
+  }
+
+  bool canCurrentUserLeaveGroup(String groupConversationId) {
+    final group = _findById(groupConversationId);
+    if (group == null || !group.isGroup) return false;
+
+    final isCurrentAdmin = group.adminMemberIds.contains(currentUserId);
+    if (!isCurrentAdmin) return true;
+
+    return group.adminMemberIds.length > 1;
+  }
+
+  bool promoteGroupMemberToAdmin(
+    String groupConversationId,
+    String memberId, {
+    String actorName = currentUserDisplayName,
+  }) {
+    final group = _findById(groupConversationId);
+    if (group == null || !group.isGroup) return false;
+    if (!isCurrentUserGroupAdmin(groupConversationId)) return false;
+    if (memberId == currentUserId) return false;
+    if (!group.memberIds.contains(memberId)) return false;
+    if (group.adminMemberIds.contains(memberId)) return false;
+
+    final member = _findById(memberId);
+    if (member == null) return false;
+
+    group.adminMemberIds.add(memberId);
+    final now = DateTime.now();
+    _appendSystemMessage(
+      conversationId: groupConversationId,
+      sentAt: now,
+      content:
+          '${_formatDateTime(now)} • $actorName đã cấp quyền quản trị viên cho ${_displayNameFromUsername(member.username)}',
+    );
+
+    notifyListeners();
+    return true;
+  }
+
+  bool demoteGroupMemberFromAdmin(
+    String groupConversationId,
+    String memberId, {
+    String actorName = currentUserDisplayName,
+  }) {
+    final group = _findById(groupConversationId);
+    if (group == null || !group.isGroup) return false;
+    if (!isCurrentUserGroupAdmin(groupConversationId)) return false;
+    if (memberId == currentUserId) return false;
+    if (!group.adminMemberIds.contains(memberId)) return false;
+
+    if (group.adminMemberIds.length <= 1) {
+      return false;
+    }
+
+    final member = _findById(memberId);
+    if (member == null) return false;
+
+    group.adminMemberIds.remove(memberId);
+    final now = DateTime.now();
+    _appendSystemMessage(
+      conversationId: groupConversationId,
+      sentAt: now,
+      content:
+          '${_formatDateTime(now)} • $actorName đã gỡ quyền quản trị viên của ${_displayNameFromUsername(member.username)}',
+    );
+
+    notifyListeners();
+    return true;
+  }
+
+  bool handoverAdminAndLeaveGroup(
+    String groupConversationId,
+    String nextAdminMemberId, {
+    String actorName = currentUserDisplayName,
+  }) {
+    final group = _findById(groupConversationId);
+    if (group == null || !group.isGroup) return false;
+    if (!group.adminMemberIds.contains(currentUserId)) return false;
+    if (nextAdminMemberId == currentUserId) return false;
+    if (!group.memberIds.contains(nextAdminMemberId)) return false;
+
+    final nextAdminConversation = _findById(nextAdminMemberId);
+    if (nextAdminConversation == null) return false;
+
+    final now = DateTime.now();
+    if (!group.adminMemberIds.contains(nextAdminMemberId)) {
+      group.adminMemberIds.add(nextAdminMemberId);
+    }
+    group.adminMemberIds.remove(currentUserId);
+
+    _appendSystemMessage(
+      conversationId: groupConversationId,
+      sentAt: now,
+      content:
+          '${_formatDateTime(now)} • $actorName đã chuyển quyền quản trị viên cho ${_displayNameFromUsername(nextAdminConversation.username)}',
+    );
+
+    _appendSystemMessage(
+      conversationId: groupConversationId,
+      sentAt: now,
+      content: '${_formatDateTime(now)} • $actorName đã rời khỏi nhóm',
+    );
+
+    group.isHidden = true;
+    notifyListeners();
+    return true;
+  }
+
   void renameGroup(
     String groupConversationId,
     String newName, {
@@ -173,6 +300,7 @@ class MockChatStore extends ChangeNotifier {
   }) {
     final group = _findById(groupConversationId);
     if (group == null || !group.isGroup) return;
+    if (!isCurrentUserGroupAdmin(groupConversationId)) return;
 
     final trimmed = newName.trim();
     if (trimmed.isEmpty || trimmed == group.username) return;
@@ -196,6 +324,7 @@ class MockChatStore extends ChangeNotifier {
   }) {
     final group = _findById(groupConversationId);
     if (group == null || !group.isGroup) return;
+    if (!isCurrentUserGroupAdmin(groupConversationId)) return;
 
     final trimmed = avatarAssetPath.trim();
     if (trimmed.isEmpty || trimmed == group.avatarAssetPath) return;
@@ -218,6 +347,7 @@ class MockChatStore extends ChangeNotifier {
   }) {
     final group = _findById(groupConversationId);
     if (group == null || !group.isGroup) return;
+    if (!isCurrentUserGroupAdmin(groupConversationId)) return;
 
     final newMembers = memberConversationIds
         .toSet()
@@ -248,12 +378,16 @@ class MockChatStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void leaveGroup(
+  bool leaveGroup(
     String groupConversationId, {
     String actorName = currentUserDisplayName,
   }) {
     final group = _findById(groupConversationId);
-    if (group == null || !group.isGroup) return;
+    if (group == null || !group.isGroup) return false;
+
+    if (!canCurrentUserLeaveGroup(groupConversationId)) {
+      return false;
+    }
 
     final now = DateTime.now();
     _appendSystemMessage(
@@ -262,8 +396,11 @@ class MockChatStore extends ChangeNotifier {
       content: '${_formatDateTime(now)} • $actorName đã rời khỏi nhóm',
     );
 
+    group.adminMemberIds.remove(currentUserId);
+
     group.isHidden = true;
     notifyListeners();
+    return true;
   }
 
   String nicknameForSelf(String conversationId) {
@@ -885,6 +1022,7 @@ class MockConversation {
   final bool isGroup;
   final List<String> memberIds;
   final List<String> memberNames;
+  final List<String> adminMemberIds;
   final DateTime createdAt;
 
   MockConversation({
@@ -907,10 +1045,14 @@ class MockConversation {
     this.mutedStartedAt,
     this.mutedUntil,
     this.isGroup = false,
-    this.memberIds = const [],
-    this.memberNames = const [],
+    List<String> memberIds = const [],
+    List<String> memberNames = const [],
+    List<String> adminMemberIds = const [],
     DateTime? createdAt,
-  }) : createdAt = createdAt ?? lastMessageAt;
+  }) : memberIds = List<String>.of(memberIds),
+       memberNames = List<String>.of(memberNames),
+       adminMemberIds = List<String>.of(adminMemberIds),
+       createdAt = createdAt ?? lastMessageAt;
 
   MockChatMessage get lastMessage => messages.last;
 

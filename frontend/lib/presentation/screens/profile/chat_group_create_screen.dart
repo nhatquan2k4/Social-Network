@@ -3,14 +3,14 @@ import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/screens/profile/chat_group_setup_screen.dart';
 
 class ChatGroupCreateScreen extends StatefulWidget {
-  final String conversationId;
-  final String currentFriendId;
+  final String? conversationId;
+  final String? currentFriendId;
   final MockChatStore chatStore;
 
   const ChatGroupCreateScreen({
     super.key,
-    required this.conversationId,
-    required this.currentFriendId,
+    this.conversationId,
+    this.currentFriendId,
     required this.chatStore,
   });
 
@@ -25,7 +25,9 @@ class _ChatGroupCreateScreenState extends State<ChatGroupCreateScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedIds.add(widget.currentFriendId);
+    if (widget.currentFriendId != null) {
+      _selectedIds.add(widget.currentFriendId!);
+    }
     _searchController.addListener(() => setState(() {}));
   }
 
@@ -38,7 +40,7 @@ class _ChatGroupCreateScreenState extends State<ChatGroupCreateScreen> {
   @override
   Widget build(BuildContext context) {
     final allSuggestions = widget.chatStore.groupSuggestions(
-      excludeConversationId: widget.conversationId,
+      excludeConversationId: widget.conversationId ?? '',
     );
     final query = _searchController.text.trim().toLowerCase();
     final filtered = allSuggestions.where((c) {

@@ -40,6 +40,11 @@ class _ChatScreenState extends State<ChatScreen> {
     return _conversation?.isGroup ?? false;
   }
 
+  bool get _canManageGroup {
+    if (!_isGroup) return false;
+    return _chatStore.isCurrentUserGroupAdmin(widget.friend.id);
+  }
+
   String get _avatarAssetPath {
     return _conversation?.avatarAssetPath ?? 'assets/images/logo1.jpg';
   }
@@ -162,30 +167,36 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             const SizedBox(width: 9),
-            GestureDetector(
-              onTap: _isGroup ? _openGroupInfo : _openUserProfile,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _friendDisplayName,
-                    style: const TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF222225),
-                      height: 1.05,
+            Expanded(
+              child: GestureDetector(
+                onTap: _isGroup ? _openGroupInfo : _openUserProfile,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _friendDisplayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF222225),
+                        height: 1.05,
+                      ),
                     ),
-                  ),
-                  Text(
-                    _subtitleText,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF87878D),
-                      height: 1.1,
+                    Text(
+                      _subtitleText,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF87878D),
+                        height: 1.1,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
@@ -193,7 +204,9 @@ class _ChatScreenState extends State<ChatScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add, size: 28, color: Color(0xFF2F2F34)),
-            onPressed: _isGroup ? _openAddMembersScreen : null,
+            onPressed: (_isGroup && _canManageGroup)
+                ? _openAddMembersScreen
+                : null,
           ),
         ],
       ),
@@ -337,8 +350,10 @@ class _ChatScreenState extends State<ChatScreen> {
             style: const TextStyle(fontSize: 11, color: Color(0xFF7F7F84)),
           ),
           const SizedBox(height: 9),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 18,
+            runSpacing: 10,
             children: [
               _miniAction(
                 icon: Icons.link,
@@ -351,11 +366,12 @@ class _ChatScreenState extends State<ChatScreen> {
                   );
                 },
               ),
-              const SizedBox(width: 18),
               _miniAction(
                 icon: Icons.person_add_alt_1,
                 label: 'Thêm người',
-                onTap: _openAddMembersScreen,
+                onTap: _canManageGroup
+                    ? _openAddMembersScreen
+                    : _showManageGroupPermissionToast,
               ),
             ],
           ),
@@ -479,6 +495,11 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _openAddMembersScreen() async {
+    if (!_canManageGroup) {
+      _showManageGroupPermissionToast();
+      return;
+    }
+
     final selected = await Navigator.push<List<String>>(
       context,
       MaterialPageRoute(
@@ -494,6 +515,15 @@ class _ChatScreenState extends State<ChatScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Đã thêm thành viên vào nhóm')),
+    );
+  }
+
+  void _showManageGroupPermissionToast() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Chỉ quản trị viên mới có thể thêm thành viên'),
+      ),
     );
   }
 

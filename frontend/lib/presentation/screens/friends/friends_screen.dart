@@ -4,6 +4,7 @@ import 'package:frontend/core/routes/app_routes.dart';
 import 'package:frontend/domain/entities/friend_entity.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/screens/chat/chat_screen.dart';
+import 'package:frontend/presentation/screens/profile/chat_group_create_screen.dart';
 import 'package:frontend/presentation/widgets/common/bottom_nav.dart';
 import 'package:frontend/presentation/widgets/common/bell_status_icon.dart';
 
@@ -61,7 +62,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add, color: Color(0xFF1F1F1F), size: 22),
-            onPressed: () {},
+            onPressed: _openQuickGroupCreate,
           ),
         ],
       ),
@@ -459,6 +460,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), duration: const Duration(seconds: 1)),
+    );
+  }
+
+  void _openQuickGroupCreate() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatGroupCreateScreen(chatStore: _chatStore),
+      ),
     );
   }
 
