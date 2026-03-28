@@ -10,6 +10,8 @@ import '../../../core/utils/logger.dart';
 import '../../providers/chat_provider.dart';
 import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/message_input.dart';
+import '../profile/chat_group_add_members_screen.dart';
+import '../profile/chat_group_info_screen.dart';
 import '../profile/chat_user_profile_screen.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -57,6 +59,10 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   String get _friendDisplayName {
+    if (_isGroup) {
+      return _conversation?.username ?? widget.friend.displayName;
+    }
+
     return _chatStore.nicknameForFriend(
       widget.friend.id,
       widget.friend.displayName,
@@ -157,7 +163,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             const SizedBox(width: 9),
             GestureDetector(
-              onTap: _isGroup ? _showGroupMembersSheet : _openUserProfile,
+              onTap: _isGroup ? _openGroupInfo : _openUserProfile,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -187,7 +193,7 @@ class _ChatScreenState extends State<ChatScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add, size: 28, color: Color(0xFF2F2F34)),
-            onPressed: () {},
+            onPressed: _isGroup ? _openAddMembersScreen : null,
           ),
         ],
       ),
@@ -349,7 +355,7 @@ class _ChatScreenState extends State<ChatScreen> {
               _miniAction(
                 icon: Icons.person_add_alt_1,
                 label: 'Thêm người',
-                onTap: _showGroupMembersSheet,
+                onTap: _openAddMembersScreen,
               ),
             ],
           ),
@@ -472,81 +478,34 @@ class _ChatScreenState extends State<ChatScreen> {
     return '$hour:$minute';
   }
 
-  Future<void> _showGroupMembersSheet() async {
-    final members = _conversation?.memberNames ?? const <String>[];
-    if (members.isEmpty) return;
-
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: const Color(0xFFF4F4F6),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+  Future<void> _openAddMembersScreen() async {
+    final selected = await Navigator.push<List<String>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatGroupAddMembersScreen(
+          conversationId: widget.friend.id,
+          chatStore: _chatStore,
+        ),
       ),
-      builder: (_) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 44,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFCFCFD4),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Thành viên nhóm (${members.length + 1})',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1F1F23),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  leading: const CircleAvatar(
-                    radius: 18,
-                    foregroundImage: AssetImage(
-                      MockChatStore.currentUserAvatarAssetPath,
-                    ),
-                  ),
-                  title: Text(
-                    '${MockChatStore.currentUserDisplayName} (bạn)',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                ...members.map(
-                  (name) => ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
-                    leading: CircleAvatar(
-                      radius: 18,
-                      backgroundColor: const Color(0xFFD5D5DA),
-                      child: Text(
-                        name.isNotEmpty ? name[0] : '?',
-                        style: const TextStyle(color: Color(0xFF3A3A40)),
-                      ),
-                    ),
-                    title: Text(
-                      name,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+    );
+
+    if (!mounted || selected == null || selected.isEmpty) return;
+    _chatStore.addMembersToGroup(widget.friend.id, selected);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Đã thêm thành viên vào nhóm')),
+    );
+  }
+
+  void _openGroupInfo() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatGroupInfoScreen(
+          conversationId: widget.friend.id,
+          chatStore: _chatStore,
+        ),
+      ),
     );
   }
 

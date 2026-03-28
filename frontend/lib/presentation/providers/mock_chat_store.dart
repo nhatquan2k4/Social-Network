@@ -153,6 +153,119 @@ class MockChatStore extends ChangeNotifier {
     return conversation;
   }
 
+  List<MockConversation> addableMembersForGroup(String groupConversationId) {
+    final group = _findById(groupConversationId);
+    if (group == null || !group.isGroup) return const [];
+
+    return _conversations.where((c) {
+      return !c.isDeleted &&
+          !c.isHidden &&
+          !c.isGroup &&
+          c.id != groupConversationId &&
+          !group.memberIds.contains(c.id);
+    }).toList();
+  }
+
+  void renameGroup(
+    String groupConversationId,
+    String newName, {
+    String actorName = currentUserDisplayName,
+  }) {
+    final group = _findById(groupConversationId);
+    if (group == null || !group.isGroup) return;
+
+    final trimmed = newName.trim();
+    if (trimmed.isEmpty || trimmed == group.username) return;
+
+    group.username = trimmed;
+    final now = DateTime.now();
+    _appendSystemMessage(
+      conversationId: groupConversationId,
+      sentAt: now,
+      content:
+          '${_formatDateTime(now)} • $actorName đã đổi tên nhóm thành "$trimmed"',
+    );
+
+    notifyListeners();
+  }
+
+  void changeGroupAvatar(
+    String groupConversationId,
+    String avatarAssetPath, {
+    String actorName = currentUserDisplayName,
+  }) {
+    final group = _findById(groupConversationId);
+    if (group == null || !group.isGroup) return;
+
+    final trimmed = avatarAssetPath.trim();
+    if (trimmed.isEmpty || trimmed == group.avatarAssetPath) return;
+
+    group.avatarAssetPath = trimmed;
+    final now = DateTime.now();
+    _appendSystemMessage(
+      conversationId: groupConversationId,
+      sentAt: now,
+      content: '${_formatDateTime(now)} • $actorName đã đổi ảnh nhóm',
+    );
+
+    notifyListeners();
+  }
+
+  void addMembersToGroup(
+    String groupConversationId,
+    List<String> memberConversationIds, {
+    String actorName = currentUserDisplayName,
+  }) {
+    final group = _findById(groupConversationId);
+    if (group == null || !group.isGroup) return;
+
+    final newMembers = memberConversationIds
+        .toSet()
+        .map(_findById)
+        .whereType<MockConversation>()
+        .where((c) => !c.isGroup && !group.memberIds.contains(c.id))
+        .toList();
+
+    if (newMembers.isEmpty) return;
+
+    final now = DateTime.now();
+    for (final member in newMembers) {
+      group.memberIds.add(member.id);
+      group.memberNames.add(_displayNameFromUsername(member.username));
+    }
+
+    final addedNames = newMembers
+        .map((m) => _displayNameFromUsername(m.username))
+        .join(', ');
+
+    _appendSystemMessage(
+      conversationId: groupConversationId,
+      sentAt: now,
+      content:
+          '${_formatDateTime(now)} • $actorName đã thêm $addedNames vào nhóm',
+    );
+
+    notifyListeners();
+  }
+
+  void leaveGroup(
+    String groupConversationId, {
+    String actorName = currentUserDisplayName,
+  }) {
+    final group = _findById(groupConversationId);
+    if (group == null || !group.isGroup) return;
+
+    final now = DateTime.now();
+    _appendSystemMessage(
+      conversationId: groupConversationId,
+      sentAt: now,
+      content: '${_formatDateTime(now)} • $actorName đã rời khỏi nhóm',
+    );
+
+    group.isHidden = true;
+    notifyListeners();
+  }
+
   String nicknameForSelf(String conversationId) {
     return _selfNicknames[conversationId] ?? currentUserDisplayName;
   }
@@ -751,9 +864,9 @@ class MockChatStore extends ChangeNotifier {
 
 class MockConversation {
   final String id;
-  final String username;
+  String username;
   final Color avatarColor;
-  final String avatarAssetPath;
+  String avatarAssetPath;
   final bool isOnline;
   List<MockChatMessage> messages;
 
