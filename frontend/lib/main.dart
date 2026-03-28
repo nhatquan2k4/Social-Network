@@ -73,7 +73,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        initialRoute: AppRoutes.login,
+        initialRoute: AppRoutes.messages,
         routes: {
           AppRoutes.login: (context) => const LoginScreen(),
           AppRoutes.messages: (context) => const MessagesScreen(),

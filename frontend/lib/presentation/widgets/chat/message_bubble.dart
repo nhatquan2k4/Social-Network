@@ -1,90 +1,76 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import '../../../domain/entities/message_entity.dart';
 
 class MessageBubble extends StatelessWidget {
-  final MessageEntity message;
+  final String content;
   final bool isMe;
   final bool showAvatar;
   final String friendName;
 
   const MessageBubble({
     super.key,
-    required this.message,
+    required this.content,
     required this.isMe,
     this.showAvatar = true,
     required this.friendName,
   });
 
-  String _formatTime(DateTime time) {
-    return DateFormat('HH:mm').format(time);
-  }
-
   @override
   Widget build(BuildContext context) {
+    final maxWidth = MediaQuery.of(context).size.width * 0.705;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 3.0),
       child: Row(
         mainAxisAlignment: isMe
             ? MainAxisAlignment.end
             : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Avatar for friend messages
           if (!isMe && showAvatar) ...[
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.blue,
-              child: Text(
-                friendName[0].toUpperCase(),
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          if (!isMe && !showAvatar) const SizedBox(width: 40),
-
-          // Message bubble
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            Container(
+              width: 31,
+              height: 31,
+              padding: const EdgeInsets.all(1),
               decoration: BoxDecoration(
-                color: isMe ? Colors.blue : Colors.grey[300],
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isMe ? 16 : 4),
-                  bottomRight: Radius.circular(isMe ? 4 : 16),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFCACBD1), width: 1),
+              ),
+              child: CircleAvatar(
+                backgroundColor: const Color(0xFF7A6256),
+                child: Text(
+                  friendName[0].toUpperCase(),
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Message content
-                  Text(
-                    message.content,
-                    style: TextStyle(
-                      color: isMe ? Colors.white : Colors.black87,
-                      fontSize: 15,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
+            ),
+            const SizedBox(width: 5),
+          ],
+          if (!isMe && !showAvatar) const SizedBox(width: 36),
 
-                  // Time
-                  Text(
-                    _formatTime(message.createdAt),
-                    style: TextStyle(
-                      color: isMe ? Colors.white70 : Colors.black54,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
+          // Message bubble
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
+              decoration: BoxDecoration(
+                color: isMe ? const Color(0xFF58E48F) : const Color(0xFFE3E3E6),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Text(
+                content,
+                style: const TextStyle(
+                  color: Color(0xFF1A1A1A),
+                  fontSize: 14.5,
+                  height: 1.24,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
             ),
           ),
 
           // Spacing for my messages
-          if (isMe) const SizedBox(width: 40),
+          if (isMe) const SizedBox(width: 3),
         ],
       ),
     );

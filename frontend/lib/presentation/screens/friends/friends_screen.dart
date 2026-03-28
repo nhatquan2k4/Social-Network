@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/domain/entities/friend_entity.dart';
 import 'package:frontend/presentation/widgets/common/bottom_nav.dart';
-import 'package:frontend/presentation/widgets/common/loading_indicator.dart';
-import 'package:frontend/presentation/widgets/common/error_display.dart';
-import 'package:frontend/presentation/widgets/common/empty_state.dart';
-import 'package:provider/provider.dart';
-import 'package:frontend/presentation/providers/friend_provider.dart';
-import 'package:frontend/presentation/providers/chat_provider.dart';
 import 'package:frontend/presentation/screens/chat/chat_screen.dart';
 import 'package:frontend/core/routes/app_routes.dart';
 
@@ -20,23 +14,155 @@ class MessagesScreen extends StatefulWidget {
 class _MessagesScreenState extends State<MessagesScreen> {
   int _currentIndex = 3;
 
-  @override
-  void initState() {
-    super.initState();
-
-    Future.microtask(() {
-      if (mounted) {
-        context.read<MessagesProvider>().fetchFriends();
-      }
-    });
-  }
+  static const List<_ConversationItemData> _figmaConversations = [
+    _ConversationItemData(
+      username: 'keociiu',
+      subtitle: 'em iu ai nh +<3',
+      timeLabel: '.now',
+      isOnline: true,
+      avatarColor: Color(0xFF8E695D),
+    ),
+    _ConversationItemData(
+      username: 'thuytrng_04',
+      subtitle: 'em sủi iu nhỏ bò nh',
+      timeLabel: '.1phút',
+      isOnline: true,
+      avatarColor: Color(0xFF6C5A49),
+    ),
+    _ConversationItemData(
+      username: 'quynhanh.xiu',
+      subtitle: 'tuần sau mình đi tắm đào nhé anh iu',
+      timeLabel: '.3h',
+      isOnline: false,
+      avatarColor: Color(0xFF6B9376),
+    ),
+    _ConversationItemData(
+      username: 'khai_4.khai',
+      subtitle: '5 phút nữa a qua nhé em iu',
+      timeLabel: '.5h',
+      isOnline: false,
+      avatarColor: Color(0xFF8A6E59),
+    ),
+    _ConversationItemData(
+      username: 'ngocha.66',
+      subtitle: 'dành ở sân nào thế á',
+      timeLabel: '.5 ngày',
+      isOnline: false,
+      avatarColor: Color(0xFF5A91AF),
+    ),
+    _ConversationItemData(
+      username: 'dimhu27th4',
+      subtitle: 'em iu anh <3',
+      timeLabel: '.1 tuần',
+      isOnline: true,
+      avatarColor: Color(0xFFA17484),
+    ),
+    _ConversationItemData(
+      username: 'thuonghip136',
+      subtitle: 'học phòng nào đấy',
+      timeLabel: '.5 tuần',
+      isOnline: false,
+      avatarColor: Color(0xFF8A7DA5),
+    ),
+    _ConversationItemData(
+      username: 'trangg.ne',
+      subtitle: 'chiều nay mình đi cafe không',
+      timeLabel: '.2 phút',
+      isOnline: true,
+      avatarColor: Color(0xFF6F8EAD),
+    ),
+    _ConversationItemData(
+      username: 'vannhh_22',
+      subtitle: 'mai nộp bài nhóm nha bạn ơi',
+      timeLabel: '.12 phút',
+      isOnline: false,
+      avatarColor: Color(0xFF95715E),
+    ),
+    _ConversationItemData(
+      username: 'huytran.dev',
+      subtitle: 'mình fix xong bug phần chat rồi',
+      timeLabel: '.26 phút',
+      isOnline: true,
+      avatarColor: Color(0xFF4E7A8C),
+    ),
+    _ConversationItemData(
+      username: 'linhchip_09',
+      subtitle: 'đi ăn tokbokki không nè',
+      timeLabel: '.41 phút',
+      isOnline: false,
+      avatarColor: Color(0xFFA16477),
+    ),
+    _ConversationItemData(
+      username: 'khanh.97',
+      subtitle: 'ảnh hôm qua đẹp ghê luôn',
+      timeLabel: '.1h',
+      isOnline: false,
+      avatarColor: Color(0xFF6C8E72),
+    ),
+    _ConversationItemData(
+      username: 'hoamaii_15',
+      subtitle: 'đừng quên mang áo khoác nha',
+      timeLabel: '.2h',
+      isOnline: true,
+      avatarColor: Color(0xFFB07A6A),
+    ),
+    _ConversationItemData(
+      username: 'ngocxanhh',
+      subtitle: 'chỗ đó nghe nhạc chill lắm',
+      timeLabel: '.4h',
+      isOnline: false,
+      avatarColor: Color(0xFF5A88A6),
+    ),
+    _ConversationItemData(
+      username: 'thu.minh_21',
+      subtitle: 'gửi tui file design với nhaa',
+      timeLabel: '.7h',
+      isOnline: false,
+      avatarColor: Color(0xFF8C78A8),
+    ),
+    _ConversationItemData(
+      username: 'datlee.pro',
+      subtitle: 'chiều chạy bộ 30p nhé',
+      timeLabel: '.9h',
+      isOnline: true,
+      avatarColor: Color(0xFF6E7F53),
+    ),
+    _ConversationItemData(
+      username: 'haann_84',
+      subtitle: 'đã đặt bàn 7h tối rồi đó',
+      timeLabel: '.1 ngày',
+      isOnline: false,
+      avatarColor: Color(0xFF9C6666),
+    ),
+    _ConversationItemData(
+      username: 'tuanvu.works',
+      subtitle: 'anh em mình code tiếp tối nay',
+      timeLabel: '.2 ngày',
+      isOnline: false,
+      avatarColor: Color(0xFF5E7598),
+    ),
+    _ConversationItemData(
+      username: 'nhii.cloud',
+      subtitle: 'mình vừa cập nhật roadmap',
+      timeLabel: '.3 ngày',
+      isOnline: true,
+      avatarColor: Color(0xFF88766C),
+    ),
+    _ConversationItemData(
+      username: 'quocbao_11',
+      subtitle: 'tháng này đi biển không mọi người',
+      timeLabel: '.4 ngày',
+      isOnline: false,
+      avatarColor: Color(0xFF5F8A88),
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF7F7F8),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF7F7F8),
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Row(
@@ -46,27 +172,23 @@ class _MessagesScreenState extends State<MessagesScreen> {
             const Text(
               'hoangtu_1',
               style: TextStyle(
-                color: Colors.black,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+                color: Color(0xFF171717),
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(width: 4),
             const Icon(
               Icons.keyboard_arrow_down,
-              color: Colors.black,
-              size: 20,
+              color: Color(0xFF1F1F1F),
+              size: 18,
             ),
           ],
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.add_box_outlined,
-              color: Colors.black,
-              size: 28,
-            ),
+            icon: const Icon(Icons.add, color: Color(0xFF1F1F1F), size: 22),
             onPressed: () {
               // TODO: Handle new message
             },
@@ -77,17 +199,24 @@ class _MessagesScreenState extends State<MessagesScreen> {
         children: [
           // Search bar
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Search',
-                hintStyle: TextStyle(color: Colors.grey.shade500),
-                prefixIcon: Icon(Icons.search, color: Colors.grey.shade600),
+                hintStyle: const TextStyle(
+                  color: Color(0xFF9A9AA1),
+                  fontSize: 13,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  color: Color(0xFF9A9AA1),
+                  size: 18,
+                ),
                 filled: true,
-                fillColor: const Color(0xFFF5F5F5),
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                fillColor: const Color(0xFFEDEDEF),
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(30),
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -96,16 +225,16 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
           // Header row
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
+            padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
                   'Tin nhắn',
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF191919),
                   ),
                 ),
                 GestureDetector(
@@ -115,7 +244,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   child: const Text(
                     'Tin nhắn đang chờ',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 12,
                       color: Color(0xFF3797EF),
                       fontWeight: FontWeight.w500,
                     ),
@@ -126,70 +255,101 @@ class _MessagesScreenState extends State<MessagesScreen> {
           ),
 
           // Conversations list
-          Consumer<MessagesProvider>(
-            builder: (context, provider, _) {
-              // Loading state
-              if (provider.isLoading) {
-                return const LoadingIndicator(message: 'Đang tải danh sách...');
-              }
-
-              // Error state
-              if (provider.error != null) {
-                return ErrorDisplay(
-                  message: provider.error!,
-                  onRetry: () => provider.fetchFriends(),
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: _figmaConversations.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final item = _figmaConversations[index];
+                final friend = FriendEntity(
+                  id: 'mock_$index',
+                  username: item.username,
+                  displayName: item.username,
                 );
-              }
 
-              // Empty state
-              if (provider.friends.isEmpty) {
-                return const EmptyState.noConversations();
-              }
-
-              // Success state - show list
-              return Expanded(
-                child: ListView.builder(
-                  itemCount: provider.friends.length,
-                  itemBuilder: (context, index) {
-                    final friend = provider.friends[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        radius: 24,
-                        backgroundColor: Colors.grey.shade300,
-                        child: Text(
-                          friend.displayName.isNotEmpty
-                              ? friend.displayName[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
+                return InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => _openChatWithFriend(context, friend),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 3,
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundColor: item.avatarColor,
+                          child: Text(
+                            item.username[0].toUpperCase(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 17,
+                            ),
                           ),
                         ),
-                      ),
-                      title: Text(
-                        friend.displayName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      item.username,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        height: 1.2,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF1C1C1C),
+                                      ),
+                                    ),
+                                  ),
+                                  if (item.isOnline)
+                                    Container(
+                                      width: 7,
+                                      height: 7,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFF34C759),
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                item.subtitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 12.5,
+                                  color: Color(0xFF7B7B80),
+                                  height: 1.25,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      subtitle: const Text(
-                        'This is a placeholder for the last message.',
-                        style: TextStyle(color: Colors.grey, fontSize: 14),
-                      ),
-                      trailing: const Text(
-                        '2:45 PM',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                      onTap: () {
-                        _openChatWithFriend(context, friend);
-                      },
-                    );
-                  },
-                ),
-              );
-            },
+                        const SizedBox(width: 10),
+                        Text(
+                          item.timeLabel,
+                          style: const TextStyle(
+                            color: Color(0xFF9B9BA1),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -216,50 +376,32 @@ class _MessagesScreenState extends State<MessagesScreen> {
     );
   }
 
-  // Mở chat với friend (tạo conversation trước)
+  // Mở chat preview theo UI Figma.
   Future<void> _openChatWithFriend(
     BuildContext context,
     FriendEntity friend,
   ) async {
-    // Show loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatScreen(friend: friend, conversationId: null),
+      ),
     );
-
-    try {
-      final chatProvider = context.read<ChatProvider>();
-
-      // Tạo conversation
-      await chatProvider.createAndLoadConversation(friend.id);
-
-      // Close loading
-      if (!context.mounted) return;
-      Navigator.pop(context);
-
-      // Navigate to chat screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ChatScreen(
-            friend: friend,
-            conversationId: chatProvider.currentConversationId,
-          ),
-        ),
-      );
-    } catch (e) {
-      // Close loading
-      if (!context.mounted) return;
-      Navigator.pop(context);
-
-      // Show error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không thể mở chat: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
+}
+
+class _ConversationItemData {
+  final String username;
+  final String subtitle;
+  final String timeLabel;
+  final bool isOnline;
+  final Color avatarColor;
+
+  const _ConversationItemData({
+    required this.username,
+    required this.subtitle,
+    required this.timeLabel,
+    required this.isOnline,
+    required this.avatarColor,
+  });
 }
