@@ -201,8 +201,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
           setState(() => _currentIndex = index);
 
           // Map tabs to routes that exist in this project.
-          // 3 = Messages, 4 = Profile
-          if (index == 3) {
+          // 0 = Home, 3 = Messages, 4 = Profile
+          if (index == 0) {
+            Navigator.pushReplacementNamed(context, AppRoutes.postsFeed);
+          } else if (index == 3) {
             Navigator.pushReplacementNamed(context, AppRoutes.messages);
           } else if (index == 4) {
             Navigator.pushReplacementNamed(context, AppRoutes.profile);

@@ -219,7 +219,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           setState(() => _currentIndex = index);
 
-          if (index == 3) {
+          if (index == 0) {
+            Navigator.pushReplacementNamed(context, AppRoutes.postsFeed);
+          } else if (index == 3) {
             Navigator.pushReplacementNamed(context, AppRoutes.messages);
           } else if (index == 4) {
             Navigator.pushReplacementNamed(context, AppRoutes.profile);

@@ -57,6 +57,14 @@ class ApiService {
   }
 
   Future<Response> post(String endpoint, dynamic data) async {
+    if (data is FormData) {
+      return await dio.post(
+        endpoint,
+        data: data,
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
+      );
+    }
+
     return await dio.post(endpoint, data: data);
   }
 
@@ -65,5 +73,9 @@ class ApiService {
     Map<String, dynamic>? queryParameters,
   }) async {
     return await dio.get(endpoint, queryParameters: queryParameters);
+  }
+
+  Future<Response> delete(String endpoint) async {
+    return await dio.delete(endpoint);
   }
 }
