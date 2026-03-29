@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:frontend/core/routes/app_routes.dart';
 
 import 'package:frontend/presentation/screens/auth/login_screen.dart';
-import 'package:frontend/presentation/screens/friends/friends_screen.dart';
+import 'package:frontend/presentation/screens/chat/messages_screen.dart';
 import 'package:frontend/presentation/screens/profile/profile_screen.dart';
 
 import 'package:frontend/presentation/providers/auth_provider.dart';

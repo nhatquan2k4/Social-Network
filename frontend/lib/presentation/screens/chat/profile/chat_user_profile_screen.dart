@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
-import 'package:frontend/presentation/screens/profile/chat_group_create_screen.dart';
-import 'package:frontend/presentation/screens/profile/chat_media_gallery_screen.dart';
-import 'package:frontend/presentation/screens/profile/chat_media_viewer_screen.dart';
-import 'package:frontend/presentation/screens/profile/chat_nickname_screen.dart';
-import 'package:frontend/presentation/screens/profile/chat_safety_screen.dart';
-import 'package:frontend/presentation/screens/profile/chat_search_screen.dart';
-import 'package:frontend/presentation/screens/profile/widgets/chat_block_bottom_sheet.dart';
-import 'package:frontend/presentation/screens/profile/widgets/chat_unblock_dialog.dart';
+import 'package:frontend/presentation/screens/chat/group/chat_group_create_screen.dart';
+import 'package:frontend/presentation/screens/chat/media/chat_media_gallery_screen.dart';
+import 'package:frontend/presentation/screens/chat/media/chat_media_viewer_screen.dart';
+import 'package:frontend/presentation/screens/chat/profile/chat_nickname_screen.dart';
+import 'package:frontend/presentation/screens/chat/profile/chat_safety_screen.dart';
+import 'package:frontend/presentation/screens/chat/search/chat_search_screen.dart';
+import 'package:frontend/presentation/screens/chat/profile/widgets/chat_block_bottom_sheet.dart';
+import 'package:frontend/presentation/screens/chat/profile/widgets/chat_unblock_dialog.dart';
 import 'package:frontend/presentation/widgets/common/bell_status_icon.dart';
 
 class ChatUserProfileScreen extends StatefulWidget {

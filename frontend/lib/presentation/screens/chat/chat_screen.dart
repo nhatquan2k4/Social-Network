@@ -10,9 +10,9 @@ import '../../../core/utils/logger.dart';
 import '../../providers/chat_provider.dart';
 import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/message_input.dart';
-import '../profile/chat_group_add_members_screen.dart';
-import '../profile/chat_group_info_screen.dart';
-import '../profile/chat_user_profile_screen.dart';
+import 'group/chat_group_add_members_screen.dart';
+import 'group/chat_group_info_screen.dart';
+import 'profile/chat_user_profile_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final FriendEntity friend;

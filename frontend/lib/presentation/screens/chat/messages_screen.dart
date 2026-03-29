@@ -4,7 +4,7 @@ import 'package:frontend/core/routes/app_routes.dart';
 import 'package:frontend/domain/entities/friend_entity.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/screens/chat/chat_screen.dart';
-import 'package:frontend/presentation/screens/profile/chat_group_create_screen.dart';
+import 'package:frontend/presentation/screens/chat/group/chat_group_create_screen.dart';
 import 'package:frontend/presentation/widgets/common/bottom_nav.dart';
 import 'package:frontend/presentation/widgets/common/bell_status_icon.dart';
 

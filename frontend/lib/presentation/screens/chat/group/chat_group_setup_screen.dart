@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/domain/entities/friend_entity.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/screens/chat/chat_screen.dart';
-import 'package:frontend/presentation/screens/profile/chat_group_avatar_picker_screen.dart';
+import 'package:frontend/presentation/screens/chat/group/chat_group_avatar_picker_screen.dart';
 
 class ChatGroupSetupScreen extends StatefulWidget {
   final List<String> selectedConversationIds;

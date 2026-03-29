@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
-import 'package:frontend/presentation/screens/profile/widgets/chat_block_bottom_sheet.dart';
-import 'package:frontend/presentation/screens/profile/widgets/chat_unblock_dialog.dart';
+import 'package:frontend/presentation/screens/chat/profile/widgets/chat_block_bottom_sheet.dart';
+import 'package:frontend/presentation/screens/chat/profile/widgets/chat_unblock_dialog.dart';
 
 class ChatSafetyScreen extends StatelessWidget {
   final String displayName;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/presentation/screens/profile/chat_media_viewer_screen.dart';
+import 'package:frontend/presentation/screens/chat/media/chat_media_viewer_screen.dart';
 
 class ChatMediaGalleryScreen extends StatelessWidget {
   final String displayName;

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
-import 'package:frontend/presentation/screens/profile/chat_group_add_members_screen.dart';
-import 'package:frontend/presentation/screens/profile/chat_group_avatar_picker_screen.dart';
-import 'package:frontend/presentation/screens/profile/chat_group_member_profile_screen.dart';
-import 'package:frontend/presentation/screens/profile/chat_media_gallery_screen.dart';
-import 'package:frontend/presentation/screens/profile/chat_search_screen.dart';
+import 'package:frontend/presentation/screens/chat/group/chat_group_add_members_screen.dart';
+import 'package:frontend/presentation/screens/chat/group/chat_group_avatar_picker_screen.dart';
+import 'package:frontend/presentation/screens/chat/group/chat_group_member_profile_screen.dart';
+import 'package:frontend/presentation/screens/chat/media/chat_media_gallery_screen.dart';
+import 'package:frontend/presentation/screens/chat/search/chat_search_screen.dart';
 
 class ChatGroupInfoScreen extends StatefulWidget {
   final String conversationId;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
-import 'package:frontend/presentation/screens/profile/chat_group_setup_screen.dart';
+import 'package:frontend/presentation/screens/chat/group/chat_group_setup_screen.dart';
 
 class ChatGroupCreateScreen extends StatefulWidget {
   final String? conversationId;
