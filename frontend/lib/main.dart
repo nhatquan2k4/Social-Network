@@ -6,7 +6,7 @@ import 'package:frontend/presentation/screens/auth/login_screen.dart';
 import 'package:frontend/presentation/screens/auth/welcome_screen.dart';
 import 'package:frontend/presentation/screens/feed/create_post_screen.dart';
 import 'package:frontend/presentation/screens/feed/feed_screen.dart';
-import 'package:frontend/presentation/screens/friends/friends_screen.dart';
+import 'package:frontend/presentation/screens/chat/messages_screen.dart';
 import 'package:frontend/presentation/screens/auth/register_screen.dart';
 import 'package:frontend/presentation/screens/auth/fogot_screen.dart';
 import 'package:frontend/presentation/screens/profile/profile_screen.dart';

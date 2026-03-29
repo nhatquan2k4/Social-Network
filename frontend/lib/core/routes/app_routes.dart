@@ -3,10 +3,8 @@ class AppRoutes {
   static const String login = '/login';
   static const String fogot = '/fogot';
   static const String register = '/register';
-  static const String messages = '/messages';
   static const String profile = '/profile';
   static const String friends = '/friends';
-  static const String profile = '/users/me';
   static const String conversations = '/conversations';
   static const String messages = '/messages/direct';
   static const String groups = '/messages/group';
