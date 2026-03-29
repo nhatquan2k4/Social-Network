@@ -8,6 +8,9 @@ extension ProfileMapper on ProfileModel {
       username: username,
       email: email,
       displayName: displayName,
+      avatarUrl: avatarUrl,
+      bio: bio,
+      phone: phone,
     );
   }
 }

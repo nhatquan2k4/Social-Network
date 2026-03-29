@@ -10,109 +10,106 @@ class BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const selectedBg = Color(0xFFDDE5F8);
-    const selectedFg = Color(0xFF1D1D1D);
-    const unselectedFg = Color(0xFF303030);
-
-    Widget navItem({
-      required int index,
-      required Widget icon,
-      required bool selected,
-    }) {
-      return Expanded(
-        child: InkWell(
-          borderRadius: BorderRadius.circular(22),
-          onTap: () => onTap?.call(index),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Align(
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 170),
-                curve: Curves.easeOut,
-                width: selected ? 42 : 30,
-                height: selected ? 42 : 30,
-                decoration: BoxDecoration(
-                  color: selected ? selectedBg : Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
-                child: IconTheme(
-                  data: IconThemeData(
-                    color: selected ? selectedFg : unselectedFg,
-                    size: 22,
-                  ),
-                  child: Center(child: icon),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    final mediaQuery = MediaQuery.of(context);
-    final routeName = ModalRoute.of(context)?.settings.name ?? 'null';
-
     return SafeArea(
-      top: false,
+      minimum: const EdgeInsets.fromLTRB(12, 0, 12, 8),
       child: Container(
+        height: 64,
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Colors.grey.shade200)),
+          color: const Color(0xFFF1F3F4),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: const Color(0xFFDCE1E5)),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
           children: [
-            if (_showBottomNavDebug)
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 2),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.78),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'route=$routeName | idx=$currentIndex | size=${mediaQuery.size.width.toStringAsFixed(0)}x${mediaQuery.size.height.toStringAsFixed(0)} | insetB=${mediaQuery.viewInsets.bottom.toStringAsFixed(1)}',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    height: 1.2,
+            _NavIconButton(
+              icon: Icons.home_outlined,
+              selected: currentIndex == 0,
+              onTap: () => onTap?.call(0),
+            ),
+            _NavIconButton(
+              icon: Icons.search,
+              selected: currentIndex == 1,
+              onTap: () => onTap?.call(1),
+            ),
+            _NavIconButton(
+              icon: Icons.play_circle_outline,
+              selected: currentIndex == 2,
+              onTap: () => onTap?.call(2),
+            ),
+            _NavIconButton(
+              customIcon: Image.asset(
+                'assets/icons/send.png',
+                width: 17,
+                height: 17,
+                color: Colors.black,
+              ),
+              selected: currentIndex == 3,
+              onTap: () => onTap?.call(3),
+            ),
+            Expanded(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(24),
+                onTap: () => onTap?.call(4),
+                child: Center(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: currentIndex == 4
+                          ? const Color(0xFFD8E0F7)
+                          : Colors.transparent,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(3),
+                      child: CircleAvatar(
+                        backgroundColor: Colors.grey.shade400,
+                        child: const Icon(
+                          Icons.person,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            Row(
-              children: [
-                navItem(
-                  index: 0,
-                  selected: currentIndex == 0,
-                  icon: const Icon(Icons.home_rounded),
-                ),
-                navItem(
-                  index: 1,
-                  selected: currentIndex == 1,
-                  icon: const Icon(Icons.search_rounded),
-                ),
-                navItem(
-                  index: 2,
-                  selected: currentIndex == 2,
-                  icon: const Icon(Icons.play_circle_outline_rounded),
-                ),
-                navItem(
-                  index: 3,
-                  selected: currentIndex == 3,
-                  icon: const Icon(Icons.send_outlined),
-                ),
-                navItem(
-                  index: 4,
-                  selected: currentIndex == 4,
-                  icon: const Icon(Icons.person_outline_rounded),
-                ),
-              ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NavIconButton extends StatelessWidget {
+  final IconData? icon;
+  final Widget? customIcon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _NavIconButton({
+    this.icon,
+    this.customIcon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final child = customIcon ?? Icon(icon, size: 23, color: Colors.black);
+
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: onTap,
+        child: Center(
+          child: AnimatedScale(
+            scale: selected ? 1.04 : 1,
+            duration: const Duration(milliseconds: 160),
+            child: child,
+          ),
         ),
       ),
     );

@@ -5,11 +5,13 @@ import '../../domain/usecases/profile_usecase.dart';
 
 class ProfileProvider extends ChangeNotifier {
   final GetProfileUseCase getProfileUseCase;
+  final UpdateMyAvatarUseCase updateMyAvatarUseCase;
 
-  ProfileProvider(this.getProfileUseCase);
+  ProfileProvider(this.getProfileUseCase, this.updateMyAvatarUseCase);
 
   ProfileEntity? profile;
   bool isLoading = false;
+  bool isSaving = false;
   String? error;
 
   Future<void> fetchProfile(String userId) async {
@@ -34,5 +36,51 @@ class ProfileProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<bool> updateAvatar(String filePath) async {
+    try {
+      isSaving = true;
+      error = null;
+      notifyListeners();
+
+      profile = await updateMyAvatarUseCase(filePath);
+      return true;
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response!.data is Map) {
+        error =
+            e.response!.data['message'] ??
+            'Khong cap nhat duoc avatar. Vui long thu lai.';
+      } else {
+        error = 'Khong the ket noi den may chu';
+      }
+      return false;
+    } catch (_) {
+      error = 'Da xay ra loi khi cap nhat avatar';
+      return false;
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  void applyLocalProfileEdits({
+    required String displayName,
+    required String username,
+    required String email,
+    String? bio,
+    String? phone,
+  }) {
+    final current = profile;
+    if (current == null) return;
+
+    profile = current.copyWith(
+      displayName: displayName,
+      username: username,
+      email: email,
+      bio: bio,
+      phone: phone,
+    );
+    notifyListeners();
   }
 }

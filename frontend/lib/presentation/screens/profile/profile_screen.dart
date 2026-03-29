@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/routes/app_routes.dart';
+import 'package:frontend/domain/entities/profile_entity.dart';
+import 'package:frontend/presentation/providers/profile_provider.dart';
+import 'package:frontend/presentation/screens/profile/edit_profile_screen.dart';
+import 'package:frontend/presentation/screens/profile/profile_media_picker_screen.dart';
 import 'package:frontend/presentation/widgets/common/bottom_nav.dart';
 import 'package:frontend/presentation/widgets/common/error_display.dart';
 import 'package:frontend/presentation/widgets/common/loading_indicator.dart';
-// import 'package:provider/provider.dart'; // ← COMMENTED: Provider approach
-
-import 'package:frontend/core/routes/app_routes.dart';
-import 'package:frontend/domain/entities/profile_entity.dart';
-import 'package:frontend/domain/usecases/profile_usecase.dart';
-import 'package:frontend/domain/repositories/profile_repository.dart';
-import 'package:frontend/data/repositories/profile_repository_impl.dart';
-import 'package:frontend/data/services/api_service.dart';
-
-// import '../../providers/profile_provider.dart'; // ← COMMENTED: Provider
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -22,216 +18,736 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   int _currentIndex = 4;
-  late Future<ProfileEntity> _profileFuture;
+  int _selectedTab = 0;
+  bool _showLinkCopiedBanner = false;
 
-  //PROVIDER
-  // @override
-  // void initState() {
-  //   super.initState();
-  //
-  //   Future.microtask(() async {
-  //     if (!mounted) return;
-  //     await context.read<ProfileProvider>().fetchProfile('me');
-  //   });
-  // }
-  //END PROVIDER
-  //FUTUREBUILDER
+  static const int _postCount = 9;
+  static const int _followerCount = 18;
+  static const int _followingCount = 36;
+
+  static const List<String> _mockPosts = [
+    'https://images.unsplash.com/photo-1464863979621-258859e62245?w=1000',
+    'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=1000',
+    'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=1000',
+    'https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=1000',
+    'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=1000',
+    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1000',
+    'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=900',
+    'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=900',
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=900',
+  ];
+
   @override
   void initState() {
     super.initState();
-    _profileFuture = _fetchProfile();
-  }
-
-  Future<ProfileEntity> _fetchProfile() async {
-    final apiService = ApiService();
-    final ProfileRepository repository = ProfileRepositoryImpl(apiService);
-    final getProfileUseCase = GetProfileUseCase(repository);
-    return await getProfileUseCase('me');
-  }
-
-  Future<void> _refresh() async {
-    setState(() {
-      _profileFuture = _fetchProfile();
+    Future.microtask(() {
+      if (!mounted) return;
+      context.read<ProfileProvider>().fetchProfile('me');
     });
   }
-  //END FUTUREBUILDER
+
+  Future<void> _refresh() {
+    return context.read<ProfileProvider>().fetchProfile('me');
+  }
+
+  Future<void> _openEditProfile(ProfileEntity profile) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditProfileScreen(initialProfile: profile),
+      ),
+    );
+  }
+
+  Future<void> _openMediaPicker() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ProfileMediaPickerScreen()),
+    );
+  }
+
+  void _showCopiedLinkBanner() {
+    if (!mounted) return;
+
+    setState(() {
+      _showLinkCopiedBanner = true;
+    });
+
+    Future.delayed(const Duration(milliseconds: 1600), () {
+      if (!mounted) return;
+      setState(() {
+        _showLinkCopiedBanner = false;
+      });
+    });
+  }
+
+  Future<void> _showAccountSwitchSheet(ProfileEntity profile) async {
+    String selected = profile.username;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (innerContext, setInnerState) {
+            Widget accountTile(String displayName, String username) {
+              final isSelected = selected == username;
+              return InkWell(
+                onTap: () => setInnerState(() => selected = username),
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: Colors.grey.shade300,
+                        child: Text(
+                          displayName.isEmpty
+                              ? '?'
+                              : displayName[0].toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              displayName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              '@$username',
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        isSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_off,
+                        color: isSelected
+                            ? const Color(0xFF0095F6)
+                            : Colors.grey.shade500,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const Text(
+                      'Chọn tài khoản',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    accountTile(profile.displayName, profile.username),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () {
+                          Navigator.pop(innerContext);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Đã chuyển tài khoản.'),
+                            ),
+                          );
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF0095F6),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                        ),
+                        child: const Text('Xong'),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Tính năng thêm tài khoản sẽ có sớm.',
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text('Thêm tài khoản'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _showProfileActionsSheet(ProfileEntity profile) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.settings_outlined),
+                  title: const Text('Cài đặt và hoạt động'),
+                  onTap: () => Navigator.pop(sheetContext),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.archive_outlined),
+                  title: const Text('Kho lưu trữ'),
+                  onTap: () => Navigator.pop(sheetContext),
+                ),
+                const Divider(),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.workspace_premium_outlined),
+                  title: const Text('Chuyển sang tài khoản chuyên nghiệp'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Tính năng đang phát triển.'),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.business_center_outlined),
+                  title: const Text('Chuyển sang tài khoản công ty'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Tính năng đang phát triển.'),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.swap_horiz),
+                  title: const Text('Chuyển tài khoản'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _showAccountSwitchSheet(profile);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAvatar(ProfileEntity profile) {
+    final avatarUrl = profile.avatarUrl;
+
+    if (avatarUrl != null && avatarUrl.isNotEmpty) {
+      return Container(
+        width: 78,
+        height: 78,
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: CircleAvatar(
+          radius: 38,
+          backgroundColor: Colors.grey.shade300,
+          backgroundImage: NetworkImage(avatarUrl),
+        ),
+      );
+    }
+
+    return Container(
+      width: 78,
+      height: 78,
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: CircleAvatar(
+        radius: 38,
+        backgroundColor: Colors.grey.shade300,
+        child: Text(
+          profile.displayName.isEmpty
+              ? '?'
+              : profile.displayName[0].toUpperCase(),
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 30,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPostImage(String url) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Container(
+          color: Colors.grey.shade200,
+          child: Image.network(
+            url,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const Center(
+                child: Icon(
+                  Icons.image_not_supported_outlined,
+                  color: Colors.grey,
+                ),
+              );
+            },
+          ),
+        ),
+        Positioned(
+          top: 6,
+          right: 6,
+          child: Icon(
+            Icons.content_copy_rounded,
+            size: 14,
+            color: Colors.white.withValues(alpha: 0.95),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTopCount({required String value, required String label}) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey.shade700,
+              fontSize: 12,
+              height: 1.1,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileActionButton({
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return Expanded(
+      child: SizedBox(
+        height: 34,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFEFEFEF),
+            foregroundColor: Colors.black,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+            textStyle: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+          ),
+          child: FittedBox(child: Text(label)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHighlightItem({
+    required Widget child,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: child,
+          ),
+          const SizedBox(height: 4),
+          Text(label, style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabHeader() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: IconButton(
+                onPressed: () => setState(() => _selectedTab = 0),
+                icon: Icon(
+                  Icons.grid_on,
+                  color: _selectedTab == 0
+                      ? Colors.black
+                      : Colors.grey.shade500,
+                ),
+              ),
+            ),
+            Expanded(
+              child: IconButton(
+                onPressed: () => setState(() => _selectedTab = 1),
+                icon: Icon(
+                  Icons.person_pin_outlined,
+                  color: _selectedTab == 1
+                      ? Colors.black
+                      : Colors.grey.shade500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(
+          height: 2,
+          child: Row(
+            children: [
+              Expanded(
+                child: Container(
+                  color: _selectedTab == 0 ? Colors.black : Colors.transparent,
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  color: _selectedTab == 1 ? Colors.black : Colors.transparent,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Divider(height: 1, color: Colors.grey.shade300),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Trang cá nhân',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      //PROVIDER
-      // body: Consumer<ProfileProvider>(
-      //   builder: (context, provider, _) {
-      //     if (provider.isLoading) {
-      //       return const LoadingIndicator(message: 'Đang tải thông tin...');
-      //     }
-      //
-      //     if (provider.error != null) {
-      //       return ErrorDisplay(
-      //         message: provider.error!,
-      //         onRetry: () => provider.fetchProfile('me'),
-      //       );
-      //     }
-      //
-      //     final profile = provider.profile;
-      //     if (profile == null) {
-      //       return const Center(
-      //         child: Text(
-      //           'Chưa có dữ liệu hồ sơ.',
-      //           style: TextStyle(color: Colors.grey),
-      //         ),
-      //       );
-      //     }
-      //
-      //     return SingleChildScrollView(
-      //       padding: const EdgeInsets.all(16),
-      //       child: Column(
-      //         crossAxisAlignment: CrossAxisAlignment.center,
-      //         children: [
-      //           const SizedBox(width: double.infinity),
-      //           CircleAvatar(
-      //             radius: 44,
-      //             backgroundColor: Colors.blue,
-      //             child: Text(
-      //               profile.displayName.isNotEmpty
-      //                   ? profile.displayName[0].toUpperCase()
-      //                   : '?',
-      //               style: const TextStyle(
-      //                 color: Colors.white,
-      //                 fontSize: 28,
-      //                 fontWeight: FontWeight.bold,
-      //               ),
-      //             ),
-      //           ),
-      //           const SizedBox(height: 12),
-      //           Text(
-      //             profile.displayName,
-      //             style: const TextStyle(
-      //               fontSize: 20,
-      //               fontWeight: FontWeight.w700,
-      //               color: Colors.black,
-      //             ),
-      //           ),
-      //           const SizedBox(height: 4),
-      //           Text(
-      //             profile.email,
-      //             style: const TextStyle(fontSize: 14, color: Colors.grey),
-      //           ),
-      //         ],
-      //       ),
-      //     );
-      //   },
-      // ),
-      //END PROVIDER
+    return Consumer<ProfileProvider>(
+      builder: (context, provider, _) {
+        final profile = provider.profile;
 
-      //FUTUREBUILDER
-      body: FutureBuilder<ProfileEntity>(
-        future: _profileFuture,
-        builder: (context, snapshot) {
-          // Loading state
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingIndicator(message: 'Đang tải thông tin...');
-          }
+        if (provider.isLoading && profile == null) {
+          return const Scaffold(
+            backgroundColor: Colors.white,
+            body: LoadingIndicator(message: 'Đang tải thông tin...'),
+          );
+        }
 
-          // Error state
-          if (snapshot.hasError) {
-            return ErrorDisplay(
-              message: snapshot.error.toString(),
-              onRetry: _refresh,
-            );
-          }
+        if (provider.error != null && profile == null) {
+          return Scaffold(
+            backgroundColor: Colors.white,
+            body: ErrorDisplay(message: provider.error!, onRetry: _refresh),
+          );
+        }
 
-          // No data state
-          if (!snapshot.hasData) {
-            return const Center(
+        if (profile == null) {
+          return const Scaffold(
+            backgroundColor: Colors.white,
+            body: Center(
               child: Text(
                 'Chưa có dữ liệu hồ sơ.',
                 style: TextStyle(color: Colors.grey),
               ),
-            );
-          }
+            ),
+          );
+        }
 
-          // Success state
-          final profile = snapshot.data!;
-          return RefreshIndicator(
-            onRefresh: _refresh,
-            child: SingleChildScrollView(
-              physics:
-                  const AlwaysScrollableScrollPhysics(), // ← Allow pull-to-refresh even when content is short
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+        return Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.white,
+            centerTitle: true,
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock, size: 13, color: Colors.black),
+                const SizedBox(width: 4),
+                Text(
+                  profile.username,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                  ),
+                ),
+                const Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 20,
+                  color: Colors.black,
+                ),
+              ],
+            ),
+            actions: [
+              IconButton(
+                onPressed: () => _showProfileActionsSheet(profile),
+                icon: const Icon(Icons.menu, color: Colors.black, size: 24),
+              ),
+            ],
+          ),
+          body: Stack(
+            children: [
+              Column(
                 children: [
-                  const SizedBox(width: double.infinity),
-                  CircleAvatar(
-                    radius: 44,
-                    backgroundColor: Colors.blue,
-                    child: Text(
-                      profile.displayName.isNotEmpty
-                          ? profile.displayName[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                  if (provider.isSaving)
+                    const LinearProgressIndicator(
+                      minHeight: 2,
+                      color: Color(0xFF0095F6),
+                    ),
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: _refresh,
+                      child: ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
+                        children: [
+                          Row(
+                            children: [
+                              _buildAvatar(profile),
+                              const SizedBox(width: 18),
+                              _buildTopCount(
+                                value: '$_postCount',
+                                label: 'bài viết',
+                              ),
+                              _buildTopCount(
+                                value: '$_followerCount',
+                                label: 'người theo dõi',
+                              ),
+                              _buildTopCount(
+                                value: '$_followingCount',
+                                label: 'đang theo dõi',
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            profile.displayName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            (profile.bio ?? '').isNotEmpty
+                                ? profile.bio!
+                                : 'Sẽ có những con cá sẽ phải trả gió???',
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              _buildProfileActionButton(
+                                label: 'Chỉnh sửa',
+                                onPressed: () => _openEditProfile(profile),
+                              ),
+                              const SizedBox(width: 8),
+                              _buildProfileActionButton(
+                                label: 'Chia sẻ trang cá nhân',
+                                onPressed: _showCopiedLinkBanner,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              _buildHighlightItem(
+                                label: 'Mới',
+                                onTap: _openMediaPicker,
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.add,
+                                    size: 30,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              _buildHighlightItem(
+                                label: 'my love',
+                                onTap: () {},
+                                child: Padding(
+                                  padding: const EdgeInsets.all(2),
+                                  child: ClipOval(
+                                    child: Image.network(
+                                      _mockPosts.first,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            return Container(
+                                              color: Colors.grey.shade300,
+                                              child: const Icon(Icons.person),
+                                            );
+                                          },
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          _buildTabHeader(),
+                          if (_selectedTab == 0)
+                            GridView.builder(
+                              itemCount: _mockPosts.length,
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 3,
+                                    crossAxisSpacing: 1,
+                                    mainAxisSpacing: 1,
+                                  ),
+                              itemBuilder: (context, index) {
+                                return _buildPostImage(_mockPosts[index]);
+                              },
+                            )
+                          else
+                            SizedBox(
+                              height: 170,
+                              child: Center(
+                                child: Text(
+                                  'Chưa có bài viết được gắn thẻ.',
+                                  style: TextStyle(color: Colors.grey.shade600),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    profile.displayName,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    profile.email,
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
                 ],
               ),
-            ),
-          );
-        },
-      ),
-      //END FUTUREBUILDER
-      bottomNavigationBar: BottomNav(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          if (index == _currentIndex) return;
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 180),
+                top: _showLinkCopiedBanner ? 10 : -56,
+                left: 0,
+                right: 0,
+                child: IgnorePointer(
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8AC8B8),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'Đã sao liên kết',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          bottomNavigationBar: BottomNav(
+            currentIndex: _currentIndex,
+            onTap: (index) {
+              if (index == _currentIndex) return;
 
-          setState(() => _currentIndex = index);
+              setState(() => _currentIndex = index);
 
-          if (index == 0) {
-            Navigator.pushReplacementNamed(context, AppRoutes.postsFeed);
-          } else if (index == 3) {
-            Navigator.pushReplacementNamed(context, AppRoutes.messages);
-          } else if (index == 4) {
-            Navigator.pushReplacementNamed(context, AppRoutes.profile);
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Trang này chưa được triển khai.')),
-            );
-          }
-        },
-      ),
+              if (index == 3) {
+                Navigator.pushReplacementNamed(context, AppRoutes.messages);
+              } else if (index == 4) {
+                Navigator.pushReplacementNamed(context, AppRoutes.profile);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Trang này chưa được triển khai.'),
+                  ),
+                );
+              }
+            },
+          ),
+        );
+      },
     );
   }
 }

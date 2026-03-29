@@ -10,6 +10,7 @@
 /// EmptyState(...)
 /// StateHandler(...)
 /// ```
+library;
 
 export 'loading_indicator.dart';
 export 'error_display.dart';

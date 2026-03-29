@@ -10,3 +10,13 @@ class GetProfileUseCase {
     return repository.getProfile(userId);
   }
 }
+
+class UpdateMyAvatarUseCase {
+  final ProfileRepository repository;
+
+  UpdateMyAvatarUseCase(this.repository);
+
+  Future<ProfileEntity> call(String filePath) {
+    return repository.updateMyAvatar(filePath);
+  }
+}
