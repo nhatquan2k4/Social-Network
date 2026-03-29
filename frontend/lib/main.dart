@@ -4,6 +4,8 @@ import 'package:frontend/core/routes/app_routes.dart';
 
 import 'package:frontend/presentation/screens/auth/login_screen.dart';
 import 'package:frontend/presentation/screens/auth/welcome_screen.dart';
+import 'package:frontend/presentation/screens/feed/create_post_screen.dart';
+import 'package:frontend/presentation/screens/feed/feed_screen.dart';
 import 'package:frontend/presentation/screens/friends/friends_screen.dart';
 import 'package:frontend/presentation/screens/auth/register_screen.dart';
 import 'package:frontend/presentation/screens/auth/fogot_screen.dart';
@@ -28,6 +30,9 @@ import 'package:frontend/data/repositories/conversation_repository_impl.dart';
 import 'package:frontend/domain/usecases/profile_usecase.dart';
 import 'package:frontend/presentation/providers/profile_provider.dart';
 import 'package:frontend/data/repositories/profile_repository_impl.dart';
+import 'package:frontend/domain/usecases/post_usecase.dart';
+import 'package:frontend/data/repositories/post_repository_impl.dart';
+import 'package:frontend/presentation/providers/feed_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -73,6 +78,11 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
+
+        ChangeNotifierProvider(
+          create: (_) =>
+              FeedProvider(PostUsecase(PostRepositoryImpl(apiService))),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -82,6 +92,8 @@ class MyApp extends StatelessWidget {
           AppRoutes.login: (context) => const LoginScreen(),
           AppRoutes.register: (context) => const RegisterScreen(),
           AppRoutes.fogot: (context) => const FogotScreen(),
+          AppRoutes.postsFeed: (context) => const FeedScreen(),
+          AppRoutes.postsCreate: (context) => const CreatePostScreen(),
           AppRoutes.messages: (context) => const MessagesScreen(),
           AppRoutes.profile: (context) => const ProfileScreen(),
         },
