@@ -1,5 +1,10 @@
 class AppRoutes {
-  static const String login = '/auth/login';
+  static const String welcome = '/';
+  static const String login = '/login';
+  static const String fogot = '/fogot';
+  static const String register = '/register';
+  static const String messages = '/messages';
+  static const String profile = '/profile';
   static const String friends = '/friends';
   static const String profile = '/users/me';
   static const String conversations = '/conversations';
@@ -8,7 +13,6 @@ class AppRoutes {
   static const String posts = '/posts';
   static const String postsFeed = '/posts/feed';
   static const String postsCreate = '/posts/create';
-
   static String postById(String postId) => '/posts/$postId';
   static String postLike(String postId) => '/posts/$postId/like';
   static String postComments(String postId) => '/posts/$postId/comments';
