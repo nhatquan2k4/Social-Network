@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/presentation/widgets/common/custom_button.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/presentation/providers/auth_provider.dart';
+import 'package:frontend/core/routes/app_routes.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +15,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _rememberMe = false;
 
   @override
   void dispose() {
@@ -112,17 +114,28 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
 
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              //Điều hướng đến màn quên mật khẩu
-                            },
-                            child: const Text(
-                              "Quên mật khẩu?",
-                              style: TextStyle(color: Color(0xFF3797EF)),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Checkbox(
+                                  value: _rememberMe,
+                                  onChanged: (v) =>
+                                      setState(() => _rememberMe = v ?? false),
+                                ),
+                                const Text('Nhớ mật khẩu'),
+                              ],
                             ),
-                          ),
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.pushNamed(context, AppRoutes.fogot),
+                              child: const Text(
+                                "Quên mật khẩu?",
+                                style: TextStyle(color: Color(0xFF3797EF)),
+                              ),
+                            ),
+                          ],
                         ),
 
                         const SizedBox(height: 36),
@@ -237,9 +250,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(color: Colors.black54),
                         ),
                         GestureDetector(
-                          onTap: () {
-                            //Điều hướng đến màn hình đăng ký
-                          },
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.register),
                           child: Text(
                             "Đăng ký",
                             style: TextStyle(
