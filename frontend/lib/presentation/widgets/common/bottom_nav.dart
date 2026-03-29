@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+const bool _showBottomNavDebug = false;
+
 class BottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int>? onTap;
