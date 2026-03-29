@@ -21,6 +21,9 @@ dotenv.config();
 const app = express();
 
 const PORT = process.env.PORT || 5001;
+const failOnMediaBootstrapError =
+  process.env.NODE_ENV === "production" ||
+  process.env.MINIO_STRICT_STARTUP === "true";
 
 const allowedOrigins = [
   "http://localhost:3000",
@@ -80,10 +83,18 @@ app.get("/", (req, res) => {
 connectDB()
   .then(() => {
     console.log("Connected to the database successfully");
-    return ensureMediaBuckets();
+    return ensureMediaBuckets().catch((error) => {
+      if (failOnMediaBootstrapError) {
+        throw error;
+      }
+
+      console.warn(
+        "MinIO is unavailable. Media features may fail until MinIO is running.",
+      );
+    });
   })
   .then(() => {
-    console.log("MinIO buckets ready");
+    console.log("Media storage bootstrap completed");
 
     app.listen(PORT, () => {
       console.log(`Server is running on port localhost:${PORT}`);

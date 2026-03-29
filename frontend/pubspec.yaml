@@ -43,6 +43,7 @@ dependencies:
   logger: ^2.6.2
   cookie_jar: ^4.0.8
   dio_cookie_manager: ^3.3.0
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

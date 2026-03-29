@@ -67,7 +67,7 @@ class StateHandler<T> extends StatelessWidget {
     }
 
     // Check if data is empty (for collections)
-    if (isEmpty != null && isEmpty!(data!)) {
+    if (isEmpty != null && isEmpty!(data as T)) {
       return EmptyState(
         message: emptyMessage ?? 'Không có dữ liệu',
         icon: emptyIcon ?? Icons.inbox_outlined,
@@ -75,7 +75,7 @@ class StateHandler<T> extends StatelessWidget {
     }
 
     // Success - show data
-    return builder(context, data!);
+    return builder(context, data as T);
   }
 }
 

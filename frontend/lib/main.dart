@@ -54,6 +54,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => ProfileProvider(
             GetProfileUseCase(ProfileRepositoryImpl(apiService)),
+            UpdateMyAvatarUseCase(ProfileRepositoryImpl(apiService)),
           ),
         ),
 

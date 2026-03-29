@@ -56,6 +56,18 @@ class ApiService {
     return await dio.put(endpoint, data: data);
   }
 
+  Future<Response> patch(String endpoint, dynamic data) async {
+    return await dio.patch(endpoint, data: data);
+  }
+
+  Future<Response> patchFormData(String endpoint, FormData data) async {
+    return await dio.patch(
+      endpoint,
+      data: data,
+      options: Options(headers: {'Content-Type': 'multipart/form-data'}),
+    );
+  }
+
   Future<Response> post(String endpoint, dynamic data) async {
     return await dio.post(endpoint, data: data);
   }
