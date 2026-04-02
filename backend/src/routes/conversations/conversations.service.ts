@@ -217,4 +217,80 @@ export class ConversationService {
       myUnreadCount: updated?.unreadCounts?.get(userId) || 0,
     };
   }
+
+  async leaveGroupConversation(conversationId: string, userId: Types.ObjectId) {
+    const conversation = await this.conversationRepository.findById(conversationId);
+
+    if (!conversation) {
+      throw new Error("Conversation khong ton tai");
+    }
+
+    if (conversation.type !== "group") {
+      throw new Error("Chi ho tro roi nhom cho group conversation");
+    }
+
+    const me = userId.toString();
+    const isMember = (conversation.participants || []).some(
+      (participant: any) => participant.userId.toString() === me,
+    );
+
+    if (!isMember) {
+      throw new Error("Ban khong o trong group nay");
+    }
+
+    conversation.participants = (conversation.participants || []).filter(
+      (participant: any) => participant.userId.toString() !== me,
+    ) as any;
+
+    conversation.seenBy = (conversation.seenBy || []).filter(
+      (reader: any) => reader.toString() !== me,
+    ) as any;
+
+    if (conversation.unreadCounts && typeof conversation.unreadCounts.delete === "function") {
+      conversation.unreadCounts.delete(me);
+    }
+
+    const ownerId = conversation.group?.createdBy?.toString();
+    const isOwnerLeaving = ownerId === me;
+    const remainedParticipants = conversation.participants || [];
+
+    if (remainedParticipants.length === 0) {
+      await Promise.all([
+        this.conversationRepository.deleteById(conversationId),
+        this.messageRepository.deleteByConversationId(conversationId),
+      ]);
+
+      return {
+        action: "conversation_deleted",
+        conversationId,
+      };
+    }
+
+    let newOwnerId: string | null = null;
+
+    if (isOwnerLeaving && conversation.group) {
+      const sorted = [...remainedParticipants].sort((a: any, b: any) => {
+        const aTime = a.joinedAt ? new Date(a.joinedAt).getTime() : 0;
+        const bTime = b.joinedAt ? new Date(b.joinedAt).getTime() : 0;
+        return aTime - bTime;
+      });
+
+      const newOwner = sorted[0];
+      if (!newOwner) {
+        throw new Error("Khong tim thay owner moi");
+      }
+
+      conversation.group.createdBy = newOwner.userId;
+      newOwnerId = newOwner.userId.toString();
+    }
+
+    await conversation.save();
+
+    return {
+      action: newOwnerId ? "owner_transferred" : "left",
+      conversationId,
+      newOwnerId,
+      participantsCount: remainedParticipants.length,
+    };
+  }
 }

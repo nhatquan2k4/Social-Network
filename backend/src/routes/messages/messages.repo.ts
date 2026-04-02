@@ -153,4 +153,8 @@ export class MessageRepository {
 			],
 		);
 	}
+
+	async deleteByConversationId(conversationId: string) {
+		return await Message.deleteMany({ conversationId });
+	}
 }

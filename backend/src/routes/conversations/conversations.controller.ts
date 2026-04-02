@@ -114,3 +114,29 @@ export const markAsSeen = async (req: Request, res: Response) => {
         return res.status(500).json({ message: 'Lỗi hệ thống' });
     }
 };
+
+export const leaveGroupConversation = async (req: Request, res: Response) => {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.user!._id;
+
+    const data = await conversationService.leaveGroupConversation(
+      conversationId as string,
+      userId,
+    );
+
+    return res.status(200).json({ message: 'Roi nhom thanh cong', data });
+  } catch (error: any) {
+    console.error('Loi khi roi group conversation', error);
+    if (error.message === 'Chi ho tro roi nhom cho group conversation') {
+      return res.status(400).json({ message: error.message });
+    }
+    if (error.message === 'Ban khong o trong group nay') {
+      return res.status(403).json({ message: error.message });
+    }
+    if (error.message === 'Conversation khong ton tai') {
+      return res.status(404).json({ message: error.message });
+    }
+    return res.status(500).json({ message: 'Lỗi hệ thống' });
+  }
+};

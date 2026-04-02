@@ -1,5 +1,5 @@
 import express from 'express';
-import { createConversation, getConversations, getMessages, markAsSeen } from './conversations.controller';
+import { createConversation, getConversations, getMessages, leaveGroupConversation, markAsSeen } from './conversations.controller';
 import {protectedRoute} from '../../shared/middlewares/auth.middleware';
 import {
   checkFriendship,
@@ -149,6 +149,31 @@ router.patch(
   protectedRoute,
   checkConversationMembership,
   markAsSeen,
+);
+
+/**
+ * @swagger
+ * /api/conversations/{conversationId}/leave:
+ *   patch:
+ *     summary: Roi nhom chat
+ *     tags: [Conversations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: conversationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Roi nhom thanh cong
+ */
+router.patch(
+  "/:conversationId/leave",
+  protectedRoute,
+  checkConversationMembership,
+  leaveGroupConversation,
 );
 
 /**

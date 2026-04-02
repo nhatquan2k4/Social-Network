@@ -67,4 +67,8 @@ export class ConversationRepository {
 			{ new: true }
 		);
 	}
+
+	async deleteById(conversationId: string) {
+		return await Conversation.findByIdAndDelete(conversationId);
+	}
 }
