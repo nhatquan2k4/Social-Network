@@ -1,73 +1,68 @@
 import express from "express";
 import dotenv from "dotenv";
-import connectDB from "./libs/db";
-import authRoutes from "./routes/authRoutes";
 import cookieParser from "cookie-parser";
 import cors, { CorsOptions } from "cors";
-import userRoutes from "./routes/userRoutes";
-import { protectedRoute } from "./middlewares/authMiddleware";
-import friendRoutes from "./routes/friendRoutes";
-import messageRoutes from "./routes/messageRoutes";
-import conversationRoutes from "./routes/conversationRoutes";
 import swaggerUi from "swagger-ui-express";
-import { swaggerSpec } from "./config/swagger";
-import mediaRoutes from "./routes/mediaRoutes";
-import { ensureMediaBuckets } from "./config/minio";
-import postRoutes from "./routes/postRoutes";
-import notificationRoutes from "./routes/notificationRoutes";
+import authRoutes from "./routes/auth/auth.route";
+import userRoutes from "./routes/users/users.route";
+import friendRoutes from "./routes/friends/friends.route";
+import messageRoutes from "./routes/messages/messages.route";
+import conversationRoutes from "./routes/conversations/conversations.route";
+import mediaRoutes from "./routes/media/media.route";
+import postRoutes from "./routes/posts/posts.route";
+import notificationRoutes from "./routes/notifications/notifications.route";
+import { swaggerSpec } from "./shared/config/swagger";
+import { ensureMediaBuckets } from "./shared/config/minio";
+import { connectDB } from "./shared/db/mongoose";
+import { envConfig } from "./shared/config/env";
+import { errorHandler } from "./shared/errors/error-handler";
 
 dotenv.config();
 
 const app = express();
 
-const PORT = process.env.PORT || 5001;
+const PORT = envConfig.port;
 const failOnMediaBootstrapError =
-  process.env.NODE_ENV === "production" ||
-  process.env.MINIO_STRICT_STARTUP === "true";
+	process.env.NODE_ENV === "production" ||
+	process.env.MINIO_STRICT_STARTUP === "true";
 
 const allowedOrigins = [
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://localhost:8080",
-  "http://127.0.0.1:8080",
-  ...(process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
-    : []),
+	"http://localhost:3000",
+	"http://127.0.0.1:3000",
+	"http://localhost:8080",
+	"http://127.0.0.1:8080",
+	...(process.env.CORS_ORIGIN
+		? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
+		: []),
 ];
 
 const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
 
 const corsOptions: CorsOptions = {
-  origin: (origin, callback) => {
-    // Allow non-browser clients and local tools without Origin header.
-    if (!origin) {
-      return callback(null, true);
-    }
+	origin: (origin, callback) => {
+		if (!origin) {
+			return callback(null, true);
+		}
 
-    if (allowedOrigins.includes(origin) || localDevOriginPattern.test(origin)) {
-      return callback(null, true);
-    }
+		if (allowedOrigins.includes(origin) || localDevOriginPattern.test(origin)) {
+			return callback(null, true);
+		}
 
-    return callback(new Error(`CORS blocked for origin: ${origin}`));
-  },
-  credentials: true,
+		return callback(new Error(`CORS blocked for origin: ${origin}`));
+	},
+	credentials: true,
 };
 
-// middleware
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
-// Swagger documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get("/api-docs.json", (req, res) => {
-  res.json(swaggerSpec);
+	res.json(swaggerSpec);
 });
 
-// public routes
 app.use("/api/auth", authRoutes);
-
-// private routes
 app.use("/api/users", userRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/api/messages", messageRoutes);
@@ -77,32 +72,36 @@ app.use("/api/posts", postRoutes);
 app.use("/api/notifications", notificationRoutes);
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+	res.send("Hello World!");
 });
 
+app.use(errorHandler);
+
 connectDB()
-  .then(() => {
-    console.log("Connected to the database successfully");
-    return ensureMediaBuckets().catch((error) => {
-      if (failOnMediaBootstrapError) {
-        throw error;
-      }
+	.then(() => {
+		console.log("Connected to the database successfully");
+		return ensureMediaBuckets().catch((error) => {
+			if (failOnMediaBootstrapError) {
+				throw error;
+			}
 
-      console.warn(
-        "MinIO is unavailable. Media features may fail until MinIO is running.",
-      );
-    });
-  })
-  .then(() => {
-    console.log("Media storage bootstrap completed");
+			console.warn(
+				"MinIO is unavailable. Media features may fail until MinIO is running.",
+			);
+		});
+	})
+	.then(() => {
+		console.log("Media storage bootstrap completed");
 
-    app.listen(PORT, () => {
-      console.log(`Server is running on port localhost:${PORT}`);
-      console.log(
-        `Swagger documentation available at http://localhost:${PORT}/api-docs`,
-      );
-    });
-  })
-  .catch((error) => {
-    console.error("Server bootstrap failed:", error);
-  });
+		app.listen(PORT, () => {
+			console.log(`Server is running on port localhost:${PORT}`);
+			console.log(
+				`Swagger documentation available at http://localhost:${PORT}/api-docs`,
+			);
+		});
+	})
+	.catch((error) => {
+		console.error("Server bootstrap failed:", error);
+	});
+
+export default app;
