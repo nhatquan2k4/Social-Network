@@ -54,6 +54,19 @@ export class PostRepository {
 		return Post.countDocuments();
 	}
 
+	async countByAuthorId(authorId: string | Types.ObjectId) {
+		return Post.countDocuments({ authorId });
+	}
+
+	async findByAuthorId(authorId: string | Types.ObjectId, skip: number, limit: number) {
+		return Post.find({ authorId })
+			.sort({ createdAt: -1 })
+			.skip(skip)
+			.limit(limit)
+			.populate("authorId", "displayName avatarUrl username")
+			.lean();
+	}
+
 	async deleteById(postId: string) {
 		return Post.findByIdAndDelete(postId);
 	}

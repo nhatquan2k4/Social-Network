@@ -11,7 +11,7 @@ class ResetPasswordScreen extends StatefulWidget {
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
-  bool _obscure = true;
+  final bool _obscure = true;
 
   @override
   void dispose() {

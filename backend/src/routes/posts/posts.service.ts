@@ -31,6 +31,14 @@ interface PostCommentLike {
   updatedAt: Date;
 }
 
+interface UpdatePostPayload {
+  content?: string;
+  hasContentField: boolean;
+  mediaFromBody?: PostMediaInput[];
+  hasMediaField: boolean;
+  uploadedMedia?: PostMediaInput[];
+}
+
 export class PostService {
   private postRepository: PostRepository;
   private notificationService: NotificationService;
@@ -191,6 +199,65 @@ export class PostService {
     }
 
     return this.formatPost(post as any);
+  }
+
+  async updatePost(postId: string, requesterId: Types.ObjectId, payload: UpdatePostPayload) {
+    const safeUploaded = (payload.uploadedMedia || []).map((item) => ({
+      bucket: item.bucket,
+      objectKey: item.objectKey,
+      mimeType: item.mimeType,
+      size: item.size,
+    }));
+
+    if (!payload.hasContentField && !payload.hasMediaField && safeUploaded.length === 0) {
+      throw new Error("Khong co du lieu cap nhat");
+    }
+
+    const post = await this.postRepository.findRawById(postId);
+    if (!post) {
+      throw new Error("Post khong ton tai");
+    }
+
+    if (post.authorId.toString() !== requesterId.toString()) {
+      throw new Error("Khong co quyen chinh sua post nay");
+    }
+
+    const currentContent = typeof post.content === "string" ? post.content : "";
+    const currentMedia = (post.media || []).map((item: any) => ({
+      bucket: item.bucket,
+      objectKey: item.objectKey,
+      mimeType: item.mimeType,
+      size: item.size,
+    }));
+
+    const nextContent = payload.hasContentField
+      ? String(payload.content || "").trim()
+      : currentContent;
+    const baseMedia = payload.hasMediaField
+      ? (payload.mediaFromBody || []).map((item) => ({
+        bucket: item.bucket,
+        objectKey: item.objectKey,
+        mimeType: item.mimeType,
+        size: item.size,
+      }))
+      : currentMedia;
+    const nextMedia = [...baseMedia, ...safeUploaded];
+
+    if (!nextContent && nextMedia.length === 0) {
+      throw new Error("Post phai co content hoac media");
+    }
+
+    post.content = nextContent || undefined;
+    post.media = nextMedia as any;
+
+    await this.postRepository.save(post);
+
+    const updated = await this.postRepository.findById(postId);
+    if (!updated) {
+      throw new Error("Post khong ton tai");
+    }
+
+    return this.formatPost(updated as any);
   }
 
   async deletePost(postId: string, requesterId: Types.ObjectId) {

@@ -225,3 +225,108 @@ export const sendGroupMessage = async (req: Request, res: Response) => {
         return res.status(500).json({ message: 'Lỗi hệ thống' });
     }
 };
+
+export const addOrUpdateMessageReaction = async (req: Request, res: Response) => {
+    try {
+        const { conversationId, messageId } = req.params;
+        const { emoji } = req.body;
+        const userId = req.user!._id;
+
+        const data = await messageService.addOrUpdateReaction(
+            conversationId as string,
+            messageId as string,
+            userId,
+            String(emoji || ''),
+        );
+
+        return res.status(200).json({ message: 'Cap nhat reaction thanh cong', data });
+    } catch (error: any) {
+        console.error('Loi khi cap nhat reaction tin nhan', error);
+        if (error?.name === 'CastError') {
+            return res.status(400).json({ message: 'conversationId hoac messageId khong hop le' });
+        }
+        if (error.message === 'Emoji khong hop le') {
+            return res.status(400).json({ message: error.message });
+        }
+        if (error.message === 'Tin nhan khong ton tai') {
+            return res.status(404).json({ message: error.message });
+        }
+        return res.status(500).json({ message: 'Loi server' });
+    }
+};
+
+export const removeMessageReaction = async (req: Request, res: Response) => {
+    try {
+        const { conversationId, messageId } = req.params;
+        const userId = req.user!._id;
+
+        const data = await messageService.removeReaction(
+            conversationId as string,
+            messageId as string,
+            userId,
+        );
+
+        return res.status(200).json({ message: 'Da go reaction tin nhan', data });
+    } catch (error: any) {
+        console.error('Loi khi go reaction tin nhan', error);
+        if (error?.name === 'CastError') {
+            return res.status(400).json({ message: 'conversationId hoac messageId khong hop le' });
+        }
+        if (error.message === 'Tin nhan khong ton tai') {
+            return res.status(404).json({ message: error.message });
+        }
+        return res.status(500).json({ message: 'Loi server' });
+    }
+};
+
+export const markMessageAsRead = async (req: Request, res: Response) => {
+    try {
+        const { conversationId, messageId } = req.params;
+        const userId = req.user!._id;
+
+        const data = await messageService.markMessageAsRead(
+            conversationId as string,
+            messageId as string,
+            userId,
+        );
+
+        return res.status(200).json({ message: 'Da danh dau tin nhan da doc', data });
+    } catch (error: any) {
+        console.error('Loi khi danh dau tin nhan da doc', error);
+        if (error?.name === 'CastError') {
+            return res.status(400).json({ message: 'conversationId hoac messageId khong hop le' });
+        }
+        if (error.message === 'Tin nhan khong ton tai') {
+            return res.status(404).json({ message: error.message });
+        }
+        return res.status(500).json({ message: 'Loi server' });
+    }
+};
+
+export const markMessagesAsReadBulk = async (req: Request, res: Response) => {
+    try {
+        const { conversationId } = req.params;
+        const userId = req.user!._id;
+        const lastMessageIdRaw = req.body?.lastMessageId;
+        const lastMessageId = typeof lastMessageIdRaw === 'string' && lastMessageIdRaw.trim()
+            ? lastMessageIdRaw.trim()
+            : undefined;
+
+        const data = await messageService.markMessagesAsReadUntil(
+            conversationId as string,
+            userId,
+            lastMessageId,
+        );
+
+        return res.status(200).json({ message: 'Da danh dau nhieu tin nhan da doc', data });
+    } catch (error: any) {
+        console.error('Loi khi danh dau nhieu tin nhan da doc', error);
+        if (error?.name === 'CastError') {
+            return res.status(400).json({ message: 'conversationId hoac lastMessageId khong hop le' });
+        }
+        if (error.message === 'Tin nhan khong ton tai') {
+            return res.status(404).json({ message: error.message });
+        }
+        return res.status(500).json({ message: 'Loi server' });
+    }
+};

@@ -108,6 +108,37 @@ const options: swaggerJsdoc.Options = {
 						},
 					},
 				},
+				MessageReaction: {
+					type: "object",
+					properties: {
+						userId: {
+							type: "string",
+							description: "ID user da react",
+						},
+						emoji: {
+							type: "string",
+							description: "Emoji reaction",
+							example: ":heart:",
+						},
+						reactedAt: {
+							type: "string",
+							format: "date-time",
+						},
+					},
+				},
+				MessageReadState: {
+					type: "object",
+					properties: {
+						userId: {
+							type: "string",
+							description: "ID user da doc",
+						},
+						readAt: {
+							type: "string",
+							format: "date-time",
+						},
+					},
+				},
 				Message: {
 					type: "object",
 					properties: {
@@ -131,6 +162,18 @@ const options: swaggerJsdoc.Options = {
 							type: "array",
 							items: {
 								$ref: "#/components/schemas/MediaItem",
+							},
+						},
+						reactions: {
+							type: "array",
+							items: {
+								$ref: "#/components/schemas/MessageReaction",
+							},
+						},
+						readBy: {
+							type: "array",
+							items: {
+								$ref: "#/components/schemas/MessageReadState",
 							},
 						},
 						createdAt: {

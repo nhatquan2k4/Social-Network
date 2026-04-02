@@ -10,6 +10,7 @@ import {
   getPostComments,
   getPostById,
   toggleLikePost,
+  updatePost,
 } from "./posts.controller";
 
 const router = express.Router();
@@ -91,6 +92,40 @@ router.get("/feed", protectedRoute, getFeed);
  *         description: Chi tiet post
  */
 router.get("/:postId", protectedRoute, getPostById);
+
+/**
+ * @swagger
+ * /api/posts/{postId}:
+ *   patch:
+ *     summary: Chinh sua post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               content:
+ *                 type: string
+ *               files:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       200:
+ *         description: Chinh sua post thanh cong
+ */
+router.patch("/:postId", protectedRoute, upload.array("files", Number(process.env.MEDIA_MAX_FILES || "10")), updatePost);
 
 /**
  * @swagger

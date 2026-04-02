@@ -96,6 +96,64 @@ export const getPostById = async (req: Request, res: Response) => {
   }
 };
 
+export const updatePost = async (req: Request, res: Response) => {
+  try {
+    const { postId } = req.params;
+    const userId = req.user!._id;
+    const hasContentField = Object.prototype.hasOwnProperty.call(req.body || {}, "content");
+    const hasMediaField = Object.prototype.hasOwnProperty.call(req.body || {}, "media");
+    const { content, media } = req.body;
+    const files = (req.files || []) as Express.Multer.File[];
+
+    if (!hasContentField && !hasMediaField && files.length === 0) {
+      return res.status(400).json({ message: "Khong co du lieu cap nhat" });
+    }
+
+    if (hasMediaField && typeof media === "string") {
+      try {
+        JSON.parse(media);
+      } catch {
+        return res.status(400).json({ message: "Media JSON khong hop le" });
+      }
+    }
+
+    const uploadedMedia = files.length > 0
+      ? await mediaService.uploadFiles(files, "post", userId.toString())
+      : [];
+
+    const normalizedUploaded = uploadedMedia.map((item) => ({
+      bucket: item.bucket,
+      objectKey: item.objectKey,
+      mimeType: item.mimeType,
+      size: item.size,
+    }));
+
+    const manualMedia = hasMediaField ? parseManualMedia(media) : [];
+
+    const updatedPost = await postService.updatePost(postId as string, userId, {
+      content,
+      hasContentField,
+      mediaFromBody: hasMediaField ? manualMedia : undefined,
+      hasMediaField,
+      uploadedMedia: normalizedUploaded,
+    });
+
+    return res.status(200).json({ message: "Chinh sua post thanh cong", data: updatedPost });
+  } catch (error: any) {
+    console.error("Loi khi chinh sua post", error);
+    if (error.message === "Khong co du lieu cap nhat" || error.message === "Post phai co content hoac media") {
+      return res.status(400).json({ message: error.message });
+    }
+    if (error.message === "Post khong ton tai") {
+      return res.status(404).json({ message: error.message });
+    }
+    if (error.message === "Khong co quyen chinh sua post nay") {
+      return res.status(403).json({ message: error.message });
+    }
+    return res.status(500).json({ message: "Loi server" });
+  }
+};
+
 export const deletePost = async (req: Request, res: Response) => {
   try {
     const { postId } = req.params;

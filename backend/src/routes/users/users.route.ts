@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { authMe, updateMyAvatar } from './users.controller';
+import { authMe, getPostsByUser, getUserProfile, updateMyAvatar, updateMyProfile } from './users.controller';
 import { protectedRoute } from '../../shared/middlewares/auth.middleware';
 
 const router = express.Router();
@@ -44,6 +44,33 @@ router.get('/me', protectedRoute, authMe);
 
 /**
  * @swagger
+ * /api/users/me:
+ *   patch:
+ *     summary: Cap nhat thong tin nguoi dung hien tai
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               displayName:
+ *                 type: string
+ *               bio:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Cap nhat thong tin thanh cong
+ */
+router.patch('/me', protectedRoute, updateMyProfile);
+
+/**
+ * @swagger
  * /api/users/me/avatar:
  *   patch:
  *     summary: Cap nhat avatar nguoi dung hien tai
@@ -71,5 +98,53 @@ router.get('/me', protectedRoute, authMe);
  *         description: Chua xac thuc
  */
 router.patch('/me/avatar', protectedRoute, upload.array('avatar', 1), updateMyAvatar);
+
+/**
+ * @swagger
+ * /api/users/{userId}/profile:
+ *   get:
+ *     summary: Lay thong tin profile va thong ke co ban cua user
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Thong tin profile va stats
+ */
+router.get('/:userId/profile', protectedRoute, getUserProfile);
+
+/**
+ * @swagger
+ * /api/users/{userId}/posts:
+ *   get:
+ *     summary: Lay danh sach post cua user
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Danh sach post cua user
+ */
+router.get('/:userId/posts', protectedRoute, getPostsByUser);
 
 export default router;

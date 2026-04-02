@@ -71,6 +71,14 @@ export class MessageService {
         return plain;
     }
 
+    private async getMessageOrThrow(messageId: string, conversationId: string) {
+        const message = await this.messageRepository.findByIdAndConversationId(messageId, conversationId);
+        if (!message) {
+            throw new Error('Tin nhan khong ton tai');
+        }
+        return message;
+    }
+
     async sendDirectMessage(
         senderId: Types.ObjectId,
         recipientId: string,
@@ -151,5 +159,97 @@ export class MessageService {
         await conversation.save();
 
         return this.enrichMessageMedia(message);
+    }
+
+    async addOrUpdateReaction(
+        conversationId: string,
+        messageId: string,
+        userId: Types.ObjectId,
+        emoji: string,
+    ) {
+        const normalizedEmoji = String(emoji || '').trim();
+        if (!normalizedEmoji || normalizedEmoji.length > 32) {
+            throw new Error('Emoji khong hop le');
+        }
+
+        await this.getMessageOrThrow(messageId, conversationId);
+
+        const updated = await this.messageRepository.upsertReaction(
+            messageId,
+            conversationId,
+            userId,
+            normalizedEmoji,
+        );
+
+        if (!updated) {
+            throw new Error('Tin nhan khong ton tai');
+        }
+
+        return this.enrichMessageMedia(updated);
+    }
+
+    async removeReaction(
+        conversationId: string,
+        messageId: string,
+        userId: Types.ObjectId,
+    ) {
+        await this.getMessageOrThrow(messageId, conversationId);
+
+        const updated = await this.messageRepository.removeReaction(
+            messageId,
+            conversationId,
+            userId,
+        );
+
+        if (!updated) {
+            throw new Error('Tin nhan khong ton tai');
+        }
+
+        return this.enrichMessageMedia(updated);
+    }
+
+    async markMessageAsRead(
+        conversationId: string,
+        messageId: string,
+        userId: Types.ObjectId,
+    ) {
+        await this.getMessageOrThrow(messageId, conversationId);
+
+        const updated = await this.messageRepository.markAsRead(
+            messageId,
+            conversationId,
+            userId,
+        );
+
+        if (!updated) {
+            throw new Error('Tin nhan khong ton tai');
+        }
+
+        return this.enrichMessageMedia(updated);
+    }
+
+    async markMessagesAsReadUntil(
+        conversationId: string,
+        userId: Types.ObjectId,
+        lastMessageId?: string,
+    ) {
+        let readUntil: Date | undefined;
+
+        if (lastMessageId) {
+            const targetMessage = await this.getMessageOrThrow(lastMessageId, conversationId);
+            readUntil = (targetMessage as any).createdAt;
+        }
+
+        const result = await this.messageRepository.markAllAsReadByConversation(
+            conversationId,
+            userId,
+            readUntil,
+        );
+
+        return {
+            modifiedCount: result.modifiedCount,
+            matchedCount: result.matchedCount,
+            readUntil: readUntil ? readUntil.toISOString() : null,
+        };
     }
 }

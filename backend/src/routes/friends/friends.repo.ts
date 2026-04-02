@@ -21,6 +21,15 @@ export class FriendRepository {
 		.populate('userB', 'username displayName avatarUrl')
 		.lean();
 	}
+
+	async countByUserId(userId: Types.ObjectId) {
+		return await Friend.countDocuments({
+			$or: [
+				{ userA: userId },
+				{ userB: userId },
+			],
+		});
+	}
 }
 
 export class FriendRequestRepository {

@@ -1,10 +1,16 @@
 import express from 'express';
-import {createConversation, getConversations, getMessages} from './conversations.controller';
+import { createConversation, getConversations, getMessages, markAsSeen } from './conversations.controller';
 import {protectedRoute} from '../../shared/middlewares/auth.middleware';
 import {
   checkFriendship,
   checkConversationMembership,
 } from "../../shared/middlewares/friend.middleware";
+import {
+  addOrUpdateMessageReaction,
+  markMessagesAsReadBulk,
+  markMessageAsRead,
+  removeMessageReaction,
+} from "../messages/messages.controller";
 
 const router = express.Router();
 
@@ -122,6 +128,31 @@ router.get("/", protectedRoute, getConversations);
 
 /**
  * @swagger
+ * /api/conversations/{conversationId}/seen:
+ *   patch:
+ *     summary: Danh dau da xem cuoc tro chuyen
+ *     tags: [Conversations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: conversationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Da cap nhat trang thai seen
+ */
+router.patch(
+  "/:conversationId/seen",
+  protectedRoute,
+  checkConversationMembership,
+  markAsSeen,
+);
+
+/**
+ * @swagger
  * /api/conversations/{conversationId}/messages:
  *   get:
  *     summary: Lấy tin nhắn của một cuộc trò chuyện
@@ -195,6 +226,137 @@ router.get(
   protectedRoute,
   checkConversationMembership,
   getMessages,
+);
+
+/**
+ * @swagger
+ * /api/conversations/{conversationId}/messages/{messageId}/reaction:
+ *   put:
+ *     summary: Them hoac cap nhat reaction cho tin nhan
+ *     tags: [Conversations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: conversationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: messageId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - emoji
+ *             properties:
+ *               emoji:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Cap nhat reaction thanh cong
+ *   delete:
+ *     summary: Go reaction cua toi khoi tin nhan
+ *     tags: [Conversations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: conversationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: messageId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Da go reaction
+ */
+router.put(
+  "/:conversationId/messages/:messageId/reaction",
+  protectedRoute,
+  checkConversationMembership,
+  addOrUpdateMessageReaction,
+);
+router.delete(
+  "/:conversationId/messages/:messageId/reaction",
+  protectedRoute,
+  checkConversationMembership,
+  removeMessageReaction,
+);
+
+/**
+ * @swagger
+ * /api/conversations/{conversationId}/messages/{messageId}/read:
+ *   patch:
+ *     summary: Danh dau tin nhan da doc
+ *     tags: [Conversations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: conversationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: messageId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Da danh dau da doc
+ */
+router.patch(
+  "/:conversationId/messages/:messageId/read",
+  protectedRoute,
+  checkConversationMembership,
+  markMessageAsRead,
+);
+
+/**
+ * @swagger
+ * /api/conversations/{conversationId}/messages/read-all:
+ *   patch:
+ *     summary: Danh dau da doc hang loat den lastMessageId
+ *     tags: [Conversations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: conversationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               lastMessageId:
+ *                 type: string
+ *                 description: Neu co, danh dau da doc toi tin nhan nay. Neu khong co, danh dau tat ca.
+ *     responses:
+ *       200:
+ *         description: Da danh dau da doc hang loat
+ */
+router.patch(
+  "/:conversationId/messages/read-all",
+  protectedRoute,
+  checkConversationMembership,
+  markMessagesAsReadBulk,
 );
 
 export default router;

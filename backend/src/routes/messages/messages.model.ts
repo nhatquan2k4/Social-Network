@@ -27,6 +27,46 @@ const messageMediaSchema = new mongoose.Schema(
 	},
 );
 
+const messageReactionSchema = new mongoose.Schema(
+	{
+		userId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "User",
+			required: true,
+		},
+		emoji: {
+			type: String,
+			required: true,
+			trim: true,
+			maxlength: 32,
+		},
+		reactedAt: {
+			type: Date,
+			default: Date.now,
+		},
+	},
+	{
+		_id: false,
+	},
+);
+
+const messageReadBySchema = new mongoose.Schema(
+	{
+		userId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "User",
+			required: true,
+		},
+		readAt: {
+			type: Date,
+			default: Date.now,
+		},
+	},
+	{
+		_id: false,
+	},
+);
+
 const messageSchema = new mongoose.Schema(
 	{
 		conversationId: {
@@ -46,6 +86,14 @@ const messageSchema = new mongoose.Schema(
 		},
 		media: {
 			type: [messageMediaSchema],
+			default: [],
+		},
+		reactions: {
+			type: [messageReactionSchema],
+			default: [],
+		},
+		readBy: {
+			type: [messageReadBySchema],
 			default: [],
 		},
 		imgUrl: {

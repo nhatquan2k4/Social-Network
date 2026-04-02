@@ -28,6 +28,34 @@ export class UserRepository {
 		return await User.findById(userId).select(fields).lean();
 	}
 
+	async findProfileById(userId: string | Types.ObjectId) {
+		return await User.findById(userId)
+			.select('_id username displayName avatarUrl bio createdAt updatedAt')
+			.lean();
+	}
+
+	async updateProfile(
+		userId: string | Types.ObjectId,
+		setData: Record<string, unknown>,
+		unsetFields: string[],
+	) {
+		const updateQuery: Record<string, unknown> = {};
+
+		if (Object.keys(setData).length > 0) {
+			updateQuery.$set = setData;
+		}
+
+		if (unsetFields.length > 0) {
+			const unsetQuery: Record<string, 1> = {};
+			unsetFields.forEach((field) => {
+				unsetQuery[field] = 1;
+			});
+			updateQuery.$unset = unsetQuery;
+		}
+
+		return await User.findByIdAndUpdate(userId, updateQuery, { new: true }).select('-hashedPassword');
+	}
+
 	async updateAvatar(
 		userId: string | Types.ObjectId,
 		avatarData: { avatarUrl: string; avatarPublicId: string; avatarBucket: string; avatarObjectKey: string },
