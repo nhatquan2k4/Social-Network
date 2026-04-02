@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/presentation/widgets/common/custom_button.dart';
-import 'package:frontend/presentation/screens/auth/otp_verification_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:frontend/presentation/providers/auth_provider.dart';
+// import 'package:frontend/presentation/screens/auth/otp_verification_screen.dart';
 import 'package:frontend/core/routes/app_routes.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -11,7 +13,8 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -20,7 +23,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -64,9 +68,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               const SizedBox(height: 18),
 
-              TextField(
-                controller: _nameController,
-                decoration: _inputDecoration('Họ và tên'),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _firstNameController,
+                      decoration: _inputDecoration('Tên'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _lastNameController,
+                      decoration: _inputDecoration('Họ'),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
               TextField(
@@ -121,8 +138,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               CustomButton(
                 label: 'Đăng ký',
-                onPressed: () {
+                onPressed: () async {
+                  final firstName = _firstNameController.text.trim();
+                  final lastName = _lastNameController.text.trim();
+                  final username = _usernameController.text.trim();
                   final email = _emailController.text.trim();
+                  final password = _passwordController.text;
+                  final confirm = _confirmController.text;
+
+                  if (firstName.isEmpty || lastName.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Vui lòng nhập họ và tên')),
+                    );
+                    return;
+                  }
+
+                  if (username.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Vui lòng nhập tên người dùng'),
+                      ),
+                    );
+                    return;
+                  }
+
                   if (email.isEmpty || !email.contains('@')) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -132,15 +171,54 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return;
                   }
 
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => OtpVerificationScreen(
-                        email: email,
-                        purpose: OtpPurpose.register,
+                  if (password.length < 6 || password != confirm) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Mật khẩu quá ngắn hoặc không khớp'),
                       ),
-                    ),
+                    );
+                    return;
+                  }
+
+                  // Show loading dialog
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (_) =>
+                        const Center(child: CircularProgressIndicator()),
                   );
+
+                  // Call register usecase via provider
+                  final success = await context.read<AuthProvider>().register(
+                    username,
+                    password,
+                    email,
+                    firstName,
+                    lastName,
+                  );
+
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop(); // close loading
+
+                  if (success) {
+                    // Registration succeeded — show success and clear form
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Đăng ký thành công')),
+                    );
+                    _firstNameController.clear();
+                    _lastNameController.clear();
+                    _usernameController.clear();
+                    _emailController.clear();
+                    _passwordController.clear();
+                    _confirmController.clear();
+                  } else {
+                    final err =
+                        context.read<AuthProvider>().errorMessage ??
+                        'Đăng ký thất bại';
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(err)));
+                  }
                 },
               ),
 
