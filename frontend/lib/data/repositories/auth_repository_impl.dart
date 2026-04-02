@@ -2,6 +2,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../services/api_service.dart';
 import '../services/local_storage_service.dart';
 import '../models/auth/login_response_model.dart';
+import '../models/auth/register_model.dart';
 import '../../core/constants/api_constants.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -23,6 +24,25 @@ class AuthRepositoryImpl implements AuthRepository {
     await localStorage.saveToken(loginResponse.accessToken);
 
     return loginResponse;
+  }
+
+  @override
+  Future<RegisterModel> register(
+    String username,
+    String password,
+    String email,
+    String firstName,
+    String lastName,
+  ) async {
+    final response = await apiService.post(ApiConstants.register, {
+      "username": username,
+      "password": password,
+      "email": email,
+      "firstName": firstName,
+      "lastName": lastName,
+    });
+
+    return RegisterModel.fromJson(response.data);
   }
 
   @override

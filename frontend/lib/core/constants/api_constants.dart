@@ -10,6 +10,7 @@ class ApiConstants {
   }
 
   static const String login = '/auth/login';
+  static const String register = '/auth/register';
   static const String friends = '/friends';
   static const String profile = '/users/me';
   static const String profileAvatar = '/users/me/avatar';

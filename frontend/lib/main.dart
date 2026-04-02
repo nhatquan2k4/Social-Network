@@ -16,6 +16,7 @@ import 'package:frontend/data/repositories/auth_repository_impl.dart';
 import 'package:frontend/data/services/api_service.dart';
 import 'package:frontend/data/services/local_storage_service.dart';
 import 'package:frontend/domain/usecases/login_usecase.dart';
+import 'package:frontend/domain/usecases/register_usecase.dart';
 
 import 'package:frontend/presentation/providers/friend_provider.dart';
 import 'package:frontend/domain/usecases/friend_usecase.dart';
@@ -50,6 +51,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => AuthProvider(
             LoginUseCase(AuthRepositoryImpl(apiService, localStorageService)),
+            RegisterUseCase(
+              AuthRepositoryImpl(apiService, localStorageService),
+            ),
           ),
         ),
 
