@@ -75,6 +75,9 @@ class MyApp extends StatelessWidget {
             createConversationUseCase: CreateConversationUseCase(
               ConversationRepositoryImpl(apiService),
             ),
+            getConversationsUseCase: GetConversationsUseCase(
+              ConversationRepositoryImpl(apiService),
+            ),
           ),
         ),
 

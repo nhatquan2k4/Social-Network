@@ -10,3 +10,13 @@ class CreateConversationUseCase {
     return repository.createConversation(recipientId: recipientId);
   }
 }
+
+class GetConversationsUseCase {
+  final ConversationRepository repository;
+
+  GetConversationsUseCase(this.repository);
+
+  Future<List<ConversationEntity>> call() {
+    return repository.getConversations();
+  }
+}

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/routes/app_routes.dart';
 import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/screens/chat/group/chat_group_create_screen.dart';
 import 'package:frontend/presentation/screens/chat/media/chat_media_gallery_screen.dart';
 import 'package:frontend/presentation/screens/chat/media/chat_media_viewer_screen.dart';
+import 'package:frontend/presentation/screens/profile/friend_profile_screen.dart';
 import 'package:frontend/presentation/screens/chat/profile/chat_nickname_screen.dart';
 import 'package:frontend/presentation/screens/chat/profile/chat_safety_screen.dart';
 import 'package:frontend/presentation/screens/chat/search/chat_search_screen.dart';
@@ -186,7 +188,7 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
           child: _actionIcon(
             icon: Icons.person_outline,
             label: context.l10n.safetyProfile,
-            onTap: () {},
+            onTap: _openFriendProfile,
           ),
         ),
         Expanded(
@@ -470,6 +472,20 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
           conversationId: widget.conversationId,
           chatStore: _chatStore,
         ),
+      ),
+    );
+  }
+
+  Future<void> _openFriendProfile() async {
+    final username = _friendUsername.trim();
+    final userId = widget.conversationId.trim();
+
+    await Navigator.of(context).pushNamed(
+      AppRoutes.profileFriend,
+      arguments: FriendProfileArgs(
+        userId: userId.isNotEmpty ? userId : username,
+        username: username.isNotEmpty ? username : widget.displayName,
+        displayName: _friendDisplayNameForNickname,
       ),
     );
   }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/l10n/l10n.dart';
+import 'package:frontend/domain/entities/friend_entity.dart';
+import 'package:frontend/presentation/providers/chat_provider.dart';
 import 'package:frontend/presentation/providers/feed_provider.dart';
+import 'package:frontend/presentation/screens/chat/chat_screen.dart';
 import 'package:provider/provider.dart';
 
 class FriendProfileArgs {
@@ -174,7 +177,7 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
                     child: _PrimaryActionButton(
                       label: l10n.privateMessage,
                       isPrimary: true,
-                      onTap: () {},
+                      onTap: _openDirectChat,
                     ),
                   ),
                 ],
@@ -264,6 +267,61 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openDirectChat() async {
+    final userId = widget.args.userId.trim();
+    final username = widget.args.username.trim();
+    final displayName = (widget.args.displayName ?? '').trim().isNotEmpty
+        ? widget.args.displayName!.trim()
+        : username;
+
+    if (userId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.featureInDevelopment)),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final chatProvider = context.read<ChatProvider>();
+      await chatProvider.createAndLoadConversation(userId);
+
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      final friend = FriendEntity(
+        id: userId,
+        username: username.isNotEmpty ? username : userId,
+        displayName: displayName,
+      );
+
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            friend: friend,
+            conversationId: chatProvider.currentConversationId,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.cannotOpenChat(e.toString())),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }
 
