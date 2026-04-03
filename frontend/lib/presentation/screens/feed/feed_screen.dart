@@ -5,6 +5,7 @@ import 'package:frontend/data/services/local_storage_service.dart';
 import 'package:frontend/domain/entities/post_entity.dart';
 import 'package:frontend/presentation/controllers/common/bottom_nav_route_controller.dart';
 import 'package:frontend/presentation/providers/feed_provider.dart';
+import 'package:frontend/presentation/providers/notification_provider.dart';
 import 'package:frontend/presentation/screens/profile/friend_profile_screen.dart';
 import 'package:frontend/presentation/widgets/common/bottom_nav.dart';
 import 'package:frontend/presentation/widgets/common/empty_state.dart';
@@ -42,6 +43,7 @@ class _FeedScreenState extends State<FeedScreen> {
       if (feedProvider.posts.isEmpty) {
         feedProvider.loadInitial();
       }
+      context.read<NotificationProvider>().syncUnreadCount();
     });
   }
 
@@ -531,15 +533,55 @@ class _FeedScreenState extends State<FeedScreen> {
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.notifications_none,
-              color: Colors.black,
-              size: 22,
-            ),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.feedNotificationSoon)),
+          Consumer<NotificationProvider>(
+            builder: (context, notificationProvider, child) {
+              final unreadCount = notificationProvider.unreadCount;
+
+              return IconButton(
+                onPressed: () async {
+                  await Navigator.of(context).pushNamed(AppRoutes.notifications);
+                  if (!mounted) return;
+                  notificationProvider.syncUnreadCount();
+                },
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(
+                      Icons.notifications_none,
+                      color: Colors.black,
+                      size: 22,
+                    ),
+                    if (unreadCount > 0)
+                      Positioned(
+                        right: -5,
+                        top: -5,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE53935),
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            unreadCount > 99 ? '99+' : unreadCount.toString(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              height: 1.1,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               );
             },
           ),

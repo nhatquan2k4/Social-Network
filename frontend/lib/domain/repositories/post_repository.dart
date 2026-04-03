@@ -4,6 +4,8 @@ import '../entities/post_entity.dart';
 abstract class PostRepository {
   Future<List<PostEntity>> fetchFeed({int page = 1, int limit = 10});
 
+  Future<PostEntity> getPostById(String postId);
+
   Future<PostEntity> createPost(
     String content, {
     List<Map<String, dynamic>> media = const [],

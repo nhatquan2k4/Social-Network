@@ -28,6 +28,9 @@ import 'package:frontend/data/repositories/profile_repository_impl.dart';
 import 'package:frontend/domain/usecases/post_usecase.dart';
 import 'package:frontend/data/repositories/post_repository_impl.dart';
 import 'package:frontend/presentation/providers/feed_provider.dart';
+import 'package:frontend/domain/usecases/notification_usecase.dart';
+import 'package:frontend/data/repositories/notification_repository_impl.dart';
+import 'package:frontend/presentation/providers/notification_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -84,6 +87,12 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) =>
               FeedProvider(PostUsecase(PostRepositoryImpl(apiService))),
+        ),
+
+        ChangeNotifierProvider(
+          create: (_) => NotificationProvider(
+            NotificationUsecase(NotificationRepositoryImpl(apiService)),
+          ),
         ),
       ],
       child: MaterialApp(

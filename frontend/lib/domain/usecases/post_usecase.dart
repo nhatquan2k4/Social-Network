@@ -11,6 +11,10 @@ class PostUsecase {
     return repository.fetchFeed(page: page, limit: limit);
   }
 
+  Future<PostEntity> getPostById(String postId) {
+    return repository.getPostById(postId);
+  }
+
   Future<PostEntity> createPost(
     String content, {
     List<Map<String, dynamic>> media = const [],

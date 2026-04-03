@@ -39,6 +39,19 @@ class PostRepositoryImpl implements PostRepository {
   }
 
   @override
+  Future<PostEntity> getPostById(String postId) async {
+    try {
+      final response = await apiService.get(ApiConstants.postById(postId));
+      final raw = response.data['data'];
+      final model = PostModel.fromJson(Map<String, dynamic>.from(raw));
+      return PostMapper.toEntity(model);
+    } catch (e) {
+      logger.e('Failed to get post by id: $e');
+      rethrow;
+    }
+  }
+
+  @override
   Future<PostEntity> createPost(
     String content, {
     List<Map<String, dynamic>> media = const [],

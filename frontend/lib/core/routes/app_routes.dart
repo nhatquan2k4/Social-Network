@@ -12,7 +12,9 @@ class AppRoutes {
   static const String posts = '/posts';
   static const String postsFeed = '/posts/feed';
   static const String postsCreate = '/posts/create';
+  static const String postDetail = '/posts/detail';
   static const String explore = '/explore';
+  static const String notifications = '/notifications';
   static String postById(String postId) => '/posts/$postId';
   static String postLike(String postId) => '/posts/$postId/like';
   static String postComments(String postId) => '/posts/$postId/comments';

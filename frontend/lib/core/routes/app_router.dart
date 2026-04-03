@@ -8,6 +8,8 @@ import 'package:frontend/presentation/screens/chat/messages_screen.dart';
 import 'package:frontend/presentation/screens/explore/explore_screen.dart';
 import 'package:frontend/presentation/screens/feed/create_post_screen.dart';
 import 'package:frontend/presentation/screens/feed/feed_screen.dart';
+import 'package:frontend/presentation/screens/feed/post_detail_screen.dart';
+import 'package:frontend/presentation/screens/notifications/notifications_screen.dart';
 import 'package:frontend/presentation/screens/profile/friend_profile_screen.dart';
 import 'package:frontend/presentation/screens/profile/profile_screen.dart';
 
@@ -41,6 +43,16 @@ class AppRouter {
           settings: settings,
           child: const CreatePostScreen(),
         );
+      case AppRoutes.postDetail:
+        final args = settings.arguments;
+        final detailArgs = args is PostDetailArgs
+            ? args
+            : const PostDetailArgs(postId: '');
+
+        return _buildMaterialRoute(
+          settings: settings,
+          child: PostDetailScreen(args: detailArgs),
+        );
       case AppRoutes.postsFeed:
         return _buildBottomTabRoute(
           settings: settings,
@@ -60,6 +72,11 @@ class AppRouter {
         return _buildBottomTabRoute(
           settings: settings,
           child: const ProfileScreen(),
+        );
+      case AppRoutes.notifications:
+        return _buildMaterialRoute(
+          settings: settings,
+          child: const NotificationsScreen(),
         );
       case AppRoutes.profileFriend:
         final args = settings.arguments;

@@ -162,6 +162,22 @@ class FeedProvider extends ChangeNotifier {
     return null;
   }
 
+  Future<PostEntity?> ensurePostById(String postId) async {
+    final existing = postById(postId);
+    if (existing != null) {
+      return existing;
+    }
+
+    try {
+      final fetched = await postUsecase.getPostById(postId);
+      _posts.insert(0, fetched);
+      notifyListeners();
+      return fetched;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> loadInitial() async {
     if (isLoadingInitial) return;
 

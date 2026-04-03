@@ -12,6 +12,7 @@ import '../../providers/chat_provider.dart';
 import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/message_input.dart';
 import 'group/chat_group_add_members_screen.dart';
+import 'group/chat_group_create_screen.dart';
 import 'group/chat_group_info_screen.dart';
 import 'profile/chat_user_profile_screen.dart';
 
@@ -205,9 +206,11 @@ class _ChatScreenState extends State<ChatScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add, size: 28, color: Color(0xFF2F2F34)),
-            onPressed: (_isGroup && _canManageGroup)
-                ? _openAddMembersScreen
-                : null,
+            onPressed: _isGroup
+                ? (_canManageGroup
+                      ? _openAddMembersScreen
+                      : _showManageGroupPermissionToast)
+                : _openQuickGroupCreateWithCurrentFriend,
           ),
         ],
       ),
@@ -517,6 +520,29 @@ class _ChatScreenState extends State<ChatScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(context.l10n.groupMemberAdded)),
+    );
+  }
+
+  Future<void> _openQuickGroupCreateWithCurrentFriend() async {
+    final friendConversation = _chatStore.conversationById(widget.friend.id);
+
+    if (friendConversation == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.featureInDevelopment)),
+      );
+      return;
+    }
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatGroupCreateScreen(
+          conversationId: widget.friend.id,
+          currentFriendId: widget.friend.id,
+          chatStore: _chatStore,
+        ),
+      ),
     );
   }
 
