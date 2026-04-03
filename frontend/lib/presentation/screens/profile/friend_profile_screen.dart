@@ -79,6 +79,11 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         leading: IconButton(
+          style: IconButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+          ),
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -94,10 +99,20 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
         ),
         actions: [
           IconButton(
+            style: IconButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
             icon: const Icon(Icons.notifications_none_outlined),
             onPressed: () {},
           ),
           IconButton(
+            style: IconButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
             icon: const Icon(Icons.more_horiz),
             onPressed: () {},
           ),
@@ -203,6 +218,11 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
               children: [
                 Expanded(
                   child: IconButton(
+                    style: IconButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
                     onPressed: () => setState(() => _selectedTab = 0),
                     icon: Icon(
                       Icons.grid_on,
@@ -212,6 +232,11 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
                 ),
                 Expanded(
                   child: IconButton(
+                    style: IconButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
                     onPressed: () => setState(() => _selectedTab = 1),
                     icon: Icon(
                       Icons.person_pin_outlined,
@@ -416,7 +441,7 @@ class _PrimaryActionButton extends StatelessWidget {
           foregroundColor: isPrimary ? Colors.white : const Color(0xFF222227),
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(30),
           ),
           textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
         ),

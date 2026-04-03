@@ -176,6 +176,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           Consumer<NotificationProvider>(
             builder: (context, provider, child) {
               return TextButton(
+                style: TextButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                ),
                 onPressed: provider.unreadCount > 0
                     ? () => provider.markAllAsRead()
                     : null,
@@ -368,6 +377,7 @@ class _NotificationTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(30),
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 8, 14, 8),
         child: Row(
@@ -499,7 +509,7 @@ class _FollowActionButton extends StatelessWidget {
           foregroundColor:
               isFollowing ? const Color(0xFF1F1F23) : Colors.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
           padding: const EdgeInsets.symmetric(horizontal: 12),
           textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
         ),
