@@ -5,6 +5,7 @@ import 'package:frontend/presentation/screens/auth/login_screen.dart';
 import 'package:frontend/presentation/screens/auth/register_screen.dart';
 import 'package:frontend/presentation/screens/auth/welcome_screen.dart';
 import 'package:frontend/presentation/screens/chat/messages_screen.dart';
+import 'package:frontend/presentation/screens/chat/pending_messages_screen.dart';
 import 'package:frontend/presentation/screens/explore/explore_screen.dart';
 import 'package:frontend/presentation/screens/feed/create_post_screen.dart';
 import 'package:frontend/presentation/screens/feed/feed_screen.dart';
@@ -67,6 +68,11 @@ class AppRouter {
         return _buildBottomTabRoute(
           settings: settings,
           child: const MessagesScreen(),
+        );
+      case AppRoutes.messagesPending:
+        return _buildMaterialRoute(
+          settings: settings,
+          child: const PendingMessagesScreen(),
         );
       case AppRoutes.profile:
         return _buildBottomTabRoute(

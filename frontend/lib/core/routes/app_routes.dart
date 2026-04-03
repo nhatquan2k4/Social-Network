@@ -8,6 +8,7 @@ class AppRoutes {
   static const String friends = '/friends';
   static const String conversations = '/conversations';
   static const String messages = '/messages/direct';
+  static const String messagesPending = '/messages/pending';
   static const String groups = '/messages/group';
   static const String posts = '/posts';
   static const String postsFeed = '/posts/feed';

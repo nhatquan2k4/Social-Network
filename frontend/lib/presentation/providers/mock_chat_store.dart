@@ -18,25 +18,9 @@ class MockChatStore extends ChangeNotifier {
       _buildInitialConversations();
 
   List<MockConversation> visibleConversations(String query) {
-    final normalized = query.trim().toLowerCase();
-
-    for (final conversation in _conversations) {
-      _refreshMuteState(conversation);
-    }
-
     final filtered = _conversations.where((c) {
       if (c.isDeleted || c.isHidden) return false;
-      if (normalized.isEmpty) return true;
-
-      final selfNickname = _selfNicknames[c.id]?.toLowerCase() ?? '';
-      final friendNickname = _friendNicknames[c.id]?.toLowerCase() ?? '';
-      final memberText = c.memberNames.join(' ').toLowerCase();
-
-      return c.username.toLowerCase().contains(normalized) ||
-          c.lastPreviewText.toLowerCase().contains(normalized) ||
-          memberText.contains(normalized) ||
-          selfNickname.contains(normalized) ||
-          friendNickname.contains(normalized);
+      return _matchesConversationQuery(c, query);
     }).toList();
 
     filtered.sort((a, b) {
@@ -47,6 +31,29 @@ class MockChatStore extends ChangeNotifier {
     });
 
     return filtered;
+  }
+
+  List<MockConversation> pendingConversations(String query) {
+    final filtered = _conversations.where((c) {
+      if (c.isDeleted || !c.isHidden) return false;
+      return _matchesConversationQuery(c, query);
+    }).toList();
+
+    filtered.sort((a, b) {
+      if (a.isPinned != b.isPinned) {
+        return a.isPinned ? -1 : 1;
+      }
+      return b.lastMessageAt.compareTo(a.lastMessageAt);
+    });
+
+    return filtered;
+  }
+
+  int get pendingConversationCount {
+    for (final conversation in _conversations) {
+      _refreshMuteState(conversation);
+    }
+    return _conversations.where((c) => !c.isDeleted && c.isHidden).length;
   }
 
   List<MockChatMessage> conversationMessages(String conversationId) {
@@ -541,6 +548,14 @@ class MockChatStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  void restoreConversation(String conversationId) {
+    final conversation = _findById(conversationId);
+    if (conversation == null) return;
+
+    conversation.isHidden = false;
+    notifyListeners();
+  }
+
   void deleteConversation(String conversationId) {
     final conversation = _findById(conversationId);
     if (conversation == null) return;
@@ -996,6 +1011,27 @@ class MockChatStore extends ChangeNotifier {
         .take(2)
         .map((e) => e[0].toUpperCase() + e.substring(1))
         .join(' ');
+  }
+
+  bool _matchesConversationQuery(MockConversation conversation, String query) {
+    final normalized = query.trim().toLowerCase();
+
+    _refreshMuteState(conversation);
+
+    if (normalized.isEmpty) {
+      return true;
+    }
+
+    final selfNickname = _selfNicknames[conversation.id]?.toLowerCase() ?? '';
+    final friendNickname =
+        _friendNicknames[conversation.id]?.toLowerCase() ?? '';
+    final memberText = conversation.memberNames.join(' ').toLowerCase();
+
+    return conversation.username.toLowerCase().contains(normalized) ||
+        conversation.lastPreviewText.toLowerCase().contains(normalized) ||
+        memberText.contains(normalized) ||
+        selfNickname.contains(normalized) ||
+        friendNickname.contains(normalized);
   }
 }
 

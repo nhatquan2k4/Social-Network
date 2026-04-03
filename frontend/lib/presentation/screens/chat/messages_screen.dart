@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/routes/app_routes.dart';
 import 'package:frontend/core/l10n/l10n.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:frontend/domain/entities/friend_entity.dart';
@@ -109,12 +110,57 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     color: Color(0xFF191919),
                   ),
                 ),
-                Text(
-                  l10n.pendingMessages,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF3797EF),
-                    fontWeight: FontWeight.w500,
+                InkWell(
+                  borderRadius: BorderRadius.circular(18),
+                  onTap: () {
+                    Navigator.of(context).pushNamed(AppRoutes.messagesPending);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 4,
+                    ),
+                    child: AnimatedBuilder(
+                      animation: _chatStore,
+                      builder: (context, _) {
+                        final pendingCount = _chatStore.pendingConversationCount;
+                        return Row(
+                          children: [
+                            Text(
+                              l10n.pendingMessages,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF3797EF),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            if (pendingCount > 0) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 1,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF3797EF),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  pendingCount > 99
+                                      ? '99+'
+                                      : pendingCount.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -190,7 +236,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                             label: l10n.hideAction,
                           ),
                           SlidableAction(
-                            onPressed: (_) {
+                            onPressed: (_) async {
+                              final shouldDelete = await _confirmDeleteConversation();
+                              if (!shouldDelete) return;
                               _chatStore.deleteConversation(item.id);
                               _showToast(l10n.chatDeleted);
                             },
@@ -469,6 +517,34 @@ class _MessagesScreenState extends State<MessagesScreen> {
         builder: (_) => ChatGroupCreateScreen(chatStore: _chatStore),
       ),
     );
+  }
+
+  Future<bool> _confirmDeleteConversation() async {
+    final l10n = context.l10n;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l10n.deleteAction),
+          content: const Text('Bạn có chắc muốn xóa đoạn chat này không?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(
+                l10n.deleteAction,
+                style: const TextStyle(color: Color(0xFFFF3B30)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirmed ?? false;
   }
 
   String? _formatMuteMoment(DateTime? moment) {
