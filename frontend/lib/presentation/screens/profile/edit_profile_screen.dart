@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/domain/entities/profile_entity.dart';
 import 'package:frontend/presentation/providers/profile_provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -57,6 +58,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _pickAndUploadAvatar() async {
+    final l10n = context.l10n;
     final picker = ImagePicker();
     final file = await picker.pickImage(
       source: ImageSource.gallery,
@@ -77,7 +79,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã cập nhật ảnh đại diện.')),
+        SnackBar(content: Text(l10n.updateAvatarSuccess)),
       );
       return;
     }
@@ -88,12 +90,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(provider.error ?? 'Không thể cập nhật ảnh đại diện.'),
+        content: Text(provider.error ?? l10n.updateAvatarFailed),
       ),
     );
   }
 
   void _saveProfileLocally() {
+    final l10n = context.l10n;
     if (!_formKey.currentState!.validate()) return;
 
     context.read<ProfileProvider>().applyLocalProfileEdits(
@@ -105,9 +108,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Đã lưu thông tin trang cá nhân (lưu cục bộ).'),
-      ),
+      SnackBar(content: Text(l10n.profileSavedLocal)),
     );
 
     Navigator.pop(context, true);
@@ -191,6 +192,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Consumer<ProfileProvider>(
       builder: (context, provider, _) {
         final profile = provider.profile ?? widget.initialProfile;
@@ -205,16 +208,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.chevron_left, color: Colors.black),
             ),
-            title: const Text(
-              'Chỉnh sửa trang cá nhân',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+            title: Text(
+              l10n.editProfileTitle,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
             ),
             centerTitle: true,
             actions: [
               TextButton(
                 onPressed: provider.isSaving ? null : _saveProfileLocally,
-                child: const Text(
-                  'Xong',
+                child: Text(
+                  l10n.done,
                   style: TextStyle(fontSize: 12, color: Color(0xFF0095F6)),
                 ),
               ),
@@ -241,8 +244,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           onPressed: provider.isSaving
                               ? null
                               : _pickAndUploadAvatar,
-                          child: const Text(
-                            'Chỉnh sửa ảnh hoặc avatar',
+                          child: Text(
+                            l10n.editAvatarAction,
                             style: TextStyle(
                               fontSize: 10,
                               color: Color(0xFF0095F6),
@@ -253,35 +256,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                   ),
                   _buildFlatFieldRow(
-                    label: 'Tên',
+                    label: l10n.firstNameHint,
                     controller: _nameController,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Vui lòng nhập tên hiển thị';
+                        return l10n.pleaseEnterDisplayName;
                       }
                       return null;
                     },
                   ),
                   _buildRowDivider(),
                   _buildFlatFieldRow(
-                    label: 'Tên người dùng',
+                    label: l10n.usernameHint,
                     controller: _usernameController,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Vui lòng nhập tên người dùng';
+                        return l10n.pleaseEnterUsername;
                       }
                       return null;
                     },
                   ),
                   _buildRowDivider(),
                   _buildFlatFieldRow(
-                    label: 'Liên kết',
+                    label: l10n.chatInviteLink,
                     controller: _linkController,
                     isPlaceholder: true,
                   ),
                   _buildRowDivider(),
                   _buildFlatFieldRow(
-                    label: 'Tiểu sử',
+                    label: l10n.bioLabel,
                     controller: _bioController,
                     maxLines: 2,
                   ),
@@ -291,9 +294,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     alignment: Alignment.center,
                     child: Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'Tài khoản riêng tư',
+                            l10n.privateAccount,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -302,7 +305,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                         Switch.adaptive(
                           value: _isPrivateAccount,
-                          activeColor: const Color(0xFF34C759),
+                          activeTrackColor: const Color(0xFF34C759),
                           onChanged: provider.isSaving
                               ? null
                               : (value) {
@@ -314,40 +317,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                   _buildRowDivider(),
                   const SizedBox(height: 10),
-                  const Text(
-                    'Thông tin cá nhân',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
+                  Text(l10n.personalInfo, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   _buildFlatFieldRow(
-                    label: 'Email',
+                    label: l10n.emailLabel,
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Vui lòng nhập email';
+                        return l10n.pleaseEnterEmail;
                       }
                       if (!value.contains('@')) {
-                        return 'Email không hợp lệ';
+                        return l10n.pleaseEnterValidEmail;
                       }
                       return null;
                     },
                   ),
                   _buildRowDivider(),
                   _buildFlatFieldRow(
-                    label: 'Điện thoại',
+                    label: l10n.phoneLabel,
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
                   ),
                   _buildRowDivider(),
                   _buildFlatFieldRow(
-                    label: 'Giới tính',
+                    label: l10n.genderLabel,
                     controller: _genderController,
                   ),
                   _buildRowDivider(),
                   const SizedBox(height: 10),
                   Text(
-                    'Dữ liệu form đang dùng mẫu UI cho phần frontend.',
+                    l10n.profileFormSampleData,
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
                   ),
                 ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 
 class ChatNicknameScreen extends StatelessWidget {
@@ -32,8 +33,8 @@ class ChatNicknameScreen extends StatelessWidget {
               icon: const Icon(Icons.arrow_back_ios_new, size: 17),
               onPressed: () => Navigator.pop(context),
             ),
-            title: const Text(
-              'Biệt danh',
+            title: Text(
+              context.l10n.nicknameAction,
               style: TextStyle(
                 color: Color(0xFF1F1F23),
                 fontWeight: FontWeight.w700,
@@ -170,8 +171,8 @@ class ChatNicknameScreen extends StatelessWidget {
                   children: [
                     GestureDetector(
                       onTap: () => Navigator.pop(sheetContext),
-                      child: const Text(
-                        'Hủy',
+                      child: Text(
+                        context.l10n.cancel,
                         style: TextStyle(
                           fontSize: 32 / 2,
                           fontWeight: FontWeight.w700,
@@ -180,8 +181,8 @@ class ChatNicknameScreen extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    const Text(
-                      'Chỉnh sửa biệt danh',
+                    Text(
+                      context.l10n.editNicknameTitle,
                       style: TextStyle(
                         fontSize: 32 / 2,
                         fontWeight: FontWeight.w700,
@@ -200,8 +201,8 @@ class ChatNicknameScreen extends StatelessWidget {
 
                         if (hasChanged) {
                           final snackText = newValue.isEmpty
-                              ? 'Đã xóa biệt danh của $targetName'
-                              : 'Đã cập nhật biệt danh của $targetName';
+                                  ? context.l10n.nicknameRemoved(targetName)
+                                  : context.l10n.nicknameUpdated(targetName);
 
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -211,8 +212,8 @@ class ChatNicknameScreen extends StatelessWidget {
                           );
                         }
                       },
-                      child: const Text(
-                        'Xong',
+                      child: Text(
+                        context.l10n.done,
                         style: TextStyle(
                           fontSize: 32 / 2,
                           fontWeight: FontWeight.w700,
@@ -236,7 +237,7 @@ class ChatNicknameScreen extends StatelessWidget {
                   controller: controller,
                   autofocus: true,
                   decoration: InputDecoration(
-                    hintText: 'Nhập biệt danh',
+                    hintText: context.l10n.enterNicknameHint,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
                       borderSide: const BorderSide(color: Color(0xFF1F1F23)),
@@ -261,7 +262,7 @@ class ChatNicknameScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Mọi người trong đoạn chat đều sẽ nhìn thấy biệt danh này của $targetName.',
+                    context.l10n.nicknameVisibleInChat(targetName),
                 style: const TextStyle(color: Color(0xFF808086), fontSize: 12),
               ),
               const SizedBox(height: 18),

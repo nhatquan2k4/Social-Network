@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/screens/chat/group/chat_group_create_screen.dart';
 import 'package:frontend/presentation/screens/chat/media/chat_media_gallery_screen.dart';
@@ -88,19 +89,19 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
                   const Divider(height: 1, color: Color(0xFFD8D8DD)),
                   _optionTile(
                     icon: Icons.edit_outlined,
-                    label: 'Biệt danh',
+                    label: context.l10n.nicknameAction,
                     onTap: _openNicknameScreen,
                   ),
                   _optionTile(
                     icon: Icons.group_add_outlined,
-                    label: 'Tạo nhóm chat',
+                    label: context.l10n.createGroupChat,
                     onTap: _openCreateGroupScreen,
                   ),
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      const Text(
-                        'Ảnh và Video',
+                      Text(
+                        context.l10n.photosAndVideoTitle,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -110,8 +111,8 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
                       const Spacer(),
                       GestureDetector(
                         onTap: _openMediaGallery,
-                        child: const Text(
-                          'Xem tất cả',
+                        child: Text(
+                          context.l10n.viewAll,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -184,14 +185,14 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
         Expanded(
           child: _actionIcon(
             icon: Icons.person_outline,
-            label: 'Trang cá nhân',
+            label: context.l10n.safetyProfile,
             onTap: () {},
           ),
         ),
         Expanded(
           child: _actionIcon(
             icon: Icons.search,
-            label: 'Tìm kiếm',
+            label: context.l10n.searchGeneric,
             onTap: _openSearchInChat,
           ),
         ),
@@ -202,7 +203,7 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
               size: 20,
               color: const Color(0xFF1D1D21),
             ),
-            label: isMuted ? 'Đang tắt' : 'Tắt',
+            label: isMuted ? context.l10n.mutedNow : context.l10n.muteOffLabel,
             onTap: _showMuteOptionsSheet,
           ),
         ),
@@ -210,7 +211,7 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
           child: _actionIcon(
             key: _optionAnchorKey,
             icon: Icons.more_horiz,
-            label: 'Lựa chọn',
+            label: context.l10n.optionsLabel,
             onTap: () => _showOptionsMenu(isBlocked: isBlocked),
           ),
         ),
@@ -328,11 +329,11 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
   }
 
   Widget _buildBlockedMediaHint() {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.only(top: 10, bottom: 12),
       child: Center(
         child: Text(
-          'Nội dung ảnh và video bị ẩn do bạn đã chặn tài khoản này.',
+          context.l10n.blockedMediaHidden,
           style: TextStyle(color: Color(0xFF7D7D82), fontSize: 13),
           textAlign: TextAlign.center,
         ),
@@ -417,10 +418,10 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
         PopupMenuItem<String>(
           value: 'restrict',
           child: Row(
-            children: const [
-              Icon(Icons.people_alt_outlined, size: 20),
-              SizedBox(width: 10),
-              Text('Hạn chế', style: TextStyle(fontWeight: FontWeight.w500)),
+            children: [
+              const Icon(Icons.people_alt_outlined, size: 20),
+              const SizedBox(width: 10),
+              Text(context.l10n.restrictAction, style: const TextStyle(fontWeight: FontWeight.w500)),
             ],
           ),
         ),
@@ -434,7 +435,7 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
               ),
               const SizedBox(width: 10),
               Text(
-                isBlocked ? 'Bỏ chặn' : 'Chặn',
+                isBlocked ? context.l10n.unblockAction : context.l10n.blockAction,
                 style: const TextStyle(fontWeight: FontWeight.w500),
               ),
             ],
@@ -486,13 +487,13 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
         final isMuted = conversation?.isMuted ?? false;
 
         final options = <_MuteOption>[
-          const _MuteOption(label: '10 phút', duration: Duration(minutes: 10)),
-          const _MuteOption(label: '30 phút', duration: Duration(minutes: 30)),
-          const _MuteOption(label: '1 giờ', duration: Duration(hours: 1)),
-          const _MuteOption(label: '2 giờ', duration: Duration(hours: 2)),
-          const _MuteOption(label: '12 giờ', duration: Duration(hours: 12)),
-          const _MuteOption(label: '24 giờ', duration: Duration(hours: 24)),
-          const _MuteOption(label: '48 giờ', duration: Duration(hours: 48)),
+          _MuteOption(label: context.l10n.mute10Minutes, duration: const Duration(minutes: 10)),
+          _MuteOption(label: context.l10n.mute30Minutes, duration: const Duration(minutes: 30)),
+          _MuteOption(label: context.l10n.mute1Hour, duration: const Duration(hours: 1)),
+          _MuteOption(label: context.l10n.mute2Hours, duration: const Duration(hours: 2)),
+          _MuteOption(label: context.l10n.mute12Hours, duration: const Duration(hours: 12)),
+          _MuteOption(label: context.l10n.mute24Hours, duration: const Duration(hours: 24)),
+          _MuteOption(label: context.l10n.mute48Hours, duration: const Duration(hours: 48)),
         ];
 
         return SafeArea(
@@ -503,9 +504,9 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Center(
+                  Center(
                     child: Text(
-                      'Tắt thông báo đoạn chat',
+                      context.l10n.muteConversationTitle,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -528,8 +529,8 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 13),
                         ),
-                        child: const Text(
-                          'Bật thông báo',
+                        child: Text(
+                          context.l10n.turnOnNotifications,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 14,
@@ -539,8 +540,8 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Text(
-                      'Ưu tiên cao nhất: Hủy toàn bộ trạng thái tắt thông báo hiện tại.',
+                    Text(
+                      context.l10n.mutePriorityHint,
                       style: TextStyle(
                         color: Color(0xFF6C6C73),
                         fontSize: 11,
@@ -590,8 +591,8 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 13),
                       ),
-                      child: const Text(
-                        'Cho đến khi bật lại',
+                      child: Text(
+                        context.l10n.muteUntilTurnedOn,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 14,

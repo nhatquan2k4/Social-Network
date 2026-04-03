@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/screens/chat/profile/widgets/chat_block_bottom_sheet.dart';
 import 'package:frontend/presentation/screens/chat/profile/widgets/chat_unblock_dialog.dart';
@@ -71,24 +72,24 @@ class ChatSafetyScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Row(
+                Row(
                   children: [
                     Expanded(
                       child: _MiniAction(
                         icon: Icons.person_outline,
-                        label: 'Trang cá nhân',
+                        label: context.l10n.safetyProfile,
                       ),
                     ),
                     Expanded(
-                      child: _MiniAction(icon: Icons.search, label: 'Tìm kiếm'),
+                      child: _MiniAction(icon: Icons.search, label: context.l10n.searchGeneric),
                     ),
                   ],
                 ),
                 const SizedBox(height: 26),
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(horizontal: 22),
                   child: Text(
-                    'Người có thể liên hệ với bạn',
+                    context.l10n.peopleWhoCanContactYou,
                     style: TextStyle(
                       fontSize: 32 / 1.78,
                       fontWeight: FontWeight.w700,
@@ -100,7 +101,9 @@ class ChatSafetyScreen extends StatelessWidget {
                   _safetyTile(
                     icon: Icons.people_alt_outlined,
                     iconColor: const Color(0xFF1E1E22),
-                    label: isRestricted ? 'Bỏ hạn chế' : 'Hạn chế',
+                    label: isRestricted
+                        ? context.l10n.unrestrictAction
+                        : context.l10n.restrictAction,
                     labelColor: const Color(0xFF222227),
                     onTap: () =>
                         chatStore.setRestricted(conversationId, !isRestricted),
@@ -108,7 +111,9 @@ class ChatSafetyScreen extends StatelessWidget {
                 _safetyTile(
                   icon: Icons.block,
                   iconColor: const Color(0xFFE60000),
-                  label: isBlocked ? 'Bỏ chặn tài khoản' : 'Chặn tài khoản',
+                  label: isBlocked
+                      ? context.l10n.unblockAccount
+                      : context.l10n.blockAccount,
                   labelColor: const Color(0xFFE60000),
                   onTap: () async {
                     if (isBlocked) {

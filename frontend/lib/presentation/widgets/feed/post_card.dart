@@ -391,7 +391,7 @@ class _UserAvatar extends StatelessWidget {
       radius: 16,
       backgroundColor: const Color(0xFFDADADA),
       backgroundImage: NetworkImage(avatarUrl!),
-      onBackgroundImageError: (_, __) {},
+      onBackgroundImageError: (exception, stackTrace) {},
       child: null,
     );
   }

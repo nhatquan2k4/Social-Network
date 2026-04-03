@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 
 class ChatGroupAddMembersScreen extends StatefulWidget {
@@ -42,6 +43,7 @@ class _ChatGroupAddMembersScreenState extends State<ChatGroupAddMembersScreen> {
       if (query.isEmpty) return true;
       return c.username.toLowerCase().contains(query);
     }).toList();
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F4),
@@ -53,8 +55,8 @@ class _ChatGroupAddMembersScreenState extends State<ChatGroupAddMembersScreen> {
           icon: const Icon(Icons.arrow_back_ios_new, size: 17),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Thêm thành viên',
+        title: Text(
+          l10n.addMember,
           style: TextStyle(
             color: Color(0xFF1F1F23),
             fontWeight: FontWeight.w700,
@@ -67,7 +69,7 @@ class _ChatGroupAddMembersScreenState extends State<ChatGroupAddMembersScreen> {
                 ? null
                 : () => Navigator.pop(context, _selectedIds.toList()),
             child: Text(
-              'Xong',
+              l10n.done,
               style: TextStyle(
                 color: _selectedIds.isEmpty
                     ? const Color(0xFF98A0AA)
@@ -104,7 +106,7 @@ class _ChatGroupAddMembersScreenState extends State<ChatGroupAddMembersScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Tìm kiếm',
+                hintText: l10n.searchGeneric,
                 prefixIcon: const Icon(Icons.search, color: Color(0xFF9A9AA1)),
                 filled: true,
                 fillColor: const Color(0xFFECECEF),
@@ -117,10 +119,10 @@ class _ChatGroupAddMembersScreenState extends State<ChatGroupAddMembersScreen> {
             ),
           ),
           if (filtered.isEmpty)
-            const Expanded(
+            Expanded(
               child: Center(
                 child: Text(
-                  'Không còn thành viên để thêm',
+                  l10n.noMemberToTransfer,
                   style: TextStyle(color: Color(0xFF7D7D84), fontSize: 14),
                 ),
               ),

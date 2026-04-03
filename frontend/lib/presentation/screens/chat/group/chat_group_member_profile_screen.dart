@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/domain/entities/friend_entity.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/screens/chat/chat_screen.dart';
@@ -92,7 +93,7 @@ class ChatGroupMemberProfileScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    isAdmin ? 'Quản trị viên nhóm' : 'Thành viên nhóm',
+                    isAdmin ? context.l10n.adminRole : context.l10n.memberRole,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -105,17 +106,18 @@ class ChatGroupMemberProfileScreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 _infoCard(
                   icon: Icons.groups_2_outlined,
-                  title: 'Vai trò trong nhóm',
-                  value: isAdmin ? 'Quản trị viên' : 'Thành viên',
+                  title: context.l10n.groupRoleTitle,
+                  value: isAdmin ? context.l10n.adminRole : context.l10n.memberRole,
                 ),
                 const SizedBox(height: 8),
                 _infoCard(
                   icon: Icons.badge_outlined,
-                  title: 'ID thành viên',
+                  title: context.l10n.memberIdTitle,
                   value: memberId,
                 ),
                 const SizedBox(height: 10),
                 _permissionSummary(
+                  context: context,
                   canManage: canManage,
                   isAdmin: isAdmin,
                   isSelf: _isSelf,
@@ -123,7 +125,7 @@ class ChatGroupMemberProfileScreen extends StatelessWidget {
                 if (canPromote || canDemote) const SizedBox(height: 8),
                 if (canPromote)
                   _adminActionButton(
-                    label: 'Cấp quyền quản trị viên',
+                    label: context.l10n.grantAdmin,
                     color: const Color(0xFF1689F6),
                     textColor: Colors.white,
                     onTap: () {
@@ -136,8 +138,8 @@ class ChatGroupMemberProfileScreen extends StatelessWidget {
                         SnackBar(
                           content: Text(
                             ok
-                                ? 'Đã cấp quyền admin cho $displayName'
-                                : 'Không thể cấp quyền admin',
+                                ? context.l10n.adminGrantedTo(displayName)
+                                : context.l10n.cannotGrantAdmin,
                           ),
                         ),
                       );
@@ -147,7 +149,7 @@ class ChatGroupMemberProfileScreen extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: _adminActionButton(
-                      label: 'Gỡ quyền quản trị viên',
+                      label: context.l10n.revokeAdmin,
                       color: const Color(0xFFFFE9EA),
                       textColor: const Color(0xFFE60000),
                       onTap: () {
@@ -160,8 +162,8 @@ class ChatGroupMemberProfileScreen extends StatelessWidget {
                           SnackBar(
                             content: Text(
                               ok
-                                  ? 'Đã gỡ quyền admin của $displayName'
-                                  : 'Không thể gỡ quyền admin',
+                                  ? context.l10n.adminRevokedFrom(displayName)
+                                  : context.l10n.cannotRevokeAdmin,
                             ),
                           ),
                         );
@@ -173,17 +175,15 @@ class ChatGroupMemberProfileScreen extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 8),
                     child: Tooltip(
                       message:
-                          'Bạn không thể tự gỡ quyền của chính mình. Hãy cấp quyền admin cho người khác trước.',
+                          context.l10n.cannotRevokeOwnAdminTooltip,
                       child: _adminActionButton(
-                        label: 'Gỡ quyền quản trị viên (bị khóa)',
+                        label: context.l10n.revokeAdminLocked,
                         color: const Color(0xFFEDEDF1),
                         textColor: const Color(0xFF8B8B92),
                         onTap: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Bạn không thể tự gỡ quyền quản trị viên',
-                              ),
+                            SnackBar(
+                              content: Text(context.l10n.cannotRevokeOwnAdmin),
                             ),
                           );
                         },
@@ -195,16 +195,16 @@ class ChatGroupMemberProfileScreen extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 8),
                     child: Tooltip(
                       message:
-                          'Chỉ quản trị viên mới có thể cấp hoặc gỡ quyền admin.',
+                          context.l10n.onlyAdminCanGrantOrRevokeTooltip,
                       child: _adminActionButton(
-                        label: 'Quản trị viên mới được đổi quyền',
+                        label: context.l10n.onlyAdminCanChangeRole,
                         color: const Color(0xFFEDEDF1),
                         textColor: const Color(0xFF8B8B92),
                         onTap: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content: Text(
-                                'Bạn không có quyền quản trị để thực hiện thao tác này',
+                                context.l10n.noAdminPermissionForAction,
                               ),
                             ),
                           );
@@ -213,10 +213,10 @@ class ChatGroupMemberProfileScreen extends StatelessWidget {
                     ),
                   ),
                 if (canManage && isAdmin && !_isSelf && !canDemote)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(top: 8),
                     child: Text(
-                      'Không thể gỡ quyền admin cuối cùng trong nhóm.',
+                      context.l10n.cannotRevokeLastAdmin,
                       style: TextStyle(
                         fontSize: 12,
                         color: Color(0xFF8A8A91),
@@ -231,7 +231,7 @@ class ChatGroupMemberProfileScreen extends StatelessWidget {
                     child: ElevatedButton.icon(
                       onPressed: () => _openDirectChat(context),
                       icon: const Icon(Icons.chat_bubble_outline, size: 18),
-                      label: const Text('Nhắn tin riêng'),
+                      label: Text(context.l10n.privateMessage),
                       style: ElevatedButton.styleFrom(
                         elevation: 0,
                         backgroundColor: const Color(0xFF1689F6),
@@ -249,7 +249,7 @@ class ChatGroupMemberProfileScreen extends StatelessWidget {
                     child: ElevatedButton.icon(
                       onPressed: null,
                       icon: const Icon(Icons.person, size: 18),
-                      label: const Text('Đây là tài khoản của bạn'),
+                      label: Text(context.l10n.thisIsYourAccount),
                       style: ElevatedButton.styleFrom(
                         elevation: 0,
                         disabledBackgroundColor: const Color(0xFFE1E1E6),
@@ -270,6 +270,7 @@ class ChatGroupMemberProfileScreen extends StatelessWidget {
   }
 
   Widget _permissionSummary({
+    required BuildContext context,
     required bool canManage,
     required bool isAdmin,
     required bool isSelf,
@@ -280,20 +281,22 @@ class ChatGroupMemberProfileScreen extends StatelessWidget {
     final String tip;
 
     if (canManage && isAdmin) {
-      badgeText = isSelf ? 'Bạn là admin hiện tại' : 'Admin có toàn quyền';
+      badgeText = isSelf
+          ? context.l10n.youAreCurrentAdmin
+          : context.l10n.adminHasFullControl;
       badgeBg = const Color(0xFFE8F3FF);
       badgeTextColor = const Color(0xFF1674C8);
-      tip = 'Bạn có thể cấp/gỡ quyền admin cho thành viên khác.';
+      tip = context.l10n.canGrantOrRevokeForOthers;
     } else if (canManage) {
-      badgeText = 'Bạn có quyền quản trị';
+      badgeText = context.l10n.youHaveAdminRights;
       badgeBg = const Color(0xFFE8F3FF);
       badgeTextColor = const Color(0xFF1674C8);
-      tip = 'Bạn có thể thay đổi quyền thành viên trong nhóm.';
+      tip = context.l10n.canChangeMemberRoles;
     } else {
-      badgeText = 'Bạn không có quyền đổi role';
+      badgeText = context.l10n.noPermissionChangeRole;
       badgeBg = const Color(0xFFEDEDF1);
       badgeTextColor = const Color(0xFF707078);
-      tip = 'Chỉ quản trị viên mới được phép cấp/gỡ quyền admin.';
+      tip = context.l10n.onlyAdminCanGrantOrRevoke;
     }
 
     return Row(

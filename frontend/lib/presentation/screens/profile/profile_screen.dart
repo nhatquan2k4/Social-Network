@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/core/routes/app_routes.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/domain/entities/profile_entity.dart';
+import 'package:frontend/presentation/controllers/common/bottom_nav_route_controller.dart';
 import 'package:frontend/presentation/providers/profile_provider.dart';
 import 'package:frontend/presentation/screens/profile/edit_profile_screen.dart';
 import 'package:frontend/presentation/screens/profile/profile_media_picker_screen.dart';
@@ -82,6 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _showAccountSwitchSheet(ProfileEntity profile) async {
+    final l10n = context.l10n;
     String selected = profile.username;
 
     await showModalBottomSheet<void>(
@@ -162,8 +164,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    const Text(
-                      'Chọn tài khoản',
+                    Text(
+                      l10n.profileChooseAccount,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -178,8 +180,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onPressed: () {
                           Navigator.pop(innerContext);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Đã chuyển tài khoản.'),
+                            SnackBar(
+                              content: Text(l10n.profileAccountSwitched),
                             ),
                           );
                         },
@@ -189,20 +191,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             borderRadius: BorderRadius.circular(999),
                           ),
                         ),
-                        child: const Text('Xong'),
+                        child: Text(l10n.done),
                       ),
                     ),
                     TextButton(
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Tính năng thêm tài khoản sẽ có sớm.',
-                            ),
+                          SnackBar(
+                            content: Text(l10n.addAccountSoon),
                           ),
                         );
                       },
-                      child: const Text('Thêm tài khoản'),
+                      child: Text(l10n.addAccount),
                     ),
                   ],
                 ),
@@ -215,6 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _showProfileActionsSheet(ProfileEntity profile) async {
+    final l10n = context.l10n;
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.white,
@@ -240,46 +241,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.settings_outlined),
-                  title: const Text('Cài đặt và hoạt động'),
+                  title: Text(l10n.settingsAndActivity),
                   onTap: () => Navigator.pop(sheetContext),
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.archive_outlined),
-                  title: const Text('Kho lưu trữ'),
+                  title: Text(l10n.archive),
                   onTap: () => Navigator.pop(sheetContext),
                 ),
                 const Divider(),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.workspace_premium_outlined),
-                  title: const Text('Chuyển sang tài khoản chuyên nghiệp'),
+                  title: Text(l10n.switchToProfessionalAccount),
                   onTap: () {
                     Navigator.pop(sheetContext);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Tính năng đang phát triển.'),
-                      ),
+                      SnackBar(content: Text(l10n.featureInDevelopment)),
                     );
                   },
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.business_center_outlined),
-                  title: const Text('Chuyển sang tài khoản công ty'),
+                  title: Text(l10n.switchToBusinessAccount),
                   onTap: () {
                     Navigator.pop(sheetContext);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Tính năng đang phát triển.'),
-                      ),
+                      SnackBar(content: Text(l10n.featureInDevelopment)),
                     );
                   },
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.swap_horiz),
-                  title: const Text('Chuyển tài khoản'),
+                  title: Text(l10n.switchAccount),
                   onTap: () {
                     Navigator.pop(sheetContext);
                     _showAccountSwitchSheet(profile);
@@ -498,14 +495,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Consumer<ProfileProvider>(
       builder: (context, provider, _) {
         final profile = provider.profile;
 
         if (provider.isLoading && profile == null) {
-          return const Scaffold(
+          return Scaffold(
             backgroundColor: Colors.white,
-            body: LoadingIndicator(message: 'Đang tải thông tin...'),
+            body: LoadingIndicator(message: l10n.loadingProfileInfo),
           );
         }
 
@@ -517,13 +516,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
 
         if (profile == null) {
-          return const Scaffold(
+          return Scaffold(
             backgroundColor: Colors.white,
             body: Center(
-              child: Text(
-                'Chưa có dữ liệu hồ sơ.',
-                style: TextStyle(color: Colors.grey),
-              ),
+              child: Text(l10n.noProfileData, style: TextStyle(color: Colors.grey)),
             ),
           );
         }
@@ -583,15 +579,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               const SizedBox(width: 18),
                               _buildTopCount(
                                 value: '$_postCount',
-                                label: 'bài viết',
+                                label: l10n.postsLabel,
                               ),
                               _buildTopCount(
                                 value: '$_followerCount',
-                                label: 'người theo dõi',
+                                label: l10n.followersLabel,
                               ),
                               _buildTopCount(
                                 value: '$_followingCount',
-                                label: 'đang theo dõi',
+                                label: l10n.followingLabel,
                               ),
                             ],
                           ),
@@ -617,12 +613,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Row(
                             children: [
                               _buildProfileActionButton(
-                                label: 'Chỉnh sửa',
+                                label: l10n.editAction,
                                 onPressed: () => _openEditProfile(profile),
                               ),
                               const SizedBox(width: 8),
                               _buildProfileActionButton(
-                                label: 'Chia sẻ trang cá nhân',
+                                label: l10n.shareProfileAction,
                                 onPressed: _showCopiedLinkBanner,
                               ),
                             ],
@@ -631,7 +627,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Row(
                             children: [
                               _buildHighlightItem(
-                                label: 'Mới',
+                                label: l10n.newLabel,
                                 onTap: _openMediaPicker,
                                 child: const Center(
                                   child: Icon(
@@ -643,7 +639,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               const SizedBox(width: 14),
                               _buildHighlightItem(
-                                label: 'my love',
+                                label: l10n.myLoveLabel,
                                 onTap: () {},
                                 child: Padding(
                                   padding: const EdgeInsets.all(2),
@@ -686,7 +682,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               height: 170,
                               child: Center(
                                 child: Text(
-                                  'Chưa có bài viết được gắn thẻ.',
+                                  l10n.taggedPostsEmpty,
                                   style: TextStyle(color: Colors.grey.shade600),
                                 ),
                               ),
@@ -713,8 +709,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: const Color(0xFF8AC8B8),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        'Đã sao liên kết',
+                      child: Text(
+                        l10n.linkCopied,
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
@@ -728,23 +724,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           bottomNavigationBar: BottomNav(
             currentIndex: _currentIndex,
-            onTap: (index) {
-              if (index == _currentIndex) return;
-
-              setState(() => _currentIndex = index);
-
-              if (index == 3) {
-                Navigator.pushReplacementNamed(context, AppRoutes.messages);
-              } else if (index == 4) {
-                Navigator.pushReplacementNamed(context, AppRoutes.profile);
-              } else {
+            onTap: (index) => BottomNavRouteController.handleTabSelection(
+              context: context,
+              currentIndex: _currentIndex,
+              nextIndex: index,
+              onIndexChanged: (next) => setState(() => _currentIndex = next),
+              onUnsupportedDestination: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Trang này chưa được triển khai.'),
-                  ),
+                  SnackBar(content: Text(l10n.pageNotImplemented)),
                 );
-              }
-            },
+              },
+            ),
           ),
         );
       },

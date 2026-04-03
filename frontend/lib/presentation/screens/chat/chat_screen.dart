@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/data/services/local_storage_service.dart';
 import 'package:frontend/domain/entities/friend_entity.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
@@ -77,7 +78,7 @@ class _ChatScreenState extends State<ChatScreen> {
   String get _subtitleText {
     if (_isGroup) {
       final count = (_conversation?.memberNames.length ?? 0) + 1;
-      return '$count thành viên';
+      return context.l10n.membersCount(count.toString());
     }
     return 'Đang hoạt động';
   }
@@ -321,6 +322,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildGroupIntroCard() {
+    final l10n = context.l10n;
     final conversation = _conversation;
     final members = conversation?.memberNames ?? const <String>[];
     final createdAt = conversation?.createdAt ?? DateTime.now();
@@ -357,18 +359,16 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               _miniAction(
                 icon: Icons.link,
-                label: 'Liên kết mời',
+                label: l10n.chatInviteLink,
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đã sao chép liên kết mời nhóm'),
-                    ),
+                    SnackBar(content: Text(l10n.inviteLinkCopied)),
                   );
                 },
               ),
               _miniAction(
                 icon: Icons.person_add_alt_1,
-                label: 'Thêm người',
+                label: l10n.addPeople,
                 onTap: _canManageGroup
                     ? _openAddMembersScreen
                     : _showManageGroupPermissionToast,
@@ -410,8 +410,8 @@ class _ChatScreenState extends State<ChatScreen> {
     required bool isRestricted,
   }) {
     final title = isBlocked
-        ? 'Bạn đã chặn $_friendDisplayName'
-        : 'Bạn đã hạn chế $_friendDisplayName';
+      ? context.l10n.youBlockedUser(_friendDisplayName)
+      : context.l10n.youRestrictedUser(_friendDisplayName);
 
     return Container(
       width: double.infinity,
@@ -431,8 +431,8 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           const SizedBox(height: 3),
-          const Text(
-            'Họ sẽ không biết khi nào bạn online hoặc đọc tin nhắn của họ',
+          Text(
+            context.l10n.noOnlineOrReadStatus,
             style: TextStyle(fontSize: 12, color: Color(0xFF7A7A80)),
             textAlign: TextAlign.center,
           ),
@@ -442,13 +442,15 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               if (!isBlocked)
                 _pillAction(
-                  label: 'Chặn',
+                  label: context.l10n.blockAction,
                   textColor: const Color(0xFFE60000),
                   onTap: () => _showBlockBottomSheet(context),
                 ),
               if (!isBlocked) const SizedBox(width: 10),
               _pillAction(
-                label: isBlocked ? 'Bỏ chặn' : 'Bỏ hạn chế',
+                label: isBlocked
+                    ? context.l10n.unblockAction
+                    : context.l10n.unrestrictAction,
                 onTap: () {
                   if (isBlocked) {
                     _showUnblockDialog(context);
@@ -514,16 +516,14 @@ class _ChatScreenState extends State<ChatScreen> {
     _chatStore.addMembersToGroup(widget.friend.id, selected);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đã thêm thành viên vào nhóm')),
+      SnackBar(content: Text(context.l10n.groupMemberAdded)),
     );
   }
 
   void _showManageGroupPermissionToast() {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Chỉ quản trị viên mới có thể thêm thành viên'),
-      ),
+      SnackBar(content: Text(context.l10n.onlyAdminCanAddMembers)),
     );
   }
 
@@ -680,7 +680,7 @@ class _ChatBlockBottomSheet extends StatelessWidget {
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 13),
               ),
-              child: const Text('Chặn', style: TextStyle(color: Colors.white)),
+              child: Text(context.l10n.blockAction, style: const TextStyle(color: Colors.white)),
             ),
           ),
           const SizedBox(height: 10),
@@ -695,7 +695,7 @@ class _ChatBlockBottomSheet extends StatelessWidget {
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 13),
               ),
-              child: const Text('Hủy', style: TextStyle(color: Colors.white)),
+              child: Text(context.l10n.cancel, style: const TextStyle(color: Colors.white)),
             ),
           ),
         ],

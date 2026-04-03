@@ -2,8 +2,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-const bool _showBottomNavDebug = false;
-
 class BottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int>? onTap;
@@ -19,7 +17,8 @@ class BottomNav extends StatelessWidget {
 
   static const _activeColor = Color(0xFF141414);
   static const _inactiveColor = Color(0xFF383C44);
-  static const _chatPillColor = Color(0xFFD9E0F8);
+  static const _selectedPillColorDefault = Color(0xFFE4E9F2);
+  static const _selectedPillColorChat = Color(0xFFD9E0F8);
 
   @override
   Widget build(BuildContext context) {
@@ -72,14 +71,31 @@ class BottomNav extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(22),
       onTap: () => onTap?.call(4),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
         width: 62,
         height: 62,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.35),
+          color: isSelected
+              ? _selectedPillColorDefault
+              : Colors.white.withValues(alpha: 0.35),
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withValues(alpha: 0.6)),
+          border: Border.all(
+            color: isSelected
+                ? Colors.white.withValues(alpha: 0.35)
+                : Colors.white.withValues(alpha: 0.6),
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0x26000000),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
         ),
         child: CircleAvatar(
           radius: 19,
@@ -109,6 +125,9 @@ class BottomNav extends StatelessWidget {
     bool isChatTab = false,
   }) {
     final isSelected = index == currentIndex;
+    final selectedPillColor = isChatTab
+        ? _selectedPillColorChat
+        : _selectedPillColorDefault;
 
     return InkWell(
       borderRadius: BorderRadius.circular(30),
@@ -120,17 +139,17 @@ class BottomNav extends StatelessWidget {
         height: 62,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected && isChatTab
-              ? _chatPillColor
+          color: isSelected
+              ? selectedPillColor
               : Colors.white.withValues(alpha: 0.28),
           shape: BoxShape.circle,
           border: Border.all(
-            color: isSelected && isChatTab
+            color: isSelected
                 ? Colors.white.withValues(alpha: 0.35)
                 : Colors.white.withValues(alpha: 0.56),
             width: 1.1,
           ),
-          boxShadow: isSelected && isChatTab
+          boxShadow: isSelected
               ? [
                   BoxShadow(
                     color: const Color(0x26000000),
@@ -143,7 +162,7 @@ class BottomNav extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            if (isSelected && isChatTab)
+            if (isSelected)
               Container(
                 width: 54,
                 height: 54,
@@ -151,7 +170,7 @@ class BottomNav extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      Colors.white.withValues(alpha: 0.22),
+                      Colors.white.withValues(alpha: isChatTab ? 0.22 : 0.16),
                       Colors.transparent,
                     ],
                   ),

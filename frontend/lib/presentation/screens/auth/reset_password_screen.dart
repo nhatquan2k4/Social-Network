@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/presentation/widgets/common/custom_button.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
@@ -33,6 +34,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -51,14 +54,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             children: [
               const SizedBox(height: 8),
 
-              const Text(
-                'Tao mật khẩu mới',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                l10n.createNewPasswordTitle,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Tạo mật khẩu gồm ít nhất 6 chữ cái hoặc chữ số. Bạn nên chọn mật khẩu thật khó đoán.',
-                style: TextStyle(color: Colors.black54),
+              Text(
+                l10n.createNewPasswordDescription,
+                style: const TextStyle(color: Colors.black54),
               ),
 
               const SizedBox(height: 12),
@@ -66,29 +69,25 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               TextField(
                 controller: _passwordController,
                 obscureText: _obscure,
-                decoration: _input('Nhập mật khẩu'),
+                decoration: _input(l10n.loginPasswordHint),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: _confirmController,
                 obscureText: _obscure,
-                decoration: _input('Nhập lại mật khẩu'),
+                decoration: _input(l10n.confirmPasswordHint),
               ),
 
               const SizedBox(height: 16),
 
               CustomButton(
-                label: 'Tiếp',
+                label: l10n.next,
                 onPressed: () {
                   final p = _passwordController.text.trim();
                   final c = _confirmController.text.trim();
                   if (p.length < 6 || p != c) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Mật khẩu không hợp lệ hoặc không trùng khớp',
-                        ),
-                      ),
+                      SnackBar(content: Text(l10n.invalidOrMismatchedPassword)),
                     );
                     return;
                   }

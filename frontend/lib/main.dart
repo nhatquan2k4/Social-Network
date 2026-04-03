@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:frontend/core/routes/app_router.dart';
+import 'package:frontend/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/core/routes/app_routes.dart';
-
-import 'package:frontend/presentation/screens/auth/login_screen.dart';
-import 'package:frontend/presentation/screens/auth/welcome_screen.dart';
-import 'package:frontend/presentation/screens/feed/create_post_screen.dart';
-import 'package:frontend/presentation/screens/feed/feed_screen.dart';
-import 'package:frontend/presentation/screens/chat/messages_screen.dart';
-import 'package:frontend/presentation/screens/auth/register_screen.dart';
-import 'package:frontend/presentation/screens/auth/fogot_screen.dart';
-import 'package:frontend/presentation/screens/profile/profile_screen.dart';
 
 import 'package:frontend/presentation/providers/auth_provider.dart';
 import 'package:frontend/data/repositories/auth_repository_impl.dart';
@@ -91,17 +85,16 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
+        locale: const Locale('vi'),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
         initialRoute: AppRoutes.welcome,
-        routes: {
-          AppRoutes.welcome: (context) => const WelcomeScreen(),
-          AppRoutes.login: (context) => const LoginScreen(),
-          AppRoutes.register: (context) => const RegisterScreen(),
-          AppRoutes.fogot: (context) => const FogotScreen(),
-          AppRoutes.postsFeed: (context) => const FeedScreen(),
-          AppRoutes.postsCreate: (context) => const CreatePostScreen(),
-          AppRoutes.messages: (context) => const MessagesScreen(),
-          AppRoutes.profile: (context) => const ProfileScreen(),
-        },
+        onGenerateRoute: AppRouter.onGenerateRoute,
       ),
     );
   }

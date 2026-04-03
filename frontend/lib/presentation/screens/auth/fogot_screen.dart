@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/presentation/widgets/common/custom_button.dart';
 import 'package:frontend/presentation/screens/auth/otp_verification_screen.dart';
 
@@ -31,6 +32,8 @@ class _FogotScreenState extends State<FogotScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -48,28 +51,28 @@ class _FogotScreenState extends State<FogotScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 8),
-              const Text(
-                'Quên mật khẩu',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                l10n.forgotPasswordTitle,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Nhập email liên kết với tài khoản để được gửi mã đặt lại mật khẩu của bạn',
-                style: TextStyle(color: Colors.black54),
+              Text(
+                l10n.forgotPasswordDescription,
+                style: const TextStyle(color: Colors.black54),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _emailController,
-                decoration: _inputDecoration('Nhập email'),
+                decoration: _inputDecoration(l10n.enterEmailHint),
               ),
               const SizedBox(height: 16),
               CustomButton(
-                label: 'Gửi mã xác nhận',
+                label: l10n.sendVerificationCode,
                 onPressed: () {
                   final text = _emailController.text.trim();
                   if (text.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Vui lòng nhập email')),
+                      SnackBar(content: Text(l10n.pleaseEnterEmail)),
                     );
                     return;
                   }

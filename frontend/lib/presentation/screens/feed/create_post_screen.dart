@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/presentation/providers/feed_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -28,6 +29,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Future<void> _pickFromGallery() async {
+    final l10n = context.l10n;
     if (_isPickingImages) return;
 
     setState(() => _isPickingImages = true);
@@ -49,7 +51,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Khong the chon anh tu thu vien')),
+        SnackBar(content: Text(l10n.createPostCannotPickGallery)),
       );
     } finally {
       if (mounted) {
@@ -59,6 +61,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Future<void> _pickFromCamera() async {
+    final l10n = context.l10n;
     if (_isPickingImages) return;
 
     setState(() => _isPickingImages = true);
@@ -82,7 +85,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Khong the mo camera')));
+      ).showSnackBar(SnackBar(content: Text(l10n.createPostCannotOpenCamera)));
     } finally {
       if (mounted) {
         setState(() => _isPickingImages = false);
@@ -155,6 +158,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final hasImages = _selectedImages.isNotEmpty;
 
     return Scaffold(
@@ -167,8 +171,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           icon: const Icon(Icons.close, color: Colors.black),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          'Tao bai viet',
+        title: Text(
+          l10n.createPostTitle,
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
         ),
         centerTitle: true,
@@ -185,8 +189,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text(
-                        'Dang',
+                    : Text(
+                      l10n.postAction,
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -213,9 +217,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     maxLines: 10,
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
-                      hintText:
-                          'Viet caption cho bai viet...'
-                          '\nGoi y: them hashtag de tiep can tot hon.',
+                        hintText: l10n.captionHint,
                       filled: true,
                       fillColor: const Color(0xFFF5F5F5),
                       border: OutlineInputBorder(
@@ -242,7 +244,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     child: OutlinedButton.icon(
                       onPressed: _isPickingImages ? null : _pickFromGallery,
                       icon: const Icon(Icons.photo_library_outlined),
-                      label: const Text('Thu vien'),
+                      label: Text(l10n.libraryLabel),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -250,7 +252,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     child: OutlinedButton.icon(
                       onPressed: _isPickingImages ? null : _pickFromCamera,
                       icon: const Icon(Icons.photo_camera_outlined),
-                      label: const Text('Camera'),
+                      label: Text(l10n.cameraLabel),
                     ),
                   ),
                 ],
@@ -281,8 +283,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               color: Colors.black38,
             ),
             const SizedBox(height: 10),
-            const Text(
-              'Them anh/video cho bai viet',
+            Text(
+              context.l10n.addMediaForPost,
               style: TextStyle(
                 color: Colors.black87,
                 fontWeight: FontWeight.w600,
@@ -292,7 +294,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             FilledButton.icon(
               onPressed: _isPickingImages ? null : _pickFromGallery,
               icon: const Icon(Icons.add_photo_alternate_outlined),
-              label: const Text('Chon tu thu vien'),
+              label: Text(context.l10n.pickFromLibrary),
             ),
           ],
         ),

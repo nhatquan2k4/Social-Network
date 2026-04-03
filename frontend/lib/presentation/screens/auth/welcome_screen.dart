@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/presentation/widgets/common/custom_button.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -6,6 +7,8 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -19,10 +22,10 @@ class WelcomeScreen extends StatelessWidget {
                 Image.asset('assets/images/logo.jpg', height: 120, width: 220),
 
                 // Two lines of description under the logo
-                const Text(
-                  'Kết nối mọi người',
+                Text(
+                  l10n.welcomeTaglineConnect,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
                     color: Colors.grey,
                     fontWeight: FontWeight.bold,
@@ -31,10 +34,10 @@ class WelcomeScreen extends StatelessWidget {
 
                 const SizedBox(height: 6),
 
-                const Text(
-                  'Mở ra các mối quan hệ mới',
+                Text(
+                  l10n.welcomeTaglineRelationship,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
                     color: Colors.grey,
                     fontWeight: FontWeight.bold,
@@ -45,14 +48,14 @@ class WelcomeScreen extends StatelessWidget {
 
                 // Buttons
                 CustomButton(
-                  label: 'Đăng nhập',
+                  label: l10n.login,
                   onPressed: () => Navigator.pushNamed(context, '/login'),
                 ),
 
                 const SizedBox(height: 12),
 
                 CustomButton(
-                  label: 'Đăng ký',
+                  label: l10n.register,
                   onPressed: () => Navigator.pushNamed(context, '/register'),
                 ),
               ],

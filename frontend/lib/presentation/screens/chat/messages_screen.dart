@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:frontend/core/routes/app_routes.dart';
 import 'package:frontend/domain/entities/friend_entity.dart';
+import 'package:frontend/presentation/controllers/common/bottom_nav_route_controller.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/screens/chat/chat_screen.dart';
 import 'package:frontend/presentation/screens/chat/group/chat_group_create_screen.dart';
@@ -36,6 +37,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F8),
       appBar: AppBar(
@@ -73,7 +76,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search',
+                hintText: l10n.messagesSearchHint,
                 hintStyle: const TextStyle(
                   color: Color(0xFF9A9AA1),
                   fontSize: 13,
@@ -97,9 +100,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
             padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
+              children: [
                 Text(
-                  'Tin nhắn',
+                  l10n.messagesTitle,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -107,7 +110,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   ),
                 ),
                 Text(
-                  'Tin nhắn đang chờ',
+                  l10n.pendingMessages,
                   style: TextStyle(
                     fontSize: 12,
                     color: Color(0xFF3797EF),
@@ -126,10 +129,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 );
 
                 if (items.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Text(
-                      'Không tìm thấy cuộc trò chuyện',
-                      style: TextStyle(color: Color(0xFF7B7B80), fontSize: 14),
+                      l10n.noConversationFound,
+                      style: const TextStyle(color: Color(0xFF7B7B80), fontSize: 14),
                     ),
                   );
                 }
@@ -165,8 +168,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                               _chatStore.togglePin(item.id);
                               _showToast(
                                 item.isPinned
-                                    ? 'Đã ghim đoạn chat'
-                                    : 'Đã bỏ ghim đoạn chat',
+                                    ? l10n.chatPinned
+                                    : l10n.chatUnpinned,
                               );
                             },
                             backgroundColor: const Color(0xFF4A8BFF),
@@ -174,27 +177,27 @@ class _MessagesScreenState extends State<MessagesScreen> {
                             icon: item.isPinned
                                 ? Icons.push_pin
                                 : Icons.push_pin_outlined,
-                            label: item.isPinned ? 'Bỏ ghim' : 'Ghim',
+                            label: item.isPinned ? l10n.unpinAction : l10n.pinAction,
                           ),
                           SlidableAction(
                             onPressed: (_) {
                               _chatStore.hideConversation(item.id);
-                              _showToast('Đã ẩn đoạn chat');
+                              _showToast(l10n.chatHidden);
                             },
                             backgroundColor: const Color(0xFF8E8E93),
                             foregroundColor: Colors.white,
                             icon: Icons.visibility_off_outlined,
-                            label: 'Ẩn',
+                            label: l10n.hideAction,
                           ),
                           SlidableAction(
                             onPressed: (_) {
                               _chatStore.deleteConversation(item.id);
-                              _showToast('Đã xóa đoạn chat');
+                              _showToast(l10n.chatDeleted);
                             },
                             backgroundColor: const Color(0xFFFF3B30),
                             foregroundColor: Colors.white,
                             icon: Icons.delete_outline,
-                            label: 'Xóa',
+                            label: l10n.deleteAction,
                           ),
                         ],
                       ),
@@ -291,7 +294,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.end,
                                         children: [
-                                          const Row(
+                                          Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               BellStatusIcon(
@@ -301,7 +304,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                               ),
                                               SizedBox(width: 4),
                                               Text(
-                                                'Đang tắt',
+                                                l10n.mutedNow,
                                                 style: TextStyle(
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.w700,
@@ -372,21 +375,17 @@ class _MessagesScreenState extends State<MessagesScreen> {
       ),
       bottomNavigationBar: BottomNav(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          if (index == _currentIndex) return;
-
-          setState(() => _currentIndex = index);
-
-          if (index == 3) {
-            Navigator.pushReplacementNamed(context, AppRoutes.messages);
-          } else if (index == 4) {
-            Navigator.pushReplacementNamed(context, AppRoutes.profile);
-          } else {
+        onTap: (index) => BottomNavRouteController.handleTabSelection(
+          context: context,
+          currentIndex: _currentIndex,
+          nextIndex: index,
+          onIndexChanged: (next) => setState(() => _currentIndex = next),
+          onUnsupportedDestination: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Trang này chưa được triển khai.')),
+              SnackBar(content: Text(l10n.pageNotImplemented)),
             );
-          }
-        },
+          },
+        ),
       ),
     );
   }
