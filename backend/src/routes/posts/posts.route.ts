@@ -9,6 +9,7 @@ import {
   getFeed,
   getPostComments,
   getPostById,
+  reportPost,
   toggleLikePost,
   updatePost,
 } from "./posts.controller";
@@ -166,6 +167,38 @@ router.delete("/:postId", protectedRoute, deletePost);
  *         description: Cap nhat like thanh cong
  */
 router.post("/:postId/like", protectedRoute, toggleLikePost);
+
+/**
+ * @swagger
+ * /api/posts/{postId}/report:
+ *   post:
+ *     summary: Bao cao bai viet
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reason
+ *             properties:
+ *               reason:
+ *                 type: string
+ *                 enum: [spam, harassment, falseInfo, hateSpeech, violence, other]
+ *     responses:
+ *       200:
+ *         description: Bao cao thanh cong
+ */
+router.post("/:postId/report", protectedRoute, reportPost);
 
 /**
  * @swagger

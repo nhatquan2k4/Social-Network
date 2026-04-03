@@ -119,6 +119,18 @@ class PostRepositoryImpl implements PostRepository {
   }
 
   @override
+  Future<void> reportPost({required String postId, required String reason}) async {
+    try {
+      await apiService.post(ApiConstants.postReport(postId), {
+        'reason': reason,
+      });
+    } catch (e) {
+      logger.e('Failed to report post: $e');
+      rethrow;
+    }
+  }
+
+  @override
   Future<PostCommentEntity> addComment(
     String postId,
     String content, {

@@ -191,6 +191,27 @@ export const toggleLikePost = async (req: Request, res: Response) => {
   }
 };
 
+export const reportPost = async (req: Request, res: Response) => {
+  try {
+    const { postId } = req.params;
+    const { reason } = req.body;
+    const userId = req.user!._id;
+
+    await postService.reportPost(postId as string, userId, String(reason || ""));
+
+    return res.status(200).json({ message: "Bao cao bai viet thanh cong" });
+  } catch (error: any) {
+    console.error("Loi khi bao cao bai viet", error);
+    if (error.message === "Post khong ton tai") {
+      return res.status(404).json({ message: error.message });
+    }
+    if (error.message === "Ly do bao cao khong hop le") {
+      return res.status(400).json({ message: error.message });
+    }
+    return res.status(500).json({ message: "Loi server" });
+  }
+};
+
 export const createPostComment = async (req: Request, res: Response) => {
   try {
     const { postId } = req.params;

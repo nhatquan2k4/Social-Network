@@ -22,6 +22,7 @@ class ApiConstants {
 
   static String postById(String postId) => '/posts/$postId';
   static String postLike(String postId) => '/posts/$postId/like';
+  static String postReport(String postId) => '/posts/$postId/report';
   static String postComments(String postId) => '/posts/$postId/comments';
   static String postCommentById(String postId, String commentId) =>
       '/posts/$postId/comments/$commentId';

@@ -27,6 +27,10 @@ class PostUsecase {
     return repository.unlikePost(postId);
   }
 
+  Future<void> reportPost({required String postId, required String reason}) {
+    return repository.reportPost(postId: postId, reason: reason);
+  }
+
   Future<PostCommentEntity> addComment(
     String postId,
     String content, {

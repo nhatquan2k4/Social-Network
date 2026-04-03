@@ -24,7 +24,6 @@ class FeedScreen extends StatefulWidget {
 class _FeedScreenState extends State<FeedScreen> {
   final ScrollController _scrollController = ScrollController();
   final LocalStorageService _localStorage = LocalStorageService();
-  final Set<String> _hiddenPostIds = <String>{};
 
   String? _currentUserId;
   int _currentIndex = 0;
@@ -201,20 +200,23 @@ class _FeedScreenState extends State<FeedScreen> {
 
     if (!mounted || selectedAction == null) return;
 
+    final feedProvider = context.read<FeedProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+
     switch (selectedAction) {
       case _PostOptionAction.addToFavorites:
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text(l10n.postOptionAddToFavoritesDone)),
         );
         break;
       case _PostOptionAction.aboutAccount:
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text(l10n.featureInDevelopment)),
         );
         break;
       case _PostOptionAction.hidePost:
-        _hidePostLocally(post.id);
-        ScaffoldMessenger.of(context).showSnackBar(
+        await feedProvider.hidePost(post.id);
+        messenger.showSnackBar(
           SnackBar(content: Text(l10n.postOptionHidePostDone)),
         );
         break;
@@ -222,7 +224,21 @@ class _FeedScreenState extends State<FeedScreen> {
         final reportReason = await _showReportReasonSheet();
         if (!mounted || reportReason == null) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
+        final reasonKey = reportReason.name;
+        await feedProvider.reportPost(
+          postId: post.id,
+          reason: reasonKey,
+        );
+
+        if (!mounted) return;
+        final providerError = feedProvider.error;
+        if (providerError != null && providerError.isNotEmpty) {
+          messenger.showSnackBar(SnackBar(content: Text(providerError)));
+          feedProvider.clearError();
+          return;
+        }
+
+        messenger.showSnackBar(
           SnackBar(
             content: Text(
               l10n.postOptionReportDoneWithReason(
@@ -233,12 +249,6 @@ class _FeedScreenState extends State<FeedScreen> {
         );
         break;
     }
-  }
-
-  void _hidePostLocally(String postId) {
-    setState(() {
-      _hiddenPostIds.add(postId);
-    });
   }
 
   String _reportReasonLabel(_PostReportReason reason, dynamic l10n) {
@@ -512,9 +522,7 @@ class _FeedScreenState extends State<FeedScreen> {
         removeBottom: true,
         child: Consumer<FeedProvider>(
           builder: (consumerContext, feedProvider, _) {
-            final visiblePosts = feedProvider.posts
-                .where((post) => !_hiddenPostIds.contains(post.id))
-                .toList();
+            final visiblePosts = feedProvider.visiblePosts;
 
             if (feedProvider.requiresAuth && !_isHandlingAuthExpiry) {
               _isHandlingAuthExpiry = true;

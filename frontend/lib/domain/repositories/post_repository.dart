@@ -14,6 +14,8 @@ abstract class PostRepository {
 
   Future<PostEntity> unlikePost(String postId);
 
+  Future<void> reportPost({required String postId, required String reason});
+
   Future<PostCommentEntity> addComment(
     String postId,
     String content, {

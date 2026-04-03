@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/data/services/local_storage_service.dart';
 
 import '../../domain/entities/post_comment_entity.dart';
 import '../../domain/entities/post_entity.dart';
@@ -11,9 +12,12 @@ class FeedProvider extends ChangeNotifier {
   FeedProvider(this.postUsecase);
 
   final PostUsecase postUsecase;
+  final LocalStorageService _localStorage = LocalStorageService();
   final List<PostEntity> _posts = [];
   final Set<String> _commentingPostIds = <String>{};
+  final Set<String> _hiddenPostIds = <String>{};
   final int _limit = 10;
+  static const String _hiddenPostsKey = 'hidden_post_ids';
 
   bool isLoadingInitial = false;
   bool isRefreshing = false;
@@ -24,8 +28,66 @@ class FeedProvider extends ChangeNotifier {
   String? error;
 
   int _page = 1;
+  bool _hiddenPostsLoaded = false;
 
   UnmodifiableListView<PostEntity> get posts => UnmodifiableListView(_posts);
+  UnmodifiableListView<PostEntity> get visiblePosts => UnmodifiableListView(
+    _posts.where((post) => !_hiddenPostIds.contains(post.id)).toList(),
+  );
+
+  bool isPostHidden(String postId) => _hiddenPostIds.contains(postId);
+
+  Future<void> _ensureHiddenPostsLoaded() async {
+    if (_hiddenPostsLoaded) return;
+
+    final stored = await _localStorage.getStringList(_hiddenPostsKey);
+    _hiddenPostIds
+      ..clear()
+      ..addAll(stored.where((id) => id.trim().isNotEmpty));
+    _hiddenPostsLoaded = true;
+  }
+
+  Future<void> hidePost(String postId) async {
+    final normalizedId = postId.trim();
+    if (normalizedId.isEmpty || _hiddenPostIds.contains(normalizedId)) return;
+
+    _hiddenPostIds.add(normalizedId);
+    await _localStorage.saveStringList(_hiddenPostsKey, _hiddenPostIds.toList());
+    notifyListeners();
+  }
+
+  Future<void> reportPost({required String postId, required String reason}) async {
+    final normalizedReason = reason.trim();
+    if (normalizedReason.isEmpty) {
+      error = 'Ly do bao cao khong hop le';
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await postUsecase.reportPost(postId: postId, reason: normalizedReason);
+      error = null;
+      notifyListeners();
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final message = e.response?.data is Map<String, dynamic>
+          ? (e.response?.data['message']?.toString())
+          : null;
+
+      if (status == 401 || status == 403) {
+        requiresAuth = true;
+        error =
+            message ?? 'Phien dang nhap da het han. Vui long dang nhap lai.';
+      } else {
+        error = message ?? 'Khong the gui bao cao';
+      }
+
+      notifyListeners();
+    } catch (e) {
+      error = 'Khong the gui bao cao: $e';
+      notifyListeners();
+    }
+  }
 
   bool isCommenting(String postId) => _commentingPostIds.contains(postId);
 
@@ -40,6 +102,8 @@ class FeedProvider extends ChangeNotifier {
 
   Future<void> loadInitial() async {
     if (isLoadingInitial) return;
+
+    await _ensureHiddenPostsLoaded();
 
     isLoadingInitial = true;
     error = null;
@@ -77,6 +141,8 @@ class FeedProvider extends ChangeNotifier {
 
   Future<void> refresh() async {
     if (isRefreshing) return;
+
+    await _ensureHiddenPostsLoaded();
 
     isRefreshing = true;
     error = null;
@@ -116,6 +182,8 @@ class FeedProvider extends ChangeNotifier {
     if (isLoadingMore || isLoadingInitial || isRefreshing || !hasMore) {
       return;
     }
+
+    await _ensureHiddenPostsLoaded();
 
     isLoadingMore = true;
     notifyListeners();
