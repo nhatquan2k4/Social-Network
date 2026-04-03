@@ -58,29 +58,6 @@ const postCommentSchema = new mongoose.Schema(
 	},
 );
 
-const postReportSchema = new mongoose.Schema(
-	{
-		reporterId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "User",
-			required: true,
-		},
-		reason: {
-			type: String,
-			required: true,
-			trim: true,
-			maxlength: 100,
-		},
-		reportedAt: {
-			type: Date,
-			default: Date.now,
-		},
-	},
-	{
-		_id: true,
-	},
-);
-
 const postSchema = new mongoose.Schema(
 	{
 		authorId: {
@@ -110,10 +87,6 @@ const postSchema = new mongoose.Schema(
 		commentsCount: {
 			type: Number,
 			default: 0,
-		},
-		reports: {
-			type: [postReportSchema],
-			default: [],
 		},
 	},
 	{

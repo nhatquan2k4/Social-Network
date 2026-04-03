@@ -307,48 +307,6 @@ export class PostService {
     return this.formatPost(populated as any);
   }
 
-  async reportPost(postId: string, reporterId: Types.ObjectId, reason: string) {
-    const normalizedReason = (reason || "").trim();
-    const allowedReasons = new Set([
-      "spam",
-      "harassment",
-      "falseInfo",
-      "hateSpeech",
-      "violence",
-      "other",
-    ]);
-
-    if (!allowedReasons.has(normalizedReason)) {
-      throw new Error("Ly do bao cao khong hop le");
-    }
-
-    const post = await this.postRepository.findRawById(postId);
-    if (!post) {
-      throw new Error("Post khong ton tai");
-    }
-
-    const reports = Array.isArray((post as any).reports)
-      ? (post as any).reports
-      : [];
-    const existingIndex = reports.findIndex(
-      (item: any) => item?.reporterId?.toString() === reporterId.toString(),
-    );
-
-    if (existingIndex >= 0) {
-      reports[existingIndex].reason = normalizedReason;
-      reports[existingIndex].reportedAt = new Date();
-    } else {
-      reports.push({
-        reporterId,
-        reason: normalizedReason,
-        reportedAt: new Date(),
-      });
-    }
-
-    (post as any).reports = reports;
-    await this.postRepository.save(post);
-  }
-
   async addComment(postId: string, authorId: Types.ObjectId, content: string, parentCommentId?: string) {
     const normalized = (content || "").trim();
     if (!normalized) {

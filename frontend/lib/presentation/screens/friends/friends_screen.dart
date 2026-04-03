@@ -19,7 +19,7 @@ class MessagesScreen extends StatefulWidget {
 }
 
 class _MessagesScreenState extends State<MessagesScreen> {
-  int _currentIndex = 3;
+  int _currentIndex = 2;
 
   @override
   void initState() {

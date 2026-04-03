@@ -16,8 +16,10 @@ class FeedProvider extends ChangeNotifier {
   final List<PostEntity> _posts = [];
   final Set<String> _commentingPostIds = <String>{};
   final Set<String> _hiddenPostIds = <String>{};
+  final Set<String> _followingAuthorIds = <String>{};
   final int _limit = 10;
   static const String _hiddenPostsKey = 'hidden_post_ids';
+  static const String _followingAuthorsKey = 'following_author_ids';
 
   bool isLoadingInitial = false;
   bool isRefreshing = false;
@@ -29,13 +31,29 @@ class FeedProvider extends ChangeNotifier {
 
   int _page = 1;
   bool _hiddenPostsLoaded = false;
+  bool _followingAuthorsLoaded = false;
 
   UnmodifiableListView<PostEntity> get posts => UnmodifiableListView(_posts);
   UnmodifiableListView<PostEntity> get visiblePosts => UnmodifiableListView(
     _posts.where((post) => !_hiddenPostIds.contains(post.id)).toList(),
   );
+  int get followingAuthorsCount => _followingAuthorIds.length;
 
   bool isPostHidden(String postId) => _hiddenPostIds.contains(postId);
+
+  bool isFollowingAuthor(String authorId, {String? currentUserId}) {
+    final normalizedAuthorId = authorId.trim();
+    if (normalizedAuthorId.isEmpty) return false;
+
+    final normalizedCurrentUserId = currentUserId?.trim();
+    if (normalizedCurrentUserId != null &&
+        normalizedCurrentUserId.isNotEmpty &&
+        normalizedCurrentUserId == normalizedAuthorId) {
+      return true;
+    }
+
+    return _followingAuthorIds.contains(normalizedAuthorId);
+  }
 
   Future<void> _ensureHiddenPostsLoaded() async {
     if (_hiddenPostsLoaded) return;
@@ -45,6 +63,50 @@ class FeedProvider extends ChangeNotifier {
       ..clear()
       ..addAll(stored.where((id) => id.trim().isNotEmpty));
     _hiddenPostsLoaded = true;
+  }
+
+  Future<void> _ensureFollowingAuthorsLoaded() async {
+    if (_followingAuthorsLoaded) return;
+
+    final stored = await _localStorage.getStringList(_followingAuthorsKey);
+    _followingAuthorIds
+      ..clear()
+      ..addAll(stored.where((id) => id.trim().isNotEmpty));
+    _followingAuthorsLoaded = true;
+  }
+
+  Future<void> ensureLocalStateLoaded() async {
+    await _ensureHiddenPostsLoaded();
+    await _ensureFollowingAuthorsLoaded();
+  }
+
+  Future<void> toggleFollowAuthor({
+    required String authorId,
+    String? currentUserId,
+  }) async {
+    final normalizedAuthorId = authorId.trim();
+    if (normalizedAuthorId.isEmpty) return;
+
+    final normalizedCurrentUserId = currentUserId?.trim();
+    if (normalizedCurrentUserId != null &&
+        normalizedCurrentUserId.isNotEmpty &&
+        normalizedCurrentUserId == normalizedAuthorId) {
+      return;
+    }
+
+    await _ensureFollowingAuthorsLoaded();
+
+    if (_followingAuthorIds.contains(normalizedAuthorId)) {
+      _followingAuthorIds.remove(normalizedAuthorId);
+    } else {
+      _followingAuthorIds.add(normalizedAuthorId);
+    }
+
+    await _localStorage.saveStringList(
+      _followingAuthorsKey,
+      _followingAuthorIds.toList(),
+    );
+    notifyListeners();
   }
 
   Future<void> hidePost(String postId) async {
@@ -104,6 +166,7 @@ class FeedProvider extends ChangeNotifier {
     if (isLoadingInitial) return;
 
     await _ensureHiddenPostsLoaded();
+    await _ensureFollowingAuthorsLoaded();
 
     isLoadingInitial = true;
     error = null;
@@ -143,6 +206,7 @@ class FeedProvider extends ChangeNotifier {
     if (isRefreshing) return;
 
     await _ensureHiddenPostsLoaded();
+    await _ensureFollowingAuthorsLoaded();
 
     isRefreshing = true;
     error = null;
@@ -184,6 +248,7 @@ class FeedProvider extends ChangeNotifier {
     }
 
     await _ensureHiddenPostsLoaded();
+    await _ensureFollowingAuthorsLoaded();
 
     isLoadingMore = true;
     notifyListeners();

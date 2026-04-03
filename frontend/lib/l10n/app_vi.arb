@@ -254,4 +254,12 @@
   ,"postReportReasonOther": "Lý do khác"
   ,"postOptionAllHiddenTitle": "Bạn đã ẩn tất cả bài viết"
   ,"postOptionAllHiddenDescription": "Hãy tải lại để xem nội dung mới hoặc chờ bài viết khác."
+  ,"followingStatus": "Đang theo dõi"
+  ,"yourStory": "Your Story"
+  ,"viewAllComments": "Xem tất cả {count} bình luận"
+  ,"@viewAllComments": { "placeholders": { "count": {} } }
+  ,"likesCountText": "{count} lượt thích"
+  ,"@likesCountText": { "placeholders": { "count": {} } }
+  ,"followAction": "Theo dõi"
+  ,"recentSearchTitle": "Gần đây"
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
+import 'package:frontend/presentation/widgets/common/follow_status_chip.dart';
 import 'package:intl/intl.dart';
 
 import '../../../domain/entities/post_entity.dart';
@@ -21,6 +23,11 @@ class PostCard extends StatelessWidget {
     this.onSave,
     this.onMore,
     this.onViewComments,
+    this.followingLabel,
+    this.followLabel,
+    this.isFollowing = true,
+    this.onFollowTap,
+    this.onAuthorTap,
   });
 
   final PostEntity post;
@@ -37,6 +44,11 @@ class PostCard extends StatelessWidget {
   final VoidCallback? onSave;
   final VoidCallback? onMore;
   final VoidCallback? onViewComments;
+  final String? followingLabel;
+  final String? followLabel;
+  final bool isFollowing;
+  final VoidCallback? onFollowTap;
+  final VoidCallback? onAuthorTap;
 
   @override
   Widget build(BuildContext context) {
@@ -72,56 +84,72 @@ class PostCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 8, 10),
+            padding: const EdgeInsets.fromLTRB(14, 10, 8, 8),
             child: Row(
               children: [
-                _UserAvatar(name: displayName, avatarUrl: avatarUrl),
-                const SizedBox(width: 9),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onAuthorTap,
+                  child: _UserAvatar(name: displayName, avatarUrl: avatarUrl),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            username,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: Colors.black,
-                              letterSpacing: -0.2,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onAuthorTap,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              username,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: Colors.black,
+                                fontSize: 14,
+                                letterSpacing: -0.1,
+                              ),
                             ),
-                          ),
-                          if (isVerified) ...[
-                            const SizedBox(width: 4),
-                            const Icon(
-                              Icons.verified,
-                              size: 16,
-                              color: Color(0xFF3797EF),
-                            ),
+                            if (isVerified) ...[
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.verified,
+                                size: 16,
+                                color: Color(0xFF3797EF),
+                              ),
+                            ],
                           ],
-                        ],
-                      ),
-                      if (locationLabel != null && locationLabel!.isNotEmpty)
-                        Text(
-                          locationLabel!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.black54,
-                            fontSize: 11,
-                          ),
-                        )
-                      else
-                        Text(
-                          displayName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.black54,
-                            fontSize: 11,
-                          ),
                         ),
-                    ],
+                        if (locationLabel != null && locationLabel!.isNotEmpty)
+                          Text(
+                            locationLabel!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF6A6A70),
+                              fontSize: 12,
+                            ),
+                          )
+                        else
+                          Text(
+                            displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF6A6A70),
+                              fontSize: 12,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
+                FollowStatusChip(
+                  isFollowing: isFollowing,
+                  followingText: followingLabel ?? context.l10n.followingStatus,
+                  followText: followLabel ?? context.l10n.followAction,
+                  onTap: onFollowTap,
+                ),
+                const SizedBox(width: 4),
                 IconButton(
                   visualDensity: VisualDensity.compact,
                   splashRadius: 18,
@@ -145,8 +173,8 @@ class PostCard extends StatelessWidget {
                 Text(
                   _formatCount(likesCount),
                   style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 22 / 2,
+                    fontWeight: FontWeight.w700,
                     color: Colors.black,
                   ),
                 ),
@@ -156,8 +184,8 @@ class PostCard extends StatelessWidget {
                 Text(
                   _formatCount(commentCount),
                   style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 22 / 2,
+                    fontWeight: FontWeight.w700,
                     color: Colors.black,
                   ),
                 ),
@@ -174,9 +202,9 @@ class PostCard extends StatelessWidget {
               child: InkWell(
                 onTap: onViewComments ?? onComment,
                 child: Text(
-                  'Xem tat ca ${_formatCount(commentCount)} binh luan',
+                  context.l10n.viewAllComments(_formatCount(commentCount)),
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.black54,
+                    color: const Color(0xFF6E6E74),
                     fontSize: 13,
                   ),
                 ),
@@ -202,31 +230,22 @@ class PostCard extends StatelessWidget {
               ),
             ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 6, 14, 10),
+            padding: const EdgeInsets.fromLTRB(14, 6, 14, 8),
             child: Row(
               children: [
                 Text(
                   DateFormat('MMMM d').format(post.createdAt),
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.black45,
+                    color: const Color(0xFFA2A2A8),
                     fontSize: 11,
                     letterSpacing: 0.2,
                   ),
                 ),
-                const Spacer(),
-                if (likesCount > 0)
-                  Text(
-                    '${_formatCount(likesCount)} luot thich',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.black45,
-                      fontSize: 11,
-                    ),
-                  ),
               ],
             ),
           ),
           Divider(height: 1, thickness: 1, color: Colors.grey.shade100),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
         ],
       ),
     );

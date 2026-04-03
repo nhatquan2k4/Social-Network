@@ -11,10 +11,8 @@ class BottomNavRouteController {
       case 1:
         return AppRoutes.explore;
       case 2:
-        return AppRoutes.reels;
-      case 3:
         return AppRoutes.messages;
-      case 4:
+      case 3:
         return AppRoutes.profile;
       default:
         return null;

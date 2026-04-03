@@ -5,6 +5,7 @@ import 'package:frontend/data/services/local_storage_service.dart';
 import 'package:frontend/domain/entities/post_entity.dart';
 import 'package:frontend/presentation/controllers/common/bottom_nav_route_controller.dart';
 import 'package:frontend/presentation/providers/feed_provider.dart';
+import 'package:frontend/presentation/screens/profile/friend_profile_screen.dart';
 import 'package:frontend/presentation/widgets/common/bottom_nav.dart';
 import 'package:frontend/presentation/widgets/common/empty_state.dart';
 import 'package:frontend/presentation/widgets/common/error_display.dart';
@@ -113,6 +114,30 @@ class _FeedScreenState extends State<FeedScreen> {
 
   Future<void> _openCreatePostScreen() async {
     await Navigator.of(context).pushNamed(AppRoutes.postsCreate);
+  }
+
+  Future<void> _openFriendProfileFromPost(PostEntity post) async {
+    final username = (post.authorUsername ?? '').trim().isNotEmpty
+        ? post.authorUsername!.trim()
+        : post.authorId;
+
+    await Navigator.of(context).pushNamed(
+      AppRoutes.profileFriend,
+      arguments: FriendProfileArgs(
+        userId: post.authorId,
+        username: username,
+        displayName: (post.authorDisplayName ?? '').trim().isNotEmpty
+            ? post.authorDisplayName!.trim()
+            : username,
+        avatarUrl: (post.authorAvatarUrl ?? '').trim().isNotEmpty
+            ? post.authorAvatarUrl!.trim()
+            : null,
+        bio: post.content,
+        postsCount: 12,
+        followersCount: (post.likes.length * 4) + 30,
+        followingCount: (post.commentsCount * 3) + 50,
+      ),
+    );
   }
 
   Future<void> _showPostOptionsSheet(PostEntity post) async {
@@ -481,19 +506,26 @@ class _FeedScreenState extends State<FeedScreen> {
         ),
         title: Image.asset(
           'assets/images/logo.jpg',
-          height: 36,
+          height: 34,
           fit: BoxFit.contain,
           filterQuality: FilterQuality.medium,
           errorBuilder: (context, error, stackTrace) {
-            return const Text(
-              'Mochi',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 30,
-                fontStyle: FontStyle.italic,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -1,
-              ),
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Text(
+                  'Mochi',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 30,
+                    fontStyle: FontStyle.italic,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -1,
+                  ),
+                ),
+                SizedBox(width: 2),
+                Icon(Icons.keyboard_arrow_down, size: 18, color: Colors.black),
+              ],
             );
           },
         ),
@@ -570,10 +602,17 @@ class _FeedScreenState extends State<FeedScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.only(top: 6, bottom: 4),
                 itemCount:
+                    1 +
                     visiblePosts.length +
                     (feedProvider.isLoadingMore ? 1 : 0),
                 itemBuilder: (context, index) {
-                  if (index >= visiblePosts.length) {
+                  if (index == 0) {
+                    return _buildStoriesStrip(visiblePosts, l10n);
+                  }
+
+                  final postIndex = index - 1;
+
+                  if (postIndex >= visiblePosts.length) {
                     return const Padding(
                       padding: EdgeInsets.symmetric(vertical: 18),
                       child: Center(
@@ -586,19 +625,35 @@ class _FeedScreenState extends State<FeedScreen> {
                     );
                   }
 
-                  final post = visiblePosts[index];
+                  final post = visiblePosts[postIndex];
                   final isLikedByMe =
                       _currentUserId != null &&
                       post.likes.contains(_currentUserId);
+                  final isFollowingAuthor = feedProvider.isFollowingAuthor(
+                    post.authorId,
+                    currentUserId: _currentUserId,
+                  );
+                  final isOwnPost =
+                      _currentUserId != null && post.authorId == _currentUserId;
 
                   return PostCard(
                     post: post,
                     isLikedByMe: isLikedByMe,
+                    isFollowing: isFollowingAuthor,
                     onLike: () => _handleLike(
                       feedProvider: feedProvider,
                       postId: post.id,
                       isCurrentlyLiked: isLikedByMe,
                     ),
+                    onFollowTap: isOwnPost
+                        ? null
+                        : () {
+                            feedProvider.toggleFollowAuthor(
+                              authorId: post.authorId,
+                              currentUserId: _currentUserId,
+                            );
+                          },
+                    onAuthorTap: () => _openFriendProfileFromPost(post),
                     onComment: () => _openCommentsSheet(post),
                     onViewComments: () => _openCommentsSheet(post),
                     onShare: () {
@@ -612,6 +667,7 @@ class _FeedScreenState extends State<FeedScreen> {
                       );
                     },
                     onMore: () => _showPostOptionsSheet(post),
+                    followingLabel: l10n.followingStatus,
                   );
                 },
               ),
@@ -639,6 +695,65 @@ class _FeedScreenState extends State<FeedScreen> {
       ),
     );
   }
+
+  Widget _buildStoriesStrip(List<PostEntity> posts, dynamic l10n) {
+    final stories = _buildStoriesData(posts, l10n);
+
+    return Column(
+      children: [
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 7),
+          child: SizedBox(
+            height: 94,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: stories.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                final story = stories[index];
+                return _FeedStoryItem(story: story);
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+      ],
+    );
+  }
+
+  List<_FeedStoryData> _buildStoriesData(List<PostEntity> posts, dynamic l10n) {
+    final stories = <_FeedStoryData>[
+      _FeedStoryData(
+        label: l10n.yourStory,
+        avatarUrl: 'assets/images/logo1.jpg',
+        isAsset: true,
+        showPlusBadge: true,
+      ),
+    ];
+
+    final usedIds = <String>{};
+    for (final post in posts) {
+      if (usedIds.contains(post.authorId)) continue;
+      usedIds.add(post.authorId);
+
+      final username = (post.authorUsername ?? '').trim();
+      final displayLabel = username.isNotEmpty
+          ? username
+          : post.authorId.substring(0, post.authorId.length > 8 ? 8 : post.authorId.length);
+
+      stories.add(
+        _FeedStoryData(
+          label: displayLabel,
+          avatarUrl: (post.authorAvatarUrl ?? '').trim(),
+        ),
+      );
+
+      if (stories.length >= 8) break;
+    }
+
+    return stories;
+  }
 }
 
 enum _PostOptionAction {
@@ -655,4 +770,108 @@ enum _PostReportReason {
   hateSpeech,
   violence,
   other,
+}
+
+class _FeedStoryData {
+  const _FeedStoryData({
+    required this.label,
+    required this.avatarUrl,
+    this.isAsset = false,
+    this.showPlusBadge = false,
+  });
+
+  final String label;
+  final String avatarUrl;
+  final bool isAsset;
+  final bool showPlusBadge;
+}
+
+class _FeedStoryItem extends StatelessWidget {
+  const _FeedStoryItem({required this.story});
+
+  final _FeedStoryData story;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasAvatar = story.avatarUrl.isNotEmpty;
+
+    Widget avatarChild;
+    if (!hasAvatar) {
+      avatarChild = const CircleAvatar(
+        radius: 25,
+        backgroundColor: Color(0xFFDADADA),
+        child: Icon(Icons.person, color: Color(0xFF8A8A90)),
+      );
+    } else if (story.isAsset) {
+      avatarChild = CircleAvatar(
+        radius: 25,
+        foregroundImage: AssetImage(story.avatarUrl),
+        backgroundColor: const Color(0xFFDADADA),
+      );
+    } else {
+      avatarChild = CircleAvatar(
+        radius: 25,
+        foregroundImage: NetworkImage(story.avatarUrl),
+        backgroundColor: const Color(0xFFDADADA),
+      );
+    }
+
+    return SizedBox(
+      width: 70,
+      child: Column(
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(2.4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFF93A6B), Color(0xFFFFA64D), Color(0xFF8A3CFF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(1.6),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                  child: avatarChild,
+                ),
+              ),
+              if (story.showPlusBadge)
+                Positioned(
+                  right: -2,
+                  bottom: 2,
+                  child: Container(
+                    width: 17,
+                    height: 17,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1689F6),
+                      borderRadius: BorderRadius.circular(99),
+                      border: Border.all(color: Colors.white, width: 1.4),
+                    ),
+                    child: const Icon(Icons.add, size: 12, color: Colors.white),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            story.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 11.5,
+              color: Color(0xFF212126),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

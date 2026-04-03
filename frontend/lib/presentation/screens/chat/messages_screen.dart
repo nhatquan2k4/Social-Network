@@ -17,7 +17,7 @@ class MessagesScreen extends StatefulWidget {
 }
 
 class _MessagesScreenState extends State<MessagesScreen> {
-  int _currentIndex = 3;
+  int _currentIndex = 2;
   final TextEditingController _searchController = TextEditingController();
   final MockChatStore _chatStore = MockChatStore.instance;
 

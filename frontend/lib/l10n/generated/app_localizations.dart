@@ -1531,6 +1531,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Refresh to load new content or wait for other posts.'**
   String get postOptionAllHiddenDescription;
+
+  /// No description provided for @followingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get followingStatus;
+
+  /// No description provided for @yourStory.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Story'**
+  String get yourStory;
+
+  /// No description provided for @viewAllComments.
+  ///
+  /// In en, this message translates to:
+  /// **'View all {count} comments'**
+  String viewAllComments(Object count);
+
+  /// No description provided for @likesCountText.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} likes'**
+  String likesCountText(Object count);
+
+  /// No description provided for @followAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow'**
+  String get followAction;
+
+  /// No description provided for @recentSearchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get recentSearchTitle;
 }
 
 class _AppLocalizationsDelegate

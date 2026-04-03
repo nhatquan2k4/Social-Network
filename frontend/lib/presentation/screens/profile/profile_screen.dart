@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/domain/entities/profile_entity.dart';
 import 'package:frontend/presentation/controllers/common/bottom_nav_route_controller.dart';
+import 'package:frontend/presentation/providers/feed_provider.dart';
 import 'package:frontend/presentation/providers/profile_provider.dart';
 import 'package:frontend/presentation/screens/profile/edit_profile_screen.dart';
 import 'package:frontend/presentation/screens/profile/profile_media_picker_screen.dart';
@@ -18,7 +19,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  int _currentIndex = 4;
+  int _currentIndex = 3;
   int _selectedTab = 0;
   bool _showLinkCopiedBanner = false;
 
@@ -44,6 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Future.microtask(() {
       if (!mounted) return;
       context.read<ProfileProvider>().fetchProfile('me');
+      context.read<FeedProvider>().ensureLocalStateLoaded();
     });
   }
 
@@ -496,6 +498,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final syncedFollowingCount = context.select<FeedProvider, int>(
+      (provider) => provider.followingAuthorsCount,
+    );
 
     return Consumer<ProfileProvider>(
       builder: (context, provider, _) {
@@ -586,7 +591,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 label: l10n.followersLabel,
                               ),
                               _buildTopCount(
-                                value: '$_followingCount',
+                                value: '${_followingCount + syncedFollowingCount}',
                                 label: l10n.followingLabel,
                               ),
                             ],

@@ -11,14 +11,12 @@ class BottomNav extends StatelessWidget {
   static const _items = [
     Icons.home_outlined,
     Icons.search,
-    Icons.smart_display_outlined,
     Icons.send_outlined,
   ];
 
   static const _activeColor = Color(0xFF141414);
   static const _inactiveColor = Color(0xFF383C44);
-  static const _selectedPillColorDefault = Color(0xFFE4E9F2);
-  static const _selectedPillColorChat = Color(0xFFD9E0F8);
+  static const _selectedPillColor = Color(0xFFD9E0F8);
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +51,7 @@ class BottomNav extends StatelessWidget {
                 children: [
                   _navIcon(index: 0, icon: _items[0]),
                   _navIcon(index: 1, icon: _items[1]),
-                  _navIcon(index: 2, icon: _items[2]),
-                  _navIcon(index: 3, icon: _items[3], isChatTab: true),
+                  _navIcon(index: 2, icon: _items[2], isChatTab: true),
                   _profileTab(),
                 ],
               ),
@@ -66,11 +63,11 @@ class BottomNav extends StatelessWidget {
   }
 
   Widget _profileTab() {
-    final isSelected = currentIndex == 4;
+    final isSelected = currentIndex == 3;
 
     return InkWell(
       borderRadius: BorderRadius.circular(22),
-      onTap: () => onTap?.call(4),
+      onTap: () => onTap?.call(3),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
@@ -79,7 +76,7 @@ class BottomNav extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected
-              ? _selectedPillColorDefault
+              ? _selectedPillColor
               : Colors.white.withValues(alpha: 0.35),
           shape: BoxShape.circle,
           border: Border.all(
@@ -125,9 +122,6 @@ class BottomNav extends StatelessWidget {
     bool isChatTab = false,
   }) {
     final isSelected = index == currentIndex;
-    final selectedPillColor = isChatTab
-        ? _selectedPillColorChat
-        : _selectedPillColorDefault;
 
     return InkWell(
       borderRadius: BorderRadius.circular(30),
@@ -140,7 +134,7 @@ class BottomNav extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected
-              ? selectedPillColor
+              ? _selectedPillColor
               : Colors.white.withValues(alpha: 0.28),
           shape: BoxShape.circle,
           border: Border.all(
@@ -170,7 +164,7 @@ class BottomNav extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      Colors.white.withValues(alpha: isChatTab ? 0.22 : 0.16),
+                      Colors.white.withValues(alpha: 0.22),
                       Colors.transparent,
                     ],
                   ),

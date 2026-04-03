@@ -771,4 +771,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get postOptionAllHiddenDescription =>
       'Refresh to load new content or wait for other posts.';
+
+  @override
+  String get followingStatus => 'Following';
+
+  @override
+  String get yourStory => 'Your Story';
+
+  @override
+  String viewAllComments(Object count) {
+    return 'View all $count comments';
+  }
+
+  @override
+  String likesCountText(Object count) {
+    return '$count likes';
+  }
+
+  @override
+  String get followAction => 'Follow';
+
+  @override
+  String get recentSearchTitle => 'Recent';
 }

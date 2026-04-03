@@ -254,4 +254,12 @@
   ,"postReportReasonOther": "Other"
   ,"postOptionAllHiddenTitle": "You have hidden all posts"
   ,"postOptionAllHiddenDescription": "Refresh to load new content or wait for other posts."
+  ,"followingStatus": "Following"
+  ,"yourStory": "Your Story"
+  ,"viewAllComments": "View all {count} comments"
+  ,"@viewAllComments": { "placeholders": { "count": {} } }
+  ,"likesCountText": "{count} likes"
+  ,"@likesCountText": { "placeholders": { "count": {} } }
+  ,"followAction": "Follow"
+  ,"recentSearchTitle": "Recent"
 }

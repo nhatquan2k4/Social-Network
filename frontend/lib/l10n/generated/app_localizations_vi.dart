@@ -777,4 +777,26 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get postOptionAllHiddenDescription =>
       'Hãy tải lại để xem nội dung mới hoặc chờ bài viết khác.';
+
+  @override
+  String get followingStatus => 'Đang theo dõi';
+
+  @override
+  String get yourStory => 'Your Story';
+
+  @override
+  String viewAllComments(Object count) {
+    return 'Xem tất cả $count bình luận';
+  }
+
+  @override
+  String likesCountText(Object count) {
+    return '$count lượt thích';
+  }
+
+  @override
+  String get followAction => 'Theo dõi';
+
+  @override
+  String get recentSearchTitle => 'Gần đây';
 }
