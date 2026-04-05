@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/core/routes/app_routes.dart';
+import 'package:frontend/presentation/controllers/auth/login_form_controller.dart';
 import 'package:frontend/presentation/providers/auth_provider.dart';
 import 'package:frontend/presentation/widgets/common/custom_button.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +15,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final LoginFormController _loginFormController = LoginFormController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
@@ -27,8 +30,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFfff0),
+      backgroundColor: const Color(0xFFFFffff),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -54,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     keyboardType: TextInputType.text,
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
-                      hintText: 'Nhập tên đăng nhập',
+                      hintText: l10n.loginUsernameHint,
                       filled: true,
                       fillColor: const Color(0xFFF5F5F5),
                       contentPadding: const EdgeInsets.symmetric(
@@ -73,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.done,
                     decoration: InputDecoration(
-                      hintText: 'Nhập mật khẩu',
+                      hintText: l10n.loginPasswordHint,
                       filled: true,
                       fillColor: const Color(0xFFF5F5F5),
                       contentPadding: const EdgeInsets.symmetric(
@@ -107,14 +112,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             onChanged: (v) =>
                                 setState(() => _rememberMe = v ?? false),
                           ),
-                          const Text('Nhớ mật khẩu'),
+                          Text(l10n.rememberPassword),
                         ],
                       ),
                       TextButton(
                         onPressed: () =>
                             Navigator.pushNamed(context, AppRoutes.fogot),
-                        child: const Text(
-                          'Quên mật khẩu?',
+                        child: Text(
+                          l10n.forgotPassword,
                           style: TextStyle(color: Color(0xFF3797EF)),
                         ),
                       ),
@@ -122,45 +127,47 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 36),
                   CustomButton(
-                    label: 'Đăng nhập',
+                    label: l10n.login,
                     onPressed: () async {
+                      final authProvider = context.read<AuthProvider>();
+                      final scaffoldMessenger = ScaffoldMessenger.of(context);
+                      final rootNavigator = Navigator.of(
+                        context,
+                        rootNavigator: true,
+                      );
+
                       FocusManager.instance.primaryFocus?.unfocus();
                       await SystemChannels.textInput.invokeMethod(
                         'TextInput.hide',
                       );
                       await Future.delayed(const Duration(milliseconds: 120));
 
-                      final success = await context.read<AuthProvider>().login(
-                        _usernameController.text,
-                        _passwordController.text,
+                      final result = await _loginFormController.submit(
+                        authProvider: authProvider,
+                        username: _usernameController.text,
+                        password: _passwordController.text,
                       );
 
-                      if (!context.mounted) return;
-
-                      if (success) {
-                        ScaffoldMessenger.of(context)
+                      if (result.isSuccess) {
+                        scaffoldMessenger
                           ..hideCurrentSnackBar()
                           ..showSnackBar(
-                            const SnackBar(
-                              content: Text('Đăng nhập thành công'),
+                            SnackBar(
+                              content: Text(l10n.loginSuccess),
                               backgroundColor: Colors.green,
-                              duration: Duration(milliseconds: 800),
+                              duration: const Duration(milliseconds: 800),
                             ),
                           );
 
-                        Navigator.of(
-                          context,
-                          rootNavigator: true,
-                        ).pushNamedAndRemoveUntil(
+                        rootNavigator.pushNamedAndRemoveUntil(
                           AppRoutes.postsFeed,
                           (route) => false,
                         );
                       } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        scaffoldMessenger.showSnackBar(
                           SnackBar(
                             content: Text(
-                              context.read<AuthProvider>().errorMessage ??
-                                  'Đăng nhập thất bại',
+                              result.errorMessage ?? l10n.loginFailed,
                             ),
                           ),
                         );
@@ -176,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Text(
-                          'hoặc',
+                          l10n.orText,
                           style: TextStyle(color: Colors.grey),
                         ),
                       ),
@@ -195,11 +202,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 24,
                       width: 24,
                     ),
-                    label: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
+                    label: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                       child: Text(
-                        'Đăng nhập với Google',
-                        style: TextStyle(
+                        l10n.loginWithGoogle,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.black,
@@ -222,16 +229,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      'Chưa có tài khoản? ',
-                      style: TextStyle(color: Colors.black54),
+                    Text(
+                      '${l10n.noAccountQuestion} ',
+                      style: const TextStyle(color: Colors.black54),
                     ),
                     GestureDetector(
                       onTap: () {
                         Navigator.pushNamed(context, AppRoutes.register);
                       },
-                      child: const Text(
-                        'Đăng ký',
+                      child: Text(
+                        l10n.register,
                         style: TextStyle(
                           color: Color(0xFF3797EF),
                           fontWeight: FontWeight.w600,

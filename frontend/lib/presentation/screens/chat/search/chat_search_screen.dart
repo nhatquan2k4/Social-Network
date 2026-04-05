@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 
 class ChatSearchScreen extends StatefulWidget {
@@ -29,6 +30,8 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F4),
       body: SafeArea(
@@ -60,11 +63,11 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
                                 setState(() => _query = value),
                             autofocus: true,
                             textInputAction: TextInputAction.search,
-                            decoration: const InputDecoration(
-                              hintText: 'Tìm trong cuộc trò chuyện',
+                            decoration: InputDecoration(
+                              hintText: l10n.searchInConversationHint,
                               border: InputBorder.none,
-                              prefixIcon: Icon(Icons.search),
-                              contentPadding: EdgeInsets.symmetric(
+                              prefixIcon: const Icon(Icons.search),
+                              contentPadding: const EdgeInsets.symmetric(
                                 vertical: 10,
                               ),
                             ),
@@ -76,9 +79,9 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
                 ),
                 Expanded(
                   child: _query.trim().isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text(
-                            'Nhập từ khóa để tìm tin nhắn',
+                            l10n.enterKeywordToSearch,
                             style: TextStyle(
                               color: Color(0xFF7D7D84),
                               fontSize: 14,
@@ -86,9 +89,9 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
                           ),
                         )
                       : results.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text(
-                            'Không tìm thấy kết quả phù hợp',
+                            l10n.noMatchingResults,
                             style: TextStyle(
                               color: Color(0xFF7D7D84),
                               fontSize: 14,
@@ -102,7 +105,7 @@ class _ChatSearchScreenState extends State<ChatSearchScreen> {
                           itemBuilder: (context, index) {
                             final message = results[index];
                             final sender = message.isMe
-                                ? 'Bạn'
+                              ? l10n.youLabel
                                 : widget.displayName;
 
                             return ListTile(

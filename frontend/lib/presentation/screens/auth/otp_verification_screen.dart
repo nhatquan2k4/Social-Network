@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/presentation/widgets/common/custom_button.dart';
 import 'package:frontend/core/routes/app_routes.dart';
 import 'package:frontend/presentation/screens/auth/reset_password_screen.dart';
@@ -40,6 +41,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -63,15 +66,15 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
               const SizedBox(height: 18),
 
-              const Text(
-                'Nhập mã xác nhận',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                l10n.otpEnterCodeTitle,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
 
               const SizedBox(height: 8),
 
               Text(
-                'Để xác nhận tài khoản, hãy nhập mã gồm 6 chữ số mà chúng tôi đã gửi đến địa chỉ ${_maskedEmail(widget.email)}.',
+                l10n.otpDescription(_maskedEmail(widget.email)),
                 style: const TextStyle(color: Colors.black54),
               ),
 
@@ -82,7 +85,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 keyboardType: TextInputType.number,
                 maxLength: 6,
                 decoration: InputDecoration(
-                  hintText: 'Nhập mã xác nhận',
+                  hintText: l10n.otpCodeHint,
                   filled: true,
                   fillColor: const Color(0xFFF5F5F5),
                   contentPadding: const EdgeInsets.symmetric(
@@ -99,14 +102,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               const SizedBox(height: 12),
 
               CustomButton(
-                label: 'Tiếp',
+                label: l10n.next,
                 onPressed: () {
                   final code = _codeController.text.trim();
                   if (code.length != 6) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Vui lòng nhập mã 6 chữ số'),
-                      ),
+                      SnackBar(content: Text(l10n.pleaseEnterSixDigitCode)),
                     );
                     return;
                   }
@@ -135,7 +136,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     // TODO: trigger resend code
                     ScaffoldMessenger.of(
                       context,
-                    ).showSnackBar(const SnackBar(content: Text('Gửi lại mã')));
+                    ).showSnackBar(SnackBar(content: Text(l10n.resendCode)));
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.redAccent,
@@ -143,8 +144,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: const Text(
-                    'Tôi không nhận được mã',
+                  child: Text(
+                    l10n.didNotReceiveCode,
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -159,9 +160,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 child: GestureDetector(
                   onTap: () =>
                       Navigator.pushReplacementNamed(context, AppRoutes.login),
-                  child: const Text(
-                    'Tôi có tài khoản rồi',
-                    style: TextStyle(color: Color(0xFF3797EF)),
+                  child: Text(
+                    l10n.alreadyHaveAccount,
+                    style: const TextStyle(color: Color(0xFF3797EF)),
                   ),
                 ),
               ),

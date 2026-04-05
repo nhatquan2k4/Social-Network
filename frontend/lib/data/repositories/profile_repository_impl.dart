@@ -11,11 +11,44 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   ProfileRepositoryImpl(this.apiService);
 
+  Map<String, dynamic> _extractUserPayload(dynamic rawData) {
+    if (rawData is! Map) {
+      throw const FormatException('Profile response is not a JSON object');
+    }
+
+    final response = Map<String, dynamic>.from(rawData);
+
+    final directUser = response['user'];
+    if (directUser is Map) {
+      return Map<String, dynamic>.from(directUser);
+    }
+
+    final data = response['data'];
+    if (data is Map) {
+      final nestedUser = data['user'];
+      if (nestedUser is Map) {
+        return Map<String, dynamic>.from(nestedUser);
+      }
+
+      if (data.containsKey('_id')) {
+        return Map<String, dynamic>.from(data);
+      }
+    }
+
+    throw const FormatException('Missing user payload in profile response');
+  }
+
   @override
   Future<ProfileEntity> getProfile(String userId) async {
-    final response = await apiService.get(ApiConstants.profile);
+    final normalizedUserId = userId.trim();
+    final isMe = normalizedUserId.isEmpty || normalizedUserId == 'me';
+    final endpoint = isMe
+        ? ApiConstants.profile
+        : '/users/$normalizedUserId/profile';
 
-    final data = ProfileModel.fromJson(response.data['user']);
+    final response = await apiService.get(endpoint);
+    final userJson = _extractUserPayload(response.data);
+    final data = ProfileModel.fromJson(userJson);
 
     return data.toEntity();
   }
@@ -31,7 +64,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
       ApiConstants.profileAvatar,
       formData,
     );
-    final data = ProfileModel.fromJson(response.data['user']);
+    final data = ProfileModel.fromJson(_extractUserPayload(response.data));
     return data.toEntity();
   }
 }

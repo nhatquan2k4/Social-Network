@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/screens/chat/group/chat_group_add_members_screen.dart';
 import 'package:frontend/presentation/screens/chat/group/chat_group_avatar_picker_screen.dart';
@@ -44,6 +45,8 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return AnimatedBuilder(
       animation: widget.chatStore,
       builder: (context, _) {
@@ -55,10 +58,10 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
               backgroundColor: const Color(0xFFF2F2F4),
               elevation: 0,
             ),
-            body: const Center(
+            body: Center(
               child: Text(
-                'Không tìm thấy thông tin nhóm',
-                style: TextStyle(color: Color(0xFF7D7D84)),
+                l10n.groupNotFound,
+                style: const TextStyle(color: Color(0xFF7D7D84)),
               ),
             ),
           );
@@ -85,8 +88,8 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
               icon: const Icon(Icons.arrow_back_ios_new, size: 17),
               onPressed: () => Navigator.pop(context),
             ),
-            title: const Text(
-              'Thông tin nhóm',
+            title: Text(
+              l10n.chatGroupInfoTitle,
               style: TextStyle(
                 color: Color(0xFF1F1F23),
                 fontWeight: FontWeight.w700,
@@ -115,7 +118,7 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${group.memberNames.length + 1} thành viên',
+                  l10n.membersCount((group.memberNames.length + 1).toString()),
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF7C7C84),
@@ -125,39 +128,39 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
                 const SizedBox(height: 16),
                 _actionTile(
                   icon: Icons.edit_outlined,
-                  label: 'Đổi tên nhóm',
+                  label: l10n.groupRename,
                   enabled: canManage,
                   onTap: () => _showRenameSheet(group.username),
                 ),
                 _actionTile(
                   icon: Icons.photo_camera_back_outlined,
-                  label: 'Đổi ảnh nhóm',
+                  label: l10n.groupChangeAvatar,
                   enabled: canManage,
                   onTap: () => _changeAvatar(group.avatarAssetPath),
                 ),
                 _actionTile(
                   icon: Icons.person_add_alt_1,
-                  label: 'Thêm thành viên',
+                  label: l10n.addMember,
                   enabled: canManage,
                   onTap: _openAddMembers,
                 ),
                 _actionTile(
                   icon: Icons.search,
-                  label: 'Tìm tin nhắn',
+                  label: l10n.searchMessages,
                   onTap: _openSearchInChat,
                 ),
                 _actionTile(
                   icon: Icons.photo_library_outlined,
-                  label: 'Ảnh và video',
+                  label: l10n.photosAndVideos,
                   onTap: _openMediaGallery,
                 ),
                 if (!canManage)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(bottom: 8),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Chỉ quản trị viên mới có thể đổi thông tin và thêm thành viên.',
+                        l10n.adminOnlyManageGroupInfo,
                         style: TextStyle(
                           fontSize: 12,
                           color: Color(0xFF8A8A91),
@@ -169,10 +172,10 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
                 const SizedBox(height: 6),
                 const Divider(height: 1, color: Color(0xFFD8D8DD)),
                 const SizedBox(height: 12),
-                const Align(
+                Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Danh sách thành viên',
+                    l10n.memberList,
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -183,15 +186,15 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
                 const SizedBox(height: 8),
                 _memberTile(
                   avatarAssetPath: MockChatStore.currentUserAvatarAssetPath,
-                  title: '${MockChatStore.currentUserDisplayName} (bạn)',
+                  title: '${MockChatStore.currentUserDisplayName} (${l10n.youSuffix})',
                   subtitle: MockChatStore.currentUserUsername,
                   roleLabel:
                       widget.chatStore.isGroupMemberAdmin(
                         widget.conversationId,
                         MockChatStore.currentUserId,
                       )
-                      ? 'Quản trị viên'
-                      : 'Thành viên',
+                      ? l10n.adminRole
+                      : l10n.memberRole,
                   onTap: () => _openMemberProfile(
                     memberId: MockChatStore.currentUserId,
                     username: MockChatStore.currentUserUsername,
@@ -215,8 +218,8 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
                           widget.conversationId,
                           member.id,
                         )
-                        ? 'Quản trị viên'
-                        : 'Thành viên',
+                        ? l10n.adminRole
+                        : l10n.memberRole,
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -233,8 +236,8 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 13),
                     ),
-                    child: const Text(
-                      'Rời nhóm',
+                    child: Text(
+                      l10n.leaveGroup,
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
@@ -243,10 +246,10 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
                   ),
                 ),
                 if (!canLeave)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(top: 8),
                     child: Text(
-                      'Bạn là quản trị viên cuối cùng. Hãy chuyển quyền admin trước khi rời nhóm.',
+                      l10n.lastAdminCannotLeave,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12,
@@ -331,7 +334,7 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
           style: TextStyle(
             fontSize: 10.5,
             fontWeight: FontWeight.w700,
-            color: roleLabel == 'Quản trị viên'
+            color: roleLabel == context.l10n.adminRole
                 ? const Color(0xFF1674C8)
                 : const Color(0xFF707078),
           ),
@@ -341,6 +344,7 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
   }
 
   Future<void> _showRenameSheet(String currentName) async {
+    final l10n = context.l10n;
     if (!widget.chatStore.isCurrentUserGroupAdmin(widget.conversationId)) {
       _showNoPermissionToast();
       return;
@@ -367,8 +371,8 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Đổi tên nhóm',
+              Text(
+                l10n.groupRename,
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
@@ -380,7 +384,7 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
                 controller: controller,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: 'Nhập tên nhóm',
+                  hintText: l10n.groupRename,
                   filled: true,
                   fillColor: const Color(0xFFE8E8EC),
                   border: OutlineInputBorder(
@@ -408,8 +412,8 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child: const Text(
-                    'Lưu',
+                  child: Text(
+                    l10n.save,
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -464,13 +468,13 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
     widget.chatStore.addMembersToGroup(widget.conversationId, selected);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đã thêm thành viên vào nhóm')),
+      SnackBar(content: Text(context.l10n.groupMemberAdded)),
     );
   }
 
   void _openSearchInChat() {
     final group = widget.chatStore.conversationById(widget.conversationId);
-    final displayName = group?.username ?? 'Nhóm chat';
+    final displayName = group?.username ?? context.l10n.groupChatFallback;
 
     Navigator.push(
       context,
@@ -486,7 +490,7 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
 
   void _openMediaGallery() {
     final group = widget.chatStore.conversationById(widget.conversationId);
-    final displayName = group?.username ?? 'Nhóm chat';
+    final displayName = group?.username ?? context.l10n.groupChatFallback;
     final avatarAssetPath = group?.avatarAssetPath ?? 'assets/images/logo1.jpg';
     final media = widget.chatStore.mediaForConversation(widget.conversationId);
 
@@ -526,22 +530,18 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
           builder: (context, setState) {
             return AlertDialog(
               backgroundColor: const Color(0xFFF4F4F6),
-              title: const Text('Rời nhóm?'),
+              title: Text(context.l10n.leaveGroupQuestion),
               content: canLeaveDirect
-                  ? const Text(
-                      'Bạn sẽ không nhận được tin nhắn mới từ nhóm này nữa.',
-                    )
+                  ? Text(context.l10n.leaveGroupNoNewMessages)
                   : Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Bạn là quản trị viên cuối cùng. Hãy chọn người nhận quyền trước khi rời nhóm.',
-                        ),
+                        Text(context.l10n.selectNewAdminBeforeLeave),
                         const SizedBox(height: 12),
                         if (memberCandidates.isEmpty)
-                          const Text(
-                            'Hiện không có thành viên nào để chuyển quyền.',
+                          Text(
+                            context.l10n.noMemberToTransfer,
                             style: TextStyle(
                               color: Color(0xFF8A8A91),
                               fontSize: 12,
@@ -614,8 +614,8 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
                                               const SizedBox(height: 2),
                                               Text(
                                                 isAdmin
-                                                    ? 'Vai trò hiện tại: Quản trị viên'
-                                                    : 'Vai trò hiện tại: Thành viên',
+                                                  ? context.l10n.currentRoleAdmin
+                                                  : context.l10n.currentRoleMember,
                                                 style: const TextStyle(
                                                   fontSize: 11.5,
                                                   color: Color(0xFF7C7C84),
@@ -647,7 +647,7 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext, null),
-                  child: const Text('Hủy'),
+                  child: Text(context.l10n.cancel),
                 ),
                 TextButton(
                   onPressed: () {
@@ -662,8 +662,8 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
 
                     Navigator.pop(dialogContext, selectedNewAdminId);
                   },
-                  child: const Text(
-                    'Rời nhóm',
+                  child: Text(
+                    context.l10n.leaveGroup,
                     style: TextStyle(color: Color(0xFFE60000)),
                   ),
                 ),
@@ -700,11 +700,7 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
 
     if (!left) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Không thể rời nhóm. Vui lòng kiểm tra lại quyền quản trị.',
-          ),
-        ),
+        SnackBar(content: Text(context.l10n.cannotLeaveGroupCheckAdmin)),
       );
       return;
     }
@@ -718,8 +714,8 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
           SnackBar(
             content: Text(
               canLeaveDirect
-                  ? 'Bạn đã rời nhóm'
-                  : 'Đã chuyển quyền admin và rời nhóm thành công',
+                  ? context.l10n.leftGroupSuccess
+                  : context.l10n.handoverAndLeaveSuccess,
             ),
           ),
         );
@@ -735,12 +731,12 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: const Color(0xFFF4F4F6),
-          title: const Text('Xác nhận lần 2'),
+          title: Text(context.l10n.secondConfirmation),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Bạn sắp chuyển quyền quản trị viên và rời nhóm.'),
+              Text(context.l10n.aboutToHandoverAndLeave),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -774,8 +770,8 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          const Text(
-                            'Sẽ trở thành quản trị viên mới',
+                          Text(
+                            context.l10n.newAdminWillBe,
                             style: TextStyle(
                               fontSize: 11.5,
                               color: Color(0xFF7C7C84),
@@ -789,8 +785,8 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              const Text(
-                'Sau khi xác nhận, bạn sẽ rời nhóm ngay.',
+              Text(
+                context.l10n.afterConfirmLeaveImmediately,
                 style: TextStyle(
                   fontSize: 12,
                   color: Color(0xFF8A8A91),
@@ -802,12 +798,12 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Quay lại'),
+              child: Text(context.l10n.goBack),
             ),
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text(
-                'Xác nhận chuyển quyền',
+              child: Text(
+                context.l10n.confirmHandover,
                 style: TextStyle(color: Color(0xFFE60000)),
               ),
             ),
@@ -843,9 +839,7 @@ class _ChatGroupInfoScreenState extends State<ChatGroupInfoScreen> {
   void _showNoPermissionToast() {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Chỉ quản trị viên mới có quyền thực hiện thao tác này'),
-      ),
+      SnackBar(content: Text(context.l10n.adminOnlyAction)),
     );
   }
 

@@ -77,6 +77,15 @@ app.get("/", (req, res) => {
 
 app.use(errorHandler);
 
+const startHttpServer = () => {
+	app.listen(PORT, () => {
+		console.log(`Server is running on port localhost:${PORT}`);
+		console.log(
+			`Swagger documentation available at http://localhost:${PORT}/api-docs`,
+		);
+	});
+};
+
 connectDB()
 	.then(() => {
 		console.log("Connected to the database successfully");
@@ -92,16 +101,13 @@ connectDB()
 	})
 	.then(() => {
 		console.log("Media storage bootstrap completed");
-
-		app.listen(PORT, () => {
-			console.log(`Server is running on port localhost:${PORT}`);
-			console.log(
-				`Swagger documentation available at http://localhost:${PORT}/api-docs`,
-			);
-		});
+		startHttpServer();
 	})
 	.catch((error) => {
-		console.error("Server bootstrap failed:", error);
+		console.error("Server bootstrap failed (continuing to start HTTP server):", error);
+		// Start the HTTP server anyway so developer can access routes like /api-docs
+		// while DB or MinIO is unavailable. Remove or guard this in production.
+		startHttpServer();
 	});
 
 export default app;

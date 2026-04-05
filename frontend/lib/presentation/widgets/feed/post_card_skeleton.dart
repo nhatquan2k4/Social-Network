@@ -10,8 +10,8 @@ class FeedSkeletonList extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.only(top: 8, bottom: 12),
       itemCount: itemCount,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (_, __) => const PostCardSkeleton(),
+      separatorBuilder: (context, index) => const SizedBox(height: 8),
+      itemBuilder: (context, index) => const PostCardSkeleton(),
     );
   }
 }

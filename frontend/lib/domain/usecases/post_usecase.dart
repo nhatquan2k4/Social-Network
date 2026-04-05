@@ -11,6 +11,10 @@ class PostUsecase {
     return repository.fetchFeed(page: page, limit: limit);
   }
 
+  Future<PostEntity> getPostById(String postId) {
+    return repository.getPostById(postId);
+  }
+
   Future<PostEntity> createPost(
     String content, {
     List<Map<String, dynamic>> media = const [],
@@ -25,6 +29,28 @@ class PostUsecase {
 
   Future<PostEntity> unlikePost(String postId) {
     return repository.unlikePost(postId);
+  }
+
+  Future<void> reportPost({required String postId, required String reason}) {
+    return repository.reportPost(postId: postId, reason: reason);
+  }
+
+  Future<PostEntity> updatePost({
+    required String postId,
+    required String content,
+    List<Map<String, dynamic>> media = const [],
+    List<String> imagePaths = const [],
+  }) {
+    return repository.updatePost(
+      postId: postId,
+      content: content,
+      media: media,
+      imagePaths: imagePaths,
+    );
+  }
+
+  Future<void> deletePost(String postId) {
+    return repository.deletePost(postId);
   }
 
   Future<PostCommentEntity> addComment(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/domain/entities/friend_entity.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/screens/chat/chat_screen.dart';
@@ -60,6 +61,7 @@ class _ChatGroupSetupScreenState extends State<ChatGroupSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final selectedMembers = _selectedIds
         .map(widget.chatStore.conversationById)
         .whereType<MockConversation>()
@@ -74,8 +76,8 @@ class _ChatGroupSetupScreenState extends State<ChatGroupSetupScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFFF2F2F4),
         elevation: 0,
-        title: const Text(
-          'Chỉnh sửa nhóm',
+        title: Text(
+          l10n.editGroupTitle,
           style: TextStyle(
             color: Color(0xFF1F1F23),
             fontWeight: FontWeight.w700,
@@ -85,8 +87,8 @@ class _ChatGroupSetupScreenState extends State<ChatGroupSetupScreen> {
         centerTitle: true,
         leading: TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text(
-            'Hủy',
+          child: Text(
+            l10n.cancel,
             style: TextStyle(
               color: Color(0xFF1C1D22),
               fontSize: 16,
@@ -99,7 +101,7 @@ class _ChatGroupSetupScreenState extends State<ChatGroupSetupScreen> {
           TextButton(
             onPressed: !_canCreate ? null : _createGroup,
             child: Text(
-              'Tạo',
+              l10n.createAction,
               style: TextStyle(
                 color: _canCreate
                     ? const Color(0xFF1689F6)
@@ -157,7 +159,7 @@ class _ChatGroupSetupScreenState extends State<ChatGroupSetupScreen> {
             child: TextField(
               controller: _groupNameController,
               decoration: InputDecoration(
-                hintText: 'Nhập tên nhóm',
+                hintText: l10n.groupNameHint,
                 filled: true,
                 fillColor: const Color(0xFFE8E8EC),
                 contentPadding: const EdgeInsets.symmetric(
@@ -172,12 +174,12 @@ class _ChatGroupSetupScreenState extends State<ChatGroupSetupScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Thành viên được mời',
+                l10n.invitedMembers,
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 15,

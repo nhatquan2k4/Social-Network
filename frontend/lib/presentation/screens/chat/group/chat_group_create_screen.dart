@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/screens/chat/group/chat_group_setup_screen.dart';
 
@@ -39,6 +40,7 @@ class _ChatGroupCreateScreenState extends State<ChatGroupCreateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final allSuggestions = widget.chatStore.groupSuggestions(
       excludeConversationId: widget.conversationId ?? '',
     );
@@ -58,8 +60,8 @@ class _ChatGroupCreateScreenState extends State<ChatGroupCreateScreen> {
           icon: const Icon(Icons.arrow_back_ios_new, size: 17),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Nhóm mới',
+        title: Text(
+          l10n.newGroupTitle,
           style: TextStyle(
             color: Color(0xFF1F1F23),
             fontWeight: FontWeight.w700,
@@ -82,7 +84,7 @@ class _ChatGroupCreateScreenState extends State<ChatGroupCreateScreen> {
                     );
                   },
             child: Text(
-              'Tiếp',
+              l10n.next,
               style: TextStyle(
                 color: _selectedIds.isEmpty
                     ? const Color(0xFF98A0AA)
@@ -97,12 +99,12 @@ class _ChatGroupCreateScreenState extends State<ChatGroupCreateScreen> {
       body: Column(
         children: [
           const SizedBox(height: 2),
-          const Padding(
+          Padding(
             padding: EdgeInsets.fromLTRB(16, 0, 16, 6),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Thành viên được mời',
+                l10n.invitedMembers,
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 15,
@@ -137,7 +139,7 @@ class _ChatGroupCreateScreenState extends State<ChatGroupCreateScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Tìm kiếm',
+                hintText: l10n.searchGeneric,
                 prefixIcon: const Icon(Icons.search, color: Color(0xFF9A9AA1)),
                 filled: true,
                 fillColor: const Color(0xFFECECEF),
@@ -149,12 +151,12 @@ class _ChatGroupCreateScreenState extends State<ChatGroupCreateScreen> {
               ),
             ),
           ),
-          const Padding(
+          Padding(
             padding: EdgeInsets.fromLTRB(18, 0, 18, 6),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Gợi ý',
+                l10n.searchGeneric,
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 31 / 2,

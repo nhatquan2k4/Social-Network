@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 
 class MessageInput extends StatefulWidget {
   final TextEditingController controller;
@@ -104,8 +105,8 @@ class _MessageInputState extends State<MessageInput> {
                         enabled: !widget.isSending,
                         maxLines: 1,
                         textCapitalization: TextCapitalization.sentences,
-                        decoration: const InputDecoration(
-                          hintText: 'Nhắn tin...',
+                        decoration: InputDecoration(
+                          hintText: context.l10n.messageInputHint,
                           hintStyle: TextStyle(
                             color: Color(0xFF8F8F95),
                             fontSize: 14,

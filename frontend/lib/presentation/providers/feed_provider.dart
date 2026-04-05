@@ -2,18 +2,25 @@ import 'dart:collection';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/data/services/local_storage_service.dart';
 
 import '../../domain/entities/post_comment_entity.dart';
 import '../../domain/entities/post_entity.dart';
+import '../../domain/entities/post_media_entity.dart';
 import '../../domain/usecases/post_usecase.dart';
 
 class FeedProvider extends ChangeNotifier {
   FeedProvider(this.postUsecase);
 
   final PostUsecase postUsecase;
+  final LocalStorageService _localStorage = LocalStorageService();
   final List<PostEntity> _posts = [];
   final Set<String> _commentingPostIds = <String>{};
+  final Set<String> _hiddenPostIds = <String>{};
+  final Set<String> _followingAuthorIds = <String>{};
   final int _limit = 10;
+  static const String _hiddenPostsKey = 'hidden_post_ids';
+  static const String _followingAuthorsKey = 'following_author_ids';
 
   bool isLoadingInitial = false;
   bool isRefreshing = false;
@@ -24,8 +31,262 @@ class FeedProvider extends ChangeNotifier {
   String? error;
 
   int _page = 1;
+  bool _hiddenPostsLoaded = false;
+  bool _followingAuthorsLoaded = false;
 
   UnmodifiableListView<PostEntity> get posts => UnmodifiableListView(_posts);
+  UnmodifiableListView<PostEntity> get visiblePosts => UnmodifiableListView(
+    _posts.where((post) => !_hiddenPostIds.contains(post.id)).toList(),
+  );
+  int get followingAuthorsCount => _followingAuthorIds.length;
+
+  bool isPostHidden(String postId) => _hiddenPostIds.contains(postId);
+
+  bool isFollowingAuthor(String authorId, {String? currentUserId}) {
+    final normalizedAuthorId = authorId.trim();
+    if (normalizedAuthorId.isEmpty) return false;
+
+    final normalizedCurrentUserId = currentUserId?.trim();
+    if (normalizedCurrentUserId != null &&
+        normalizedCurrentUserId.isNotEmpty &&
+        normalizedCurrentUserId == normalizedAuthorId) {
+      return true;
+    }
+
+    return _followingAuthorIds.contains(normalizedAuthorId);
+  }
+
+  Future<void> _ensureHiddenPostsLoaded() async {
+    if (_hiddenPostsLoaded) return;
+
+    final stored = await _localStorage.getStringList(_hiddenPostsKey);
+    _hiddenPostIds
+      ..clear()
+      ..addAll(stored.where((id) => id.trim().isNotEmpty));
+    _hiddenPostsLoaded = true;
+  }
+
+  Future<void> _ensureFollowingAuthorsLoaded() async {
+    if (_followingAuthorsLoaded) return;
+
+    final stored = await _localStorage.getStringList(_followingAuthorsKey);
+    _followingAuthorIds
+      ..clear()
+      ..addAll(stored.where((id) => id.trim().isNotEmpty));
+    _followingAuthorsLoaded = true;
+  }
+
+  Future<void> ensureLocalStateLoaded() async {
+    await _ensureHiddenPostsLoaded();
+    await _ensureFollowingAuthorsLoaded();
+  }
+
+  Future<void> toggleFollowAuthor({
+    required String authorId,
+    String? currentUserId,
+  }) async {
+    final normalizedAuthorId = authorId.trim();
+    if (normalizedAuthorId.isEmpty) return;
+
+    final normalizedCurrentUserId = currentUserId?.trim();
+    if (normalizedCurrentUserId != null &&
+        normalizedCurrentUserId.isNotEmpty &&
+        normalizedCurrentUserId == normalizedAuthorId) {
+      return;
+    }
+
+    await _ensureFollowingAuthorsLoaded();
+
+    if (_followingAuthorIds.contains(normalizedAuthorId)) {
+      _followingAuthorIds.remove(normalizedAuthorId);
+    } else {
+      _followingAuthorIds.add(normalizedAuthorId);
+    }
+
+    await _localStorage.saveStringList(
+      _followingAuthorsKey,
+      _followingAuthorIds.toList(),
+    );
+    notifyListeners();
+  }
+
+  Future<void> hidePost(String postId) async {
+    final normalizedId = postId.trim();
+    if (normalizedId.isEmpty || _hiddenPostIds.contains(normalizedId)) return;
+
+    _hiddenPostIds.add(normalizedId);
+    await _localStorage.saveStringList(
+      _hiddenPostsKey,
+      _hiddenPostIds.toList(),
+    );
+    notifyListeners();
+  }
+
+  Future<void> reportPost({
+    required String postId,
+    required String reason,
+  }) async {
+    final normalizedReason = reason.trim();
+    if (normalizedReason.isEmpty) {
+      error = 'Ly do bao cao khong hop le';
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await postUsecase.reportPost(postId: postId, reason: normalizedReason);
+      error = null;
+      notifyListeners();
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final message = e.response?.data is Map<String, dynamic>
+          ? (e.response?.data['message']?.toString())
+          : null;
+
+      if (status == 401 || status == 403) {
+        requiresAuth = true;
+        error =
+            message ?? 'Phien dang nhap da het han. Vui long dang nhap lai.';
+      } else {
+        error = message ?? 'Khong the gui bao cao';
+      }
+
+      notifyListeners();
+    } catch (e) {
+      error = 'Khong the gui bao cao: $e';
+      notifyListeners();
+    }
+  }
+
+  Future<bool> deletePost(String postId) async {
+    final normalizedId = postId.trim();
+    if (normalizedId.isEmpty) {
+      error = 'Khong tim thay bai viet de xoa';
+      notifyListeners();
+      return false;
+    }
+
+    final index = _posts.indexWhere((post) => post.id == normalizedId);
+    if (index == -1) {
+      error = 'Khong tim thay bai viet';
+      notifyListeners();
+      return false;
+    }
+
+    try {
+      await postUsecase.deletePost(normalizedId);
+
+      _posts.removeAt(index);
+      _hiddenPostIds.remove(normalizedId);
+      await _localStorage.saveStringList(
+        _hiddenPostsKey,
+        _hiddenPostIds.toList(),
+      );
+
+      error = null;
+      notifyListeners();
+      return true;
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final message = e.response?.data is Map<String, dynamic>
+          ? (e.response?.data['message']?.toString())
+          : null;
+
+      if (status == 401 || status == 403) {
+        requiresAuth = true;
+        error =
+            message ?? 'Phien dang nhap da het han. Vui long dang nhap lai.';
+      } else {
+        error = message ?? 'Khong the xoa bai viet';
+      }
+
+      notifyListeners();
+      return false;
+    } catch (e) {
+      error = 'Khong the xoa bai viet: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updatePostContent({
+    required String postId,
+    required String content,
+    List<PostMediaEntity>? retainedMedia,
+    List<String> newImagePaths = const [],
+  }) async {
+    final normalizedId = postId.trim();
+    final normalizedContent = content.trim();
+
+    if (normalizedId.isEmpty) {
+      error = 'Khong tim thay bai viet de sua';
+      notifyListeners();
+      return false;
+    }
+
+    final index = _posts.indexWhere((post) => post.id == normalizedId);
+    if (index == -1) {
+      error = 'Khong tim thay bai viet';
+      notifyListeners();
+      return false;
+    }
+
+    final keepMedia = retainedMedia ?? _posts[index].media;
+    final hasMediaAfterUpdate =
+        keepMedia.isNotEmpty ||
+        newImagePaths.any((path) => path.trim().isNotEmpty);
+
+    if (normalizedContent.isEmpty && !hasMediaAfterUpdate) {
+      error = 'Bai viet can co noi dung hoac it nhat mot anh';
+      notifyListeners();
+      return false;
+    }
+
+    try {
+      final mediaPayload = keepMedia
+          .map(
+            (item) => {
+              'bucket': item.bucket,
+              'objectKey': item.objectKey,
+              'mimeType': item.mimeType,
+              'size': item.size,
+            },
+          )
+          .toList(growable: false);
+
+      final updatedPost = await postUsecase.updatePost(
+        postId: normalizedId,
+        content: normalizedContent,
+        media: mediaPayload,
+        imagePaths: newImagePaths,
+      );
+
+      _posts[index] = updatedPost;
+      error = null;
+      notifyListeners();
+      return true;
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final message = e.response?.data is Map<String, dynamic>
+          ? (e.response?.data['message']?.toString())
+          : null;
+
+      if (status == 401 || status == 403) {
+        requiresAuth = true;
+        error =
+            message ?? 'Phien dang nhap da het han. Vui long dang nhap lai.';
+      } else {
+        error = message ?? 'Khong the sua bai viet';
+      }
+
+      notifyListeners();
+      return false;
+    } catch (e) {
+      error = 'Khong the sua bai viet: $e';
+      notifyListeners();
+      return false;
+    }
+  }
 
   bool isCommenting(String postId) => _commentingPostIds.contains(postId);
 
@@ -38,8 +299,27 @@ class FeedProvider extends ChangeNotifier {
     return null;
   }
 
+  Future<PostEntity?> ensurePostById(String postId) async {
+    final existing = postById(postId);
+    if (existing != null) {
+      return existing;
+    }
+
+    try {
+      final fetched = await postUsecase.getPostById(postId);
+      _posts.insert(0, fetched);
+      notifyListeners();
+      return fetched;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> loadInitial() async {
     if (isLoadingInitial) return;
+
+    await _ensureHiddenPostsLoaded();
+    await _ensureFollowingAuthorsLoaded();
 
     isLoadingInitial = true;
     error = null;
@@ -77,6 +357,9 @@ class FeedProvider extends ChangeNotifier {
 
   Future<void> refresh() async {
     if (isRefreshing) return;
+
+    await _ensureHiddenPostsLoaded();
+    await _ensureFollowingAuthorsLoaded();
 
     isRefreshing = true;
     error = null;
@@ -116,6 +399,9 @@ class FeedProvider extends ChangeNotifier {
     if (isLoadingMore || isLoadingInitial || isRefreshing || !hasMore) {
       return;
     }
+
+    await _ensureHiddenPostsLoaded();
+    await _ensureFollowingAuthorsLoaded();
 
     isLoadingMore = true;
     notifyListeners();

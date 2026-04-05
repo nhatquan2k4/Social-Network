@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/presentation/widgets/common/custom_button.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/presentation/providers/auth_provider.dart';
+import 'package:frontend/presentation/controllers/auth/register_form_controller.dart';
 // import 'package:frontend/presentation/screens/auth/otp_verification_screen.dart';
 import 'package:frontend/core/routes/app_routes.dart';
 
@@ -13,6 +15,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final RegisterFormController _registerFormController = RegisterFormController();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
@@ -45,6 +48,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -73,14 +78,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Expanded(
                     child: TextField(
                       controller: _firstNameController,
-                      decoration: _inputDecoration('Tên'),
+                      decoration: _inputDecoration(l10n.firstNameHint),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: TextField(
                       controller: _lastNameController,
-                      decoration: _inputDecoration('Họ'),
+                      decoration: _inputDecoration(l10n.lastNameHint),
                     ),
                   ),
                 ],
@@ -88,20 +93,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 10),
               TextField(
                 controller: _usernameController,
-                decoration: _inputDecoration('Tên người dùng'),
+                decoration: _inputDecoration(l10n.usernameHint),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: _inputDecoration('Nhập email'),
+                decoration: _inputDecoration(l10n.enterEmailHint),
               ),
               const SizedBox(height: 10),
 
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
-                decoration: _inputDecoration('Nhập mật khẩu').copyWith(
+                decoration: _inputDecoration(l10n.loginPasswordHint).copyWith(
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
@@ -120,7 +125,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               TextField(
                 controller: _confirmController,
                 obscureText: _obscurePassword,
-                decoration: _inputDecoration('Nhập lại mật khẩu').copyWith(
+                decoration: _inputDecoration(l10n.reenterPasswordHint).copyWith(
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
@@ -137,46 +142,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 18),
 
               CustomButton(
-                label: 'Đăng ký',
+                label: l10n.register,
                 onPressed: () async {
-                  final firstName = _firstNameController.text.trim();
-                  final lastName = _lastNameController.text.trim();
-                  final username = _usernameController.text.trim();
-                  final email = _emailController.text.trim();
-                  final password = _passwordController.text;
-                  final confirm = _confirmController.text;
+                  final authProvider = context.read<AuthProvider>();
+                  final scaffoldMessenger = ScaffoldMessenger.of(context);
+                  final navigator = Navigator.of(context);
 
-                  if (firstName.isEmpty || lastName.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Vui lòng nhập họ và tên')),
-                    );
-                    return;
-                  }
+                  final input = RegisterInput(
+                    firstName: _firstNameController.text.trim(),
+                    lastName: _lastNameController.text.trim(),
+                    username: _usernameController.text.trim(),
+                    email: _emailController.text.trim(),
+                    password: _passwordController.text,
+                    confirmPassword: _confirmController.text,
+                  );
 
-                  if (username.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Vui lòng nhập tên người dùng'),
-                      ),
-                    );
-                    return;
-                  }
-
-                  if (email.isEmpty || !email.contains('@')) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Vui lòng nhập email hợp lệ'),
-                      ),
-                    );
-                    return;
-                  }
-
-                  if (password.length < 6 || password != confirm) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Mật khẩu quá ngắn hoặc không khớp'),
-                      ),
-                    );
+                  final validationError = _registerFormController.validate(input);
+                  if (validationError != null) {
+                    final message = switch (validationError) {
+                      RegisterValidationError.missingFullName =>
+                        l10n.pleaseEnterFullName,
+                      RegisterValidationError.missingUsername =>
+                        l10n.pleaseEnterUsername,
+                      RegisterValidationError.invalidEmail =>
+                        l10n.pleaseEnterValidEmail,
+                      RegisterValidationError.invalidPassword =>
+                        l10n.passwordTooShortOrMismatch,
+                    };
+                    scaffoldMessenger.showSnackBar(SnackBar(content: Text(message)));
                     return;
                   }
 
@@ -189,21 +182,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   );
 
                   // Call register usecase via provider
-                  final success = await context.read<AuthProvider>().register(
-                    username,
-                    password,
-                    email,
-                    firstName,
-                    lastName,
+                  final result = await _registerFormController.submit(
+                    authProvider: authProvider,
+                    input: input,
                   );
 
-                  if (!context.mounted) return;
-                  Navigator.of(context).pop(); // close loading
+                  navigator.pop(); // close loading
 
-                  if (success) {
+                  if (result.isSuccess) {
                     // Registration succeeded — show success and clear form
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đăng ký thành công')),
+                    scaffoldMessenger.showSnackBar(
+                      SnackBar(content: Text(l10n.registerSuccess)),
                     );
                     _firstNameController.clear();
                     _lastNameController.clear();
@@ -212,12 +201,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     _passwordController.clear();
                     _confirmController.clear();
                   } else {
-                    final err =
-                        context.read<AuthProvider>().errorMessage ??
-                        'Đăng ký thất bại';
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(err)));
+                    final errorMessage = result.errorMessage ?? l10n.registerFailed;
+                    scaffoldMessenger.showSnackBar(
+                      SnackBar(content: Text(errorMessage)),
+                    );
                   }
                 },
               ),
@@ -225,7 +212,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 12),
 
               Center(
-                child: Text('hoặc', style: TextStyle(color: Colors.grey)),
+                child: Text(l10n.orText, style: const TextStyle(color: Colors.grey)),
               ),
 
               const SizedBox(height: 12),
@@ -237,10 +224,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   height: 24,
                   width: 24,
                 ),
-                label: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
+                label: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Text(
-                    'Đăng nhập với Google',
+                    l10n.loginWithGoogle,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -264,12 +251,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onTap: () => Navigator.pushNamed(context, AppRoutes.login),
                   child: RichText(
                     text: TextSpan(
-                      text: 'Tôi đã có tài khoản rồi. ',
+                      text: '${l10n.haveAccountQuestion} ',
                       style: const TextStyle(color: Colors.black54),
-                      children: const [
+                      children: [
                         TextSpan(
-                          text: 'Đăng nhập',
-                          style: TextStyle(
+                          text: l10n.login,
+                          style: const TextStyle(
                             color: Color(0xFF3797EF),
                             fontWeight: FontWeight.w600,
                           ),

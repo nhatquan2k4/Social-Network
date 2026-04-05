@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
+import 'package:frontend/presentation/controllers/common/bottom_nav_route_controller.dart';
 import 'package:frontend/domain/entities/friend_entity.dart';
 import 'package:frontend/presentation/widgets/common/bottom_nav.dart';
 import 'package:frontend/presentation/widgets/common/loading_indicator.dart';
@@ -7,8 +9,8 @@ import 'package:frontend/presentation/widgets/common/empty_state.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/presentation/providers/friend_provider.dart';
 import 'package:frontend/presentation/providers/chat_provider.dart';
+import 'package:frontend/presentation/providers/profile_provider.dart';
 import 'package:frontend/presentation/screens/chat/chat_screen.dart';
-import 'package:frontend/core/routes/app_routes.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -18,7 +20,7 @@ class MessagesScreen extends StatefulWidget {
 }
 
 class _MessagesScreenState extends State<MessagesScreen> {
-  int _currentIndex = 3;
+  int _currentIndex = 2;
 
   @override
   void initState() {
@@ -33,6 +35,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final myProfile = context.watch<ProfileProvider>().profile;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -80,7 +85,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
             padding: const EdgeInsets.all(12.0),
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Search',
+                hintText: l10n.friendsSearchHint,
                 hintStyle: TextStyle(color: Colors.grey.shade500),
                 prefixIcon: Icon(Icons.search, color: Colors.grey.shade600),
                 filled: true,
@@ -174,8 +179,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                           fontSize: 16,
                         ),
                       ),
-                      subtitle: const Text(
-                        'This is a placeholder for the last message.',
+                      subtitle: Text(
+                        l10n.placeholderLastMessage,
                         style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
                       trailing: const Text(
@@ -195,24 +200,22 @@ class _MessagesScreenState extends State<MessagesScreen> {
       ),
       bottomNavigationBar: BottomNav(
         currentIndex: _currentIndex,
+        profileAvatarUrl: myProfile?.avatarUrl,
+        profileDisplayName: myProfile?.displayName,
         onTap: (index) {
           if (index == _currentIndex) return;
 
           setState(() => _currentIndex = index);
 
-          // Map tabs to routes that exist in this project.
-          // 0 = Home, 3 = Messages, 4 = Profile
-          if (index == 0) {
-            Navigator.pushReplacementNamed(context, AppRoutes.postsFeed);
-          } else if (index == 3) {
-            Navigator.pushReplacementNamed(context, AppRoutes.messages);
-          } else if (index == 4) {
-            Navigator.pushReplacementNamed(context, AppRoutes.profile);
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Trang này chưa được triển khai.')),
-            );
+          final targetRoute = BottomNavRouteController.routeForIndex(index);
+          if (targetRoute == null) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(l10n.pageNotImplemented)));
+            return;
           }
+
+          Navigator.pushReplacementNamed(context, targetRoute);
         },
       ),
     );
@@ -258,7 +261,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       // Show error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Không thể mở chat: $e'),
+          content: Text(context.l10n.cannotOpenChat(e.toString())),
           backgroundColor: Colors.red,
         ),
       );

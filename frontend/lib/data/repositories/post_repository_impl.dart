@@ -3,6 +3,7 @@ import '../../core/utils/logger.dart';
 import '../../domain/entities/post_comment_entity.dart';
 import '../../domain/entities/post_entity.dart';
 import '../../domain/repositories/post_repository.dart';
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../models/post/post_comment_model.dart';
 import '../models/post/post_model.dart';
@@ -13,6 +14,37 @@ class PostRepositoryImpl implements PostRepository {
   final ApiService apiService;
 
   PostRepositoryImpl(this.apiService);
+
+  Map<String, dynamic> _extractLikePostPayload(
+    dynamic responseData,
+    String postId,
+  ) {
+    final rawData = responseData is Map<String, dynamic>
+        ? responseData['data']
+        : null;
+
+    Map<String, dynamic>? payload;
+    if (rawData is Map<String, dynamic>) {
+      if (rawData['post'] is Map<String, dynamic>) {
+        payload = Map<String, dynamic>.from(
+          rawData['post'] as Map<String, dynamic>,
+        );
+      } else {
+        payload = Map<String, dynamic>.from(rawData);
+      }
+    }
+
+    if (payload == null) {
+      throw const FormatException('Invalid like response payload');
+    }
+
+    final hasId = payload['_id'] != null || payload['id'] != null;
+    if (!hasId) {
+      payload['_id'] = postId;
+    }
+
+    return payload;
+  }
 
   @override
   Future<List<PostEntity>> fetchFeed({int page = 1, int limit = 10}) async {
@@ -34,6 +66,19 @@ class PostRepositoryImpl implements PostRepository {
       return PostMapper.toEntityList(models);
     } catch (e) {
       logger.e('Failed to fetch feed: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<PostEntity> getPostById(String postId) async {
+    try {
+      final response = await apiService.get(ApiConstants.postById(postId));
+      final raw = response.data['data'];
+      final model = PostModel.fromJson(Map<String, dynamic>.from(raw));
+      return PostMapper.toEntity(model);
+    } catch (e) {
+      logger.e('Failed to get post by id: $e');
       rethrow;
     }
   }
@@ -95,8 +140,8 @@ class PostRepositoryImpl implements PostRepository {
   Future<PostEntity> likePost(String postId) async {
     try {
       final response = await apiService.post(ApiConstants.postLike(postId), {});
-      final raw = response.data['data'];
-      final model = PostModel.fromJson(Map<String, dynamic>.from(raw));
+      final raw = _extractLikePostPayload(response.data, postId);
+      final model = PostModel.fromJson(raw);
       return PostMapper.toEntity(model);
     } catch (e) {
       logger.e('Failed to like post: $e');
@@ -109,11 +154,81 @@ class PostRepositoryImpl implements PostRepository {
     try {
       // Backend exposes like/unlike as a single toggle endpoint.
       final response = await apiService.post(ApiConstants.postLike(postId), {});
+      final raw = _extractLikePostPayload(response.data, postId);
+      final model = PostModel.fromJson(raw);
+      return PostMapper.toEntity(model);
+    } catch (e) {
+      logger.e('Failed to unlike post: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> reportPost({
+    required String postId,
+    required String reason,
+  }) async {
+    try {
+      await apiService.post(ApiConstants.postReport(postId), {
+        'reason': reason,
+      });
+    } catch (e) {
+      logger.e('Failed to report post: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<PostEntity> updatePost({
+    required String postId,
+    required String content,
+    List<Map<String, dynamic>> media = const [],
+    List<String> imagePaths = const [],
+  }) async {
+    try {
+      final normalizedContent = content.trim();
+
+      final dynamic payload;
+      if (imagePaths.isNotEmpty) {
+        final files = <MultipartFile>[];
+        for (final path in imagePaths) {
+          final trimmed = path.trim();
+          if (trimmed.isEmpty) continue;
+
+          final segments = trimmed.split(RegExp(r'[\\/]'));
+          final fileName = segments.isNotEmpty ? segments.last : 'image.jpg';
+          files.add(await MultipartFile.fromFile(trimmed, filename: fileName));
+        }
+
+        payload = FormData.fromMap({
+          'content': normalizedContent,
+          'media': jsonEncode(media),
+          if (files.isNotEmpty) 'files': files,
+        });
+      } else {
+        payload = {'content': normalizedContent, 'media': media};
+      }
+
+      final response = await apiService.patch(
+        ApiConstants.postById(postId),
+        payload,
+      );
+
       final raw = response.data['data'];
       final model = PostModel.fromJson(Map<String, dynamic>.from(raw));
       return PostMapper.toEntity(model);
     } catch (e) {
-      logger.e('Failed to unlike post: $e');
+      logger.e('Failed to update post: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> deletePost(String postId) async {
+    try {
+      await apiService.delete(ApiConstants.postById(postId));
+    } catch (e) {
+      logger.e('Failed to delete post: $e');
       rethrow;
     }
   }

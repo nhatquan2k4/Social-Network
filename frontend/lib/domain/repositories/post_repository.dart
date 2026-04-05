@@ -4,6 +4,8 @@ import '../entities/post_entity.dart';
 abstract class PostRepository {
   Future<List<PostEntity>> fetchFeed({int page = 1, int limit = 10});
 
+  Future<PostEntity> getPostById(String postId);
+
   Future<PostEntity> createPost(
     String content, {
     List<Map<String, dynamic>> media = const [],
@@ -13,6 +15,17 @@ abstract class PostRepository {
   Future<PostEntity> likePost(String postId);
 
   Future<PostEntity> unlikePost(String postId);
+
+  Future<void> reportPost({required String postId, required String reason});
+
+  Future<PostEntity> updatePost({
+    required String postId,
+    required String content,
+    List<Map<String, dynamic>> media = const [],
+    List<String> imagePaths = const [],
+  });
+
+  Future<void> deletePost(String postId);
 
   Future<PostCommentEntity> addComment(
     String postId,

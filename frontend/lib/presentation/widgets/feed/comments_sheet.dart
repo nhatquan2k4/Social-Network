@@ -10,19 +10,44 @@ class CommentsSheet extends StatefulWidget {
     super.key,
     required this.initialPost,
     required this.currentUserId,
+    this.highlightedCommentId,
+    this.initialReplyCommentId,
+    this.autoFocusComposer = false,
   });
 
   final PostEntity initialPost;
   final String? currentUserId;
+  final String? highlightedCommentId;
+  final String? initialReplyCommentId;
+  final bool autoFocusComposer;
 
   @override
   State<CommentsSheet> createState() => _CommentsSheetState();
 }
 
-class _CommentsSheetState extends State<CommentsSheet> {
+class _CommentsSheetState extends State<CommentsSheet>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _inputFocusNode = FocusNode();
+  final Map<String, GlobalKey> _commentKeys = <String, GlobalKey>{};
   PostCommentEntity? _replyTarget;
+  String? _activeHighlightCommentId;
+  bool _didAutoHighlight = false;
+  bool _didInitializeReplyTarget = false;
+  late final AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _activeHighlightCommentId = widget.highlightedCommentId?.trim();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 820),
+    );
+    if ((_activeHighlightCommentId ?? '').isNotEmpty) {
+      _pulseController.repeat(reverse: true);
+    }
+  }
 
   String _formatCommentAuthor(String authorId) {
     if (widget.currentUserId != null && authorId == widget.currentUserId) {
@@ -138,13 +163,6 @@ class _CommentsSheetState extends State<CommentsSheet> {
   }
 
   @override
-  void dispose() {
-    _inputFocusNode.dispose();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return AnimatedPadding(
       duration: const Duration(milliseconds: 180),
@@ -169,6 +187,8 @@ class _CommentsSheetState extends State<CommentsSheet> {
                 final comments = _buildFlattenedComments(post.comments);
                 final isBusy = feedProvider.isCommenting(post.id);
                 final replyTarget = _replyTarget;
+                _tryInitializeReplyTarget(comments);
+                _tryAutoHighlight(comments);
 
                 return Column(
                   children: [
@@ -213,91 +233,142 @@ class _CommentsSheetState extends State<CommentsSheet> {
                               itemBuilder: (context, index) {
                                 final item = comments[index];
                                 final comment = item.comment;
+                                final colorScheme =
+                                    Theme.of(context).colorScheme;
+                                final highlightBg = Color.lerp(
+                                  colorScheme.primaryContainer,
+                                  colorScheme.surface,
+                                  0.45,
+                                );
                                 final indent = (item.depth * 18.0)
                                     .clamp(0.0, 72.0)
                                     .toDouble();
                                 final authorLabel = _formatCommentAuthor(
                                   comment.authorId,
                                 );
+                                final isHighlighted =
+                                    _activeHighlightCommentId == comment.id;
+                                final rowKey = _commentKeys.putIfAbsent(
+                                  comment.id,
+                                  () => GlobalKey(),
+                                );
 
                                 return Padding(
+                                  key: rowKey,
                                   padding: EdgeInsets.only(left: indent),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 14,
-                                        backgroundColor: const Color(
-                                          0xFFE7E7E7,
-                                        ),
-                                        child: Text(
-                                          authorLabel[0].toUpperCase(),
-                                          style: const TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.black87,
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 260),
+                                    curve: Curves.easeOut,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isHighlighted
+                                          ? highlightBg
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 14,
+                                          backgroundColor: const Color(
+                                            0xFFE7E7E7,
+                                          ),
+                                          child: Text(
+                                            authorLabel[0].toUpperCase(),
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.black87,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Text(
-                                                  authorLabel,
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Text(
+                                                    authorLabel,
+                                                    style: const TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w700,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    DateFormat(
+                                                      'HH:mm dd/MM',
+                                                    ).format(comment.createdAt),
+                                                    style: const TextStyle(
+                                                      color: Colors.black45,
+                                                      fontSize: 11,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 3),
+                                              AnimatedBuilder(
+                                                animation: _pulseController,
+                                                builder: (context, child) {
+                                                  final textColor =
+                                                      isHighlighted
+                                                      ? Color.lerp(
+                                                          colorScheme
+                                                              .onPrimaryContainer,
+                                                          colorScheme.primary,
+                                                          _pulseController
+                                                              .value,
+                                                        )
+                                                      : colorScheme.onSurface;
+
+                                                  return Text(
+                                                    comment.content,
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      height: 1.3,
+                                                      color: textColor,
+                                                      fontWeight:
+                                                          isHighlighted
+                                                          ? FontWeight.w600
+                                                          : FontWeight.w400,
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                              const SizedBox(height: 4),
+                                              InkWell(
+                                                onTap: () {
+                                                  setState(
+                                                    () =>
+                                                        _replyTarget = comment,
+                                                  );
+                                                  _inputFocusNode
+                                                      .requestFocus();
+                                                },
+                                                child: Text(
+                                                  _replyTarget?.id == comment.id
+                                                      ? 'Dang tra loi...'
+                                                      : 'Tra loi',
                                                   style: const TextStyle(
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Color(0xFF246BCE),
                                                   ),
                                                 ),
-                                                const SizedBox(width: 8),
-                                                Text(
-                                                  DateFormat(
-                                                    'HH:mm dd/MM',
-                                                  ).format(comment.createdAt),
-                                                  style: const TextStyle(
-                                                    color: Colors.black45,
-                                                    fontSize: 11,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 3),
-                                            Text(
-                                              comment.content,
-                                              style: const TextStyle(
-                                                fontSize: 14,
-                                                height: 1.3,
                                               ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            InkWell(
-                                              onTap: () {
-                                                setState(
-                                                  () => _replyTarget = comment,
-                                                );
-                                                _inputFocusNode.requestFocus();
-                                              },
-                                              child: Text(
-                                                _replyTarget?.id == comment.id
-                                                    ? 'Dang tra loi...'
-                                                    : 'Tra loi',
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Color(0xFF246BCE),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 );
                               },
@@ -412,6 +483,80 @@ class _CommentsSheetState extends State<CommentsSheet> {
         },
       ),
     );
+  }
+
+  void _tryAutoHighlight(List<_FlattenedComment> comments) {
+    if (_didAutoHighlight) return;
+    final targetId = _activeHighlightCommentId;
+    if (targetId == null || targetId.isEmpty) return;
+
+    final exists = comments.any((item) => item.comment.id == targetId);
+    if (!exists) return;
+
+    _didAutoHighlight = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final targetKey = _commentKeys[targetId];
+      final targetContext = targetKey?.currentContext;
+      if (targetContext == null) return;
+
+      Scrollable.ensureVisible(
+        targetContext,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+        alignment: 0.2,
+      );
+
+      Future.delayed(const Duration(milliseconds: 1800), () {
+        if (!mounted) return;
+        if (_activeHighlightCommentId != targetId) return;
+        setState(() {
+          _activeHighlightCommentId = null;
+        });
+        _pulseController.stop();
+      });
+    });
+  }
+
+  void _tryInitializeReplyTarget(List<_FlattenedComment> comments) {
+    if (_didInitializeReplyTarget) return;
+
+    final targetId = widget.initialReplyCommentId?.trim();
+    if (targetId == null || targetId.isEmpty) {
+      _didInitializeReplyTarget = true;
+      return;
+    }
+
+    PostCommentEntity? matched;
+    for (final item in comments) {
+      if (item.comment.id == targetId) {
+        matched = item.comment;
+        break;
+      }
+    }
+
+    _didInitializeReplyTarget = true;
+    if (matched == null) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _replyTarget = matched;
+      });
+
+      if (widget.autoFocusComposer) {
+        _inputFocusNode.requestFocus();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    _inputFocusNode.dispose();
+    _controller.dispose();
+    super.dispose();
   }
 }
 

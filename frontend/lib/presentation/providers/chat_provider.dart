@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../domain/entities/conversation_entity.dart';
 import '../../domain/entities/message_entity.dart';
 import '../../domain/usecases/message_usecase.dart';
 import '../../domain/usecases/conversation_usecase.dart';
@@ -8,11 +9,13 @@ class ChatProvider extends ChangeNotifier {
   final GetMessagesUseCase getMessagesUseCase;
   final SendMessageUseCase sendMessageUseCase;
   final CreateConversationUseCase createConversationUseCase;
+  final GetConversationsUseCase getConversationsUseCase;
 
   ChatProvider({
     required this.getMessagesUseCase,
     required this.sendMessageUseCase,
     required this.createConversationUseCase,
+    required this.getConversationsUseCase,
   });
 
   List<MessageEntity> messages = [];
@@ -21,6 +24,8 @@ class ChatProvider extends ChangeNotifier {
   String? error;
   String? currentConversationId;
   String? currentRecipientId;
+  final Map<String, String> _conversationIdByRecipientId =
+      <String, String>{};
 
   // Optimistic UI: tin nhắn tạm thời đang chờ gửi
   final List<MessageEntity> _pendingMessages = [];
@@ -33,6 +38,9 @@ class ChatProvider extends ChangeNotifier {
   void setConversation(String? conversationId, String recipientId) {
     currentConversationId = conversationId;
     currentRecipientId = recipientId;
+    if (conversationId != null && conversationId.trim().isNotEmpty) {
+      _conversationIdByRecipientId[recipientId] = conversationId;
+    }
     messages = [];
     _pendingMessages.clear();
     error = null;
@@ -44,7 +52,44 @@ class ChatProvider extends ChangeNotifier {
       isLoading = true;
       notifyListeners();
 
-      logger.i('Creating conversation for recipientId: $recipientId');
+      logger.i('Resolving conversation for recipientId: $recipientId');
+
+      final cachedConversationId =
+          _conversationIdByRecipientId[recipientId]?.trim();
+      if (cachedConversationId != null && cachedConversationId.isNotEmpty) {
+        logger.i('Using cached conversationId: $cachedConversationId');
+        currentConversationId = cachedConversationId;
+        currentRecipientId = recipientId;
+
+        await loadMessages();
+        if (error == null) {
+          return;
+        }
+
+        // Cache can become stale; clear and continue with API resolution.
+        _conversationIdByRecipientId.remove(recipientId);
+      }
+
+      final conversations = await getConversationsUseCase();
+      _hydrateConversationCache(conversations);
+
+      final existingConversation = _findExistingDirectConversation(
+        conversations: conversations,
+        recipientId: recipientId,
+      );
+
+      if (existingConversation != null) {
+        logger.i('Found existing conversation: ${existingConversation.id}');
+        currentConversationId = existingConversation.id;
+        currentRecipientId = recipientId;
+        _conversationIdByRecipientId[recipientId] = existingConversation.id;
+
+        await loadMessages();
+        error = null;
+        return;
+      }
+
+      logger.i('No existing conversation found. Creating a new one.');
 
       // Tạo conversation
       final conversation = await createConversationUseCase(
@@ -56,6 +101,7 @@ class ChatProvider extends ChangeNotifier {
       // Set conversation ID
       currentConversationId = conversation.id;
       currentRecipientId = recipientId;
+      _conversationIdByRecipientId[recipientId] = conversation.id;
 
       logger.i('Saved conversationId: $currentConversationId');
 
@@ -74,6 +120,32 @@ class ChatProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  void _hydrateConversationCache(List<ConversationEntity> conversations) {
+    for (final conversation in conversations) {
+      if (conversation.type != 'direct') continue;
+
+      for (final participantId in conversation.participantIds) {
+        final normalizedParticipantId = participantId.trim();
+        if (normalizedParticipantId.isEmpty) continue;
+
+        _conversationIdByRecipientId[normalizedParticipantId] = conversation.id;
+      }
+    }
+  }
+
+  ConversationEntity? _findExistingDirectConversation({
+    required List<ConversationEntity> conversations,
+    required String recipientId,
+  }) {
+    for (final conversation in conversations) {
+      if (conversation.type != 'direct') continue;
+      if (conversation.participantIds.contains(recipientId)) {
+        return conversation;
+      }
+    }
+    return null;
   }
 
   Future<void> loadMessages({bool loadMore = false}) async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/l10n/l10n.dart';
 
 class ProfileMediaPickerScreen extends StatefulWidget {
   const ProfileMediaPickerScreen({super.key});
@@ -28,6 +29,7 @@ class _ProfileMediaPickerScreenState extends State<ProfileMediaPickerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final selectedUrl = _mediaUrls[_selectedIndex];
 
     return Scaffold(
@@ -38,14 +40,14 @@ class _ProfileMediaPickerScreenState extends State<ProfileMediaPickerScreen> {
         leadingWidth: 70,
         leading: TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Hủy'),
+          child: Text(l10n.cancel),
         ),
-        title: const Row(
+        title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Thư viện', style: TextStyle(fontWeight: FontWeight.w700)),
-            SizedBox(width: 4),
-            Icon(Icons.keyboard_arrow_down, size: 20),
+            Text(l10n.mediaLibrary, style: const TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(width: 4),
+            const Icon(Icons.keyboard_arrow_down, size: 20),
           ],
         ),
         centerTitle: true,
@@ -53,12 +55,10 @@ class _ProfileMediaPickerScreenState extends State<ProfileMediaPickerScreen> {
           TextButton(
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Đã chọn ảnh, sẵn sàng bước tiếp.'),
-                ),
+                SnackBar(content: Text(l10n.mediaSelectedReady)),
               );
             },
-            child: const Text('Tiếp'),
+            child: Text(l10n.next),
           ),
         ],
       ),

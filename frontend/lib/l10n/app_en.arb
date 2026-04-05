@@ -1,0 +1,265 @@
+{
+  "@@locale": "en",
+  "welcomeTaglineConnect": "Connect everyone",
+  "welcomeTaglineRelationship": "Open new relationships",
+  "login": "Log in",
+  "register": "Register",
+  "loginUsernameHint": "Enter username",
+  "loginPasswordHint": "Enter password",
+  "rememberPassword": "Remember password",
+  "forgotPassword": "Forgot password?",
+  "loginSuccess": "Login successful",
+  "loginFailed": "Login failed",
+  "orText": "or",
+  "loginWithGoogle": "Log in with Google",
+  "noAccountQuestion": "No account yet?",
+  "haveAccountQuestion": "I already have an account.",
+  "forgotPasswordTitle": "Forgot password",
+  "forgotPasswordDescription": "Enter the email linked to your account to receive a reset code.",
+  "enterEmailHint": "Enter email",
+  "sendVerificationCode": "Send verification code",
+  "pleaseEnterEmail": "Please enter email",
+  "otpEnterCodeTitle": "Enter verification code",
+  "otpDescription": "To verify your account, enter the 6-digit code we sent to {maskedEmail}.",
+  "@otpDescription": {
+    "placeholders": {
+      "maskedEmail": {}
+    }
+  },
+  "otpCodeHint": "Enter verification code",
+  "next": "Next",
+  "pleaseEnterSixDigitCode": "Please enter a 6-digit code",
+  "resendCode": "Resend code",
+  "didNotReceiveCode": "I did not receive the code",
+  "alreadyHaveAccount": "I already have an account",
+  "createNewPasswordTitle": "Create a new password",
+  "createNewPasswordDescription": "Create a password with at least 6 letters or digits. Choose one that is hard to guess.",
+  "confirmPasswordHint": "Re-enter password",
+  "invalidOrMismatchedPassword": "Invalid or mismatched password",
+  "firstNameHint": "First name",
+  "lastNameHint": "Last name",
+  "usernameHint": "Username",
+  "reenterPasswordHint": "Re-enter password",
+  "pleaseEnterFullName": "Please enter first and last name",
+  "pleaseEnterUsername": "Please enter username",
+  "pleaseEnterValidEmail": "Please enter a valid email",
+  "passwordTooShortOrMismatch": "Password is too short or does not match",
+  "registerSuccess": "Registration successful",
+  "registerFailed": "Registration failed",
+  "done": "Done",
+  "cancel": "Cancel",
+  "save": "Save",
+  "profileChooseAccount": "Choose account",
+  "profileAccountSwitched": "Account switched.",
+  "addAccount": "Add account",
+  "addAccountSoon": "Add account feature is coming soon.",
+  "settingsAndActivity": "Settings and activity",
+  "archive": "Archive",
+  "switchToProfessionalAccount": "Switch to professional account",
+  "switchToBusinessAccount": "Switch to business account",
+  "switchAccount": "Switch account",
+  "featureInDevelopment": "Feature is in development.",
+  "loadingProfileInfo": "Loading profile information...",
+  "noProfileData": "No profile data available.",
+  "postsLabel": "posts",
+  "followersLabel": "followers",
+  "followingLabel": "following",
+  "editAction": "Edit",
+  "shareProfileAction": "Share profile",
+  "newLabel": "New",
+  "taggedPostsEmpty": "No tagged posts yet.",
+  "linkCopied": "Link copied",
+  "pageNotImplemented": "This page has not been implemented yet.",
+  "editProfileTitle": "Edit profile",
+  "editAvatarAction": "Edit photo or avatar",
+  "pleaseEnterDisplayName": "Please enter display name",
+  "updateAvatarSuccess": "Avatar updated successfully.",
+  "updateAvatarFailed": "Cannot update avatar.",
+  "profileSavedLocal": "Profile changes saved locally.",
+  "privateAccount": "Private account",
+  "personalInfo": "Personal information",
+  "emailLabel": "Email",
+  "phoneLabel": "Phone",
+  "genderLabel": "Gender",
+  "profileFormSampleData": "The form data currently uses frontend UI sample data.",
+  "mediaLibrary": "Library",
+  "mediaSelectedReady": "Image selected, ready for next step.",
+  "chatGroupInfoTitle": "Group info",
+  "groupNotFound": "Group information not found",
+  "membersCount": "{count} members",
+  "@membersCount": { "placeholders": { "count": {} } },
+  "groupRename": "Rename group",
+  "groupChangeAvatar": "Change group avatar",
+  "addMember": "Add member",
+  "searchMessages": "Search messages",
+  "photosAndVideos": "Photos and videos",
+  "adminOnlyManageGroupInfo": "Only admins can update group info and add members.",
+  "memberList": "Member list",
+  "youSuffix": "you",
+  "adminRole": "Admin",
+  "memberRole": "Member",
+  "leaveGroup": "Leave group",
+  "lastAdminCannotLeave": "You are the last admin. Transfer admin rights before leaving.",
+  "groupChatFallback": "Group chat",
+  "groupMemberAdded": "Members added to group",
+  "leaveGroupQuestion": "Leave group?",
+  "leaveGroupNoNewMessages": "You will no longer receive new messages from this group.",
+  "selectNewAdminBeforeLeave": "You are the last admin. Choose a new admin before leaving.",
+  "noMemberToTransfer": "No members available for transfer.",
+  "currentRoleAdmin": "Current role: Admin",
+  "currentRoleMember": "Current role: Member",
+  "cannotLeaveGroupCheckAdmin": "Cannot leave group. Please recheck admin permissions.",
+  "leftGroupSuccess": "You left the group",
+  "handoverAndLeaveSuccess": "Admin rights transferred and you left the group",
+  "secondConfirmation": "Second confirmation",
+  "aboutToHandoverAndLeave": "You are about to transfer admin rights and leave the group.",
+  "newAdminWillBe": "Will become the new admin",
+  "afterConfirmLeaveImmediately": "After confirmation, you will leave the group immediately.",
+  "goBack": "Go back",
+  "confirmHandover": "Confirm transfer",
+  "adminOnlyAction": "Only admins can perform this action",
+  "chatInviteLink": "Invite link",
+  "inviteLinkCopied": "Group invite link copied",
+  "addPeople": "Add people",
+  "youBlockedUser": "You blocked {name}",
+  "@youBlockedUser": { "placeholders": { "name": {} } },
+  "youRestrictedUser": "You restricted {name}",
+  "@youRestrictedUser": { "placeholders": { "name": {} } },
+  "noOnlineOrReadStatus": "They will not know when you are online or read their messages",
+  "blockAction": "Block",
+  "unblockAction": "Unblock",
+  "unrestrictAction": "Unrestrict",
+  "onlyAdminCanAddMembers": "Only admins can add members",
+  "messagesSearchHint": "Search",
+  "messagesTitle": "Messages",
+  "pendingMessages": "Message requests",
+  "noConversationFound": "No conversations found",
+  "chatPinned": "Chat pinned",
+  "chatUnpinned": "Chat unpinned",
+  "chatHidden": "Chat hidden",
+  "chatDeleted": "Chat deleted",
+  "pinAction": "Pin",
+  "unpinAction": "Unpin",
+  "hideAction": "Hide",
+  "deleteAction": "Delete",
+  "mutedNow": "Muted",
+  "feedNotificationSoon": "Notifications will be added later.",
+  "sessionExpiredRelogin": "Session expired. Please sign in again.",
+  "emptyNoPosts": "No posts yet",
+  "emptyFollowFriends": "Check back later or follow more friends",
+  "shareSoon": "Share will be added later.",
+  "saveSoon": "Save post will be added later.",
+  "createPostCannotPickGallery": "Cannot pick images from gallery",
+  "createPostCannotOpenCamera": "Cannot open camera",
+  "createPostTitle": "Create post",
+  "postAction": "Post",
+  "captionHint": "Write a caption for your post...\nTip: add hashtags for better reach.",
+  "addMediaForPost": "Add photo/video to your post",
+  "pickFromLibrary": "Pick from library",
+  "libraryLabel": "Library",
+  "cameraLabel": "Camera",
+  "friendsSearchHint": "Search",
+  "cannotOpenChat": "Cannot open chat: {error}",
+  "@cannotOpenChat": { "placeholders": { "error": {} } },
+  "placeholderLastMessage": "This is a placeholder for the last message.",
+  "messageInputHint": "Type a message..."
+  ,"bioLabel": "Bio"
+  ,"myLoveLabel": "my love"
+  ,"searchInConversationHint": "Search in conversation"
+  ,"enterKeywordToSearch": "Enter a keyword to search messages"
+  ,"noMatchingResults": "No matching results found"
+  ,"youLabel": "You"
+  ,"enterNicknameHint": "Enter nickname"
+  ,"nicknameRemoved": "Nickname removed for {name}"
+  ,"@nicknameRemoved": { "placeholders": { "name": {} } }
+  ,"nicknameUpdated": "Nickname updated for {name}"
+  ,"@nicknameUpdated": { "placeholders": { "name": {} } }
+  ,"nicknameVisibleInChat": "Everyone in this chat will see this nickname for {name}."
+  ,"@nicknameVisibleInChat": { "placeholders": { "name": {} } }
+  ,"groupNameHint": "Enter group name"
+  ,"invitedMembers": "Invited members"
+  ,"searchGeneric": "Search"
+  ,"safetyProfile": "Profile"
+  ,"restrictAction": "Restrict"
+  ,"blockAccount": "Block account"
+  ,"unblockAccount": "Unblock account"
+  ,"nicknameAction": "Nickname"
+  ,"createGroupChat": "Create group chat"
+  ,"optionsLabel": "Options"
+  ,"muteOffLabel": "Off"
+  ,"photosAndVideoTitle": "Photos and Videos"
+  ,"viewAll": "See all"
+  ,"blockedMediaHidden": "Photos and videos are hidden because you blocked this account."
+  ,"mute10Minutes": "10 minutes"
+  ,"mute30Minutes": "30 minutes"
+  ,"mute1Hour": "1 hour"
+  ,"mute2Hours": "2 hours"
+  ,"mute12Hours": "12 hours"
+  ,"mute24Hours": "24 hours"
+  ,"mute48Hours": "48 hours"
+  ,"muteConversationTitle": "Mute conversation notifications"
+  ,"turnOnNotifications": "Turn on notifications"
+  ,"grantAdmin": "Grant admin role"
+  ,"revokeAdmin": "Revoke admin role"
+  ,"revokeAdminLocked": "Revoke admin role (locked)"
+  ,"onlyAdminCanChangeRole": "Only admins can change roles"
+  ,"privateMessage": "Private message"
+  ,"thisIsYourAccount": "This is your account"
+  ,"newGroupTitle": "New group"
+  ,"editGroupTitle": "Edit group"
+  ,"createAction": "Create"
+  ,"peopleWhoCanContactYou": "People who can contact you"
+  ,"editNicknameTitle": "Edit nickname"
+  ,"groupRoleTitle": "Group role"
+  ,"memberIdTitle": "Member ID"
+  ,"adminGrantedTo": "Granted admin role to {name}"
+  ,"@adminGrantedTo": { "placeholders": { "name": {} } }
+  ,"cannotGrantAdmin": "Cannot grant admin role"
+  ,"adminRevokedFrom": "Revoked admin role from {name}"
+  ,"@adminRevokedFrom": { "placeholders": { "name": {} } }
+  ,"cannotRevokeAdmin": "Cannot revoke admin role"
+  ,"cannotRevokeOwnAdminTooltip": "You cannot revoke your own role. Grant admin to someone else first."
+  ,"cannotRevokeOwnAdmin": "You cannot revoke your own admin role"
+  ,"onlyAdminCanGrantOrRevokeTooltip": "Only admins can grant or revoke admin role."
+  ,"noAdminPermissionForAction": "You do not have admin permission for this action"
+  ,"cannotRevokeLastAdmin": "Cannot revoke the last admin in the group."
+  ,"youAreCurrentAdmin": "You are the current admin"
+  ,"adminHasFullControl": "Admin has full control"
+  ,"canGrantOrRevokeForOthers": "You can grant/revoke admin role for other members."
+  ,"youHaveAdminRights": "You have admin rights"
+  ,"canChangeMemberRoles": "You can change member roles in this group."
+  ,"noPermissionChangeRole": "You do not have permission to change roles"
+  ,"onlyAdminCanGrantOrRevoke": "Only admins are allowed to grant/revoke admin role."
+  ,"mutePriorityHint": "Top priority: clear all current mute states."
+  ,"muteUntilTurnedOn": "Until turned on again"
+  ,"exploreTitle": "Explore"
+  ,"reelsTitle": "Reels"
+  ,"postOptionAddToFavorites": "Add to favorites"
+  ,"postOptionAboutThisAccount": "About this account"
+  ,"postOptionHidePost": "Hide post"
+  ,"postOptionReport": "Report"
+  ,"postOptionAddToFavoritesDone": "Added to favorites"
+  ,"postOptionHidePostDone": "Post hidden"
+  ,"postOptionReportDone": "Report submitted"
+  ,"postOptionReportDoneWithReason": "Report submitted with reason: {reason}"
+  ,"@postOptionReportDoneWithReason": { "placeholders": { "reason": {} } }
+  ,"postReportTitle": "Report post"
+  ,"postReportSelectReason": "Select the most relevant reason"
+  ,"postReportSubmit": "Submit report"
+  ,"postReportReasonSpam": "Spam"
+  ,"postReportReasonHarassment": "Harassment or bullying"
+  ,"postReportReasonFalseInfo": "False information"
+  ,"postReportReasonHateSpeech": "Hate speech"
+  ,"postReportReasonViolence": "Violence or dangerous acts"
+  ,"postReportReasonOther": "Other"
+  ,"postOptionAllHiddenTitle": "You have hidden all posts"
+  ,"postOptionAllHiddenDescription": "Refresh to load new content or wait for other posts."
+  ,"followingStatus": "Following"
+  ,"yourStory": "Your Story"
+  ,"viewAllComments": "View all {count} comments"
+  ,"@viewAllComments": { "placeholders": { "count": {} } }
+  ,"likesCountText": "{count} likes"
+  ,"@likesCountText": { "placeholders": { "count": {} } }
+  ,"followAction": "Follow"
+  ,"recentSearchTitle": "Recent"
+}
