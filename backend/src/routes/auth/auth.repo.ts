@@ -1,5 +1,8 @@
 ﻿import { Types } from 'mongoose';
-import { SessionModel as Session } from './auth.model';
+import {
+	EmailVerificationTokenModel as EmailVerificationToken,
+	SessionModel as Session,
+} from './auth.model';
 
 export { UserRepository } from '../users/users.repo';
 
@@ -18,5 +21,38 @@ export class SessionRepository {
 
 	async findByRefreshToken(refreshToken: string) {
 		return await Session.findOne({ refreshToken });
+	}
+}
+
+export class EmailVerificationTokenRepository {
+	async create(tokenData: {
+		userId: Types.ObjectId;
+		tokenHash: string;
+		expiresAt: Date;
+	}) {
+		return await EmailVerificationToken.create(tokenData);
+	}
+
+	async findValidByHash(tokenHash: string) {
+		return await EmailVerificationToken.findOne({
+			tokenHash,
+			consumedAt: null,
+			expiresAt: { $gt: new Date() },
+		});
+	}
+
+	async consumeById(tokenId: string | Types.ObjectId) {
+		return await EmailVerificationToken.findByIdAndUpdate(
+			tokenId,
+			{ $set: { consumedAt: new Date() } },
+			{ new: true },
+		);
+	}
+
+	async consumeAllActiveByUserId(userId: string | Types.ObjectId) {
+		return await EmailVerificationToken.updateMany(
+			{ userId, consumedAt: null },
+			{ $set: { consumedAt: new Date() } },
+		);
 	}
 }

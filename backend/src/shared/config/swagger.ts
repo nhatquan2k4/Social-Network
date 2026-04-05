@@ -74,6 +74,16 @@ const options: swaggerJsdoc.Options = {
 							format: "email",
 							description: "User email",
 						},
+						isEmailVerified: {
+							type: "boolean",
+							description: "Trang thai xac thuc email",
+						},
+						emailVerifiedAt: {
+							type: "string",
+							format: "date-time",
+							description: "Thoi diem xac thuc email",
+							nullable: true,
+						},
 						displayName: {
 							type: "string",
 							description: "Display name",
