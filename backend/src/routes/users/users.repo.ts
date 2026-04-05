@@ -6,6 +6,10 @@ export class UserRepository {
 		return await User.findOne({ username });
 	}
 
+	async findByEmail(email: string) {
+		return await User.findOne({ email: email.toLowerCase().trim() });
+	}
+
 	async findById(userId: string | Types.ObjectId) {
 		return await User.findById(userId);
 	}
@@ -19,9 +23,40 @@ export class UserRepository {
 		hashedPassword: string;
 		email: string;
 		displayName: string;
+		isEmailVerified?: boolean;
+		emailVerifiedAt?: Date | null;
+		emailVerificationSentAt?: Date | null;
 	}) {
 		const newUser = new User(userData);
 		return await newUser.save();
+	}
+
+	async markEmailVerified(userId: string | Types.ObjectId) {
+		return await User.findByIdAndUpdate(
+			userId,
+			{
+				$set: {
+					isEmailVerified: true,
+					emailVerifiedAt: new Date(),
+				},
+				$unset: {
+					emailVerificationSentAt: 1,
+				},
+			},
+			{ new: true },
+		);
+	}
+
+	async setEmailVerificationSentAt(userId: string | Types.ObjectId, sentAt: Date) {
+		return await User.findByIdAndUpdate(
+			userId,
+			{
+				$set: {
+					emailVerificationSentAt: sentAt,
+				},
+			},
+			{ new: true },
+		);
 	}
 
 	async findByIdWithFields(userId: string | Types.ObjectId, fields: string) {

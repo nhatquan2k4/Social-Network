@@ -5,6 +5,9 @@ interface UserDocument extends Document {
   username: string;
   hashedPassword: string;
   email: string;
+  isEmailVerified?: boolean;
+  emailVerifiedAt?: Date | null;
+  emailVerificationSentAt?: Date | null;
   displayName: string;
   avatarUrl?: string;
   avatarPublicId?: string;

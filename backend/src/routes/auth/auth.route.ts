@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, logout } from './auth.controller';
+import { register, login, logout, resendEmailVerification, verifyEmail } from './auth.controller';
 
 const router = express.Router();
 
@@ -125,6 +125,10 @@ router.post("/register", register);
  *                   type: string
  *                   description: JWT access token
  *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 isEmailVerified:
+ *                   type: boolean
+ *                   description: Trang thai xac thuc email
+ *                   example: false
  *       400:
  *         description: Thiếu thông tin đăng nhập
  *         content:
@@ -171,5 +175,59 @@ router.post("/login", login);
  *               $ref: '#/components/schemas/Error'
  */
 router.post("/logout", logout);
+
+/**
+ * @swagger
+ * /api/auth/email-verification/verify:
+ *   post:
+ *     summary: Xac thuc email bang token
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Verification token gui qua email
+ *     responses:
+ *       200:
+ *         description: Xac thuc email thanh cong
+ *       400:
+ *         description: Token khong hop le hoac het han
+ */
+router.post('/email-verification/verify', verifyEmail);
+
+/**
+ * @swagger
+ * /api/auth/email-verification/resend:
+ *   post:
+ *     summary: Gui lai email xac thuc
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Da xu ly gui lai email xac thuc
+ *       429:
+ *         description: Gui lai qua nhanh
+ */
+router.post('/email-verification/resend', resendEmailVerification);
 
 export default router;

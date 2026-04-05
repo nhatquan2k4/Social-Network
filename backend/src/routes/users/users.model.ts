@@ -20,6 +20,18 @@ const userSchema = new mongoose.Schema(
 			trim: true,
 			lowercase: true,
 		},
+		isEmailVerified: {
+			type: Boolean,
+			default: false,
+		},
+		emailVerifiedAt: {
+			type: Date,
+			default: null,
+		},
+		emailVerificationSentAt: {
+			type: Date,
+			default: null,
+		},
 		displayName: {
 			type: String,
 			required: true,

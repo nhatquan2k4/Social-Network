@@ -45,6 +45,7 @@ services:
       - "3001:3001"
     environment:
       PORT: 3001
+      NODE_ENV: ${NODE_ENV:-development}
       ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET:-replace_with_a_strong_secret}
       MONGODB_CONNECTIONSTRING: mongodb://mongodb:27018/social_network
       MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio}
@@ -65,6 +66,15 @@ services:
       MEDIA_MESSAGE_QUALITY: ${MEDIA_MESSAGE_QUALITY:-78}
       MEDIA_AVATAR_QUALITY: ${MEDIA_AVATAR_QUALITY:-80}
       MEDIA_MESSAGE_REQUIRE_CONVERSATION_ID: ${MEDIA_MESSAGE_REQUIRE_CONVERSATION_ID:-true}
+      MAIL_FROM: ${MAIL_FROM:-Social Network <no-reply@socialnetwork.local>}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      EMAIL_VERIFICATION_TOKEN_TTL_SECONDS: ${EMAIL_VERIFICATION_TOKEN_TTL_SECONDS:-900}
+      EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS: ${EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS:-60}
+      EMAIL_VERIFICATION_REDIRECT_URL: ${EMAIL_VERIFICATION_REDIRECT_URL:-http://localhost:3000/verify-email}
     depends_on:
       mongodb:
         condition: service_healthy
