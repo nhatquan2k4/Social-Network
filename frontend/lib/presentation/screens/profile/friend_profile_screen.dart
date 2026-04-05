@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/routes/app_routes.dart';
+import 'package:frontend/core/utils/url_normalizer.dart';
 import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/domain/entities/friend_entity.dart';
+import 'package:frontend/domain/entities/post_entity.dart';
 import 'package:frontend/presentation/providers/chat_provider.dart';
 import 'package:frontend/presentation/providers/feed_provider.dart';
 import 'package:frontend/presentation/screens/chat/chat_screen.dart';
+import 'package:frontend/presentation/screens/feed/post_detail_screen.dart';
 import 'package:provider/provider.dart';
 
 class FriendProfileArgs {
@@ -40,34 +44,43 @@ class FriendProfileScreen extends StatefulWidget {
 class _FriendProfileScreenState extends State<FriendProfileScreen> {
   int _selectedTab = 0;
 
-  static const List<String> _mockPosts = [
-    'assets/images/image 74.png',
-    'assets/images/image 75.png',
-    'assets/images/image 76.png',
-    'assets/images/image 77.png',
-    'assets/images/image 78.png',
-    'assets/images/image 79.png',
-    'assets/images/image 80.png',
-    'assets/images/image 81.png',
-    'assets/images/image 82.png',
-    'assets/images/image 83.png',
-    'assets/images/image 84.png',
-    'assets/images/image 85.png',
-  ];
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<FeedProvider>().ensureLocalStateLoaded();
+      final feedProvider = context.read<FeedProvider>();
+      feedProvider.ensureLocalStateLoaded();
+      if (feedProvider.posts.isEmpty) {
+        feedProvider.loadInitial();
+      }
     });
+  }
+
+  List<PostEntity> _friendPosts(List<PostEntity> posts) {
+    final friendId = widget.args.userId.trim();
+    if (friendId.isEmpty) return const [];
+
+    return posts
+        .where((post) => post.authorId.trim() == friendId)
+        .toList(growable: false);
+  }
+
+  String? _postPreviewImage(PostEntity post) {
+    for (final media in post.media) {
+      final url = normalizeClientNetworkUrl((media.mediaUrl ?? '').trim());
+      if (url.isNotEmpty) {
+        return url;
+      }
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final feedProvider = context.watch<FeedProvider>();
+    final friendPosts = _friendPosts(feedProvider.posts);
     final isFollowing = feedProvider.isFollowingAuthor(widget.args.userId);
     final displayName = (widget.args.displayName ?? '').trim().isNotEmpty
         ? widget.args.displayName!.trim()
@@ -135,7 +148,7 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
                     child: Row(
                       children: [
                         _StatItem(
-                          value: widget.args.postsCount.toString(),
+                          value: friendPosts.length.toString(),
                           label: l10n.postsLabel,
                         ),
                         _StatItem(
@@ -156,7 +169,10 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
               child: Text(
                 displayName,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
               ),
             ),
             if ((widget.args.bio ?? '').trim().isNotEmpty)
@@ -183,7 +199,9 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
                           : l10n.followAction,
                       isPrimary: !isFollowing,
                       onTap: () {
-                        feedProvider.toggleFollowAuthor(authorId: widget.args.userId);
+                        feedProvider.toggleFollowAuthor(
+                          authorId: widget.args.userId,
+                        );
                       },
                     ),
                   ),
@@ -226,7 +244,9 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
                     onPressed: () => setState(() => _selectedTab = 0),
                     icon: Icon(
                       Icons.grid_on,
-                      color: _selectedTab == 0 ? Colors.black : const Color(0xFF9B9BA1),
+                      color: _selectedTab == 0
+                          ? Colors.black
+                          : const Color(0xFF9B9BA1),
                     ),
                   ),
                 ),
@@ -240,7 +260,9 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
                     onPressed: () => setState(() => _selectedTab = 1),
                     icon: Icon(
                       Icons.person_pin_outlined,
-                      color: _selectedTab == 1 ? Colors.black : const Color(0xFF9B9BA1),
+                      color: _selectedTab == 1
+                          ? Colors.black
+                          : const Color(0xFF9B9BA1),
                     ),
                   ),
                 ),
@@ -252,32 +274,64 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
                 children: [
                   Expanded(
                     child: Container(
-                      color: _selectedTab == 0 ? Colors.black : Colors.transparent,
+                      color: _selectedTab == 0
+                          ? Colors.black
+                          : Colors.transparent,
                     ),
                   ),
                   Expanded(
                     child: Container(
-                      color: _selectedTab == 1 ? Colors.black : Colors.transparent,
+                      color: _selectedTab == 1
+                          ? Colors.black
+                          : Colors.transparent,
                     ),
                   ),
                 ],
               ),
             ),
             if (_selectedTab == 0)
-              GridView.builder(
-                padding: const EdgeInsets.only(top: 1),
-                itemCount: _mockPosts.length,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 1,
-                  mainAxisSpacing: 1,
-                ),
-                itemBuilder: (context, index) {
-                  return _PostTile(imagePath: _mockPosts[index]);
-                },
-              )
+              friendPosts.isEmpty
+                  ? SizedBox(
+                      height: 180,
+                      child: Center(
+                        child: Text(
+                          'Người dùng này chưa có bài đăng',
+                          style: const TextStyle(color: Color(0xFF8F8F95)),
+                        ),
+                      ),
+                    )
+                  : GridView.builder(
+                      padding: const EdgeInsets.only(top: 1),
+                      itemCount: friendPosts.length,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 1,
+                            mainAxisSpacing: 1,
+                          ),
+                      itemBuilder: (context, index) {
+                        final post = friendPosts[index];
+                        final sequencePostIds = friendPosts
+                            .map((item) => item.id.trim())
+                            .where((id) => id.isNotEmpty)
+                            .toList(growable: false);
+                        return _PostTile(
+                          imageUrl: _postPreviewImage(post),
+                          hasMultipleMedia: post.media.length > 1,
+                          onTap: () {
+                            Navigator.of(context).pushNamed(
+                              AppRoutes.postDetail,
+                              arguments: PostDetailArgs(
+                                postId: post.id,
+                                sequencePostIds: sequencePostIds,
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    )
             else
               SizedBox(
                 height: 180,
@@ -437,7 +491,9 @@ class _PrimaryActionButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
-          backgroundColor: isPrimary ? const Color(0xFF1689F6) : const Color(0xFFEFEFF1),
+          backgroundColor: isPrimary
+              ? const Color(0xFF1689F6)
+              : const Color(0xFFEFEFF1),
           foregroundColor: isPrimary ? Colors.white : const Color(0xFF222227),
           elevation: 0,
           shape: RoundedRectangleBorder(
@@ -496,26 +552,57 @@ class _StoryCircle extends StatelessWidget {
 }
 
 class _PostTile extends StatelessWidget {
-  const _PostTile({required this.imagePath});
+  const _PostTile({
+    required this.imageUrl,
+    required this.hasMultipleMedia,
+    required this.onTap,
+  });
 
-  final String imagePath;
+  final String? imageUrl;
+  final bool hasMultipleMedia;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.asset(imagePath, fit: BoxFit.cover),
-        Positioned(
-          top: 6,
-          right: 6,
-          child: Icon(
-            Icons.content_copy_rounded,
-            size: 14,
-            color: Colors.white.withValues(alpha: 0.95),
-          ),
-        ),
-      ],
+    return InkWell(
+      onTap: onTap,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (imageUrl != null && imageUrl!.isNotEmpty)
+            Image.network(
+              imageUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                color: const Color(0xFFE6E6E9),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.image_not_supported_outlined,
+                  color: Color(0xFF99999F),
+                ),
+              ),
+            )
+          else
+            Container(
+              color: const Color(0xFFE6E6E9),
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.image_not_supported_outlined,
+                color: Color(0xFF99999F),
+              ),
+            ),
+          if (hasMultipleMedia)
+            Positioned(
+              top: 6,
+              right: 6,
+              child: Icon(
+                Icons.content_copy_rounded,
+                size: 14,
+                color: Colors.white.withValues(alpha: 0.95),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

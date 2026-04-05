@@ -9,6 +9,8 @@
     "start": "tsx src/server.ts",
     "build": "tsc",
     "serve": "node dist/server.js",
+    "start:prod": "npm run build && npm run serve",
+    "docker:up": "docker-compose up --build",
     "seed": "tsx src/scripts/seed.ts"
   },
   "type": "module",

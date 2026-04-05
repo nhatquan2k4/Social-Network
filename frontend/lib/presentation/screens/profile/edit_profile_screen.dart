@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:frontend/core/l10n/l10n.dart';
+import 'package:frontend/core/utils/url_normalizer.dart';
 import 'package:frontend/domain/entities/profile_entity.dart';
 import 'package:frontend/presentation/providers/profile_provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -29,20 +30,53 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   bool _isPrivateAccount = false;
   String? _localAvatarPath;
+  bool _didHydrateFromApi = false;
 
   @override
   void initState() {
     super.initState();
-    // Keep sample values in the edit form for frontend-only profile design.
-    _nameController = TextEditingController(text: 'Hoàng Tú');
-    _usernameController = TextEditingController(text: 'hoangtu_1');
-    _linkController = TextEditingController(text: 'Thêm liên kết');
-    _bioController = TextEditingController(
-      text: 'Sẽ có những con cá sẽ phải trả giá gì ???',
-    );
-    _emailController = TextEditingController(text: 'hoangtu@gmail.com');
-    _phoneController = TextEditingController(text: '0123456789');
-    _genderController = TextEditingController(text: 'Nam');
+    _nameController = TextEditingController();
+    _usernameController = TextEditingController();
+    _linkController = TextEditingController();
+    _bioController = TextEditingController();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController();
+    _genderController = TextEditingController();
+
+    _bindProfileToForm(widget.initialProfile);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _loadLatestProfile();
+    });
+  }
+
+  Future<void> _loadLatestProfile() async {
+    final provider = context.read<ProfileProvider>();
+    await provider.fetchProfile('me');
+    if (!mounted) return;
+
+    final latest = provider.profile;
+    if (latest == null) return;
+
+    _bindProfileToForm(latest);
+    _didHydrateFromApi = true;
+  }
+
+  void _bindProfileToForm(ProfileEntity profile) {
+    _nameController.text = profile.displayName;
+    _usernameController.text = profile.username;
+    _emailController.text = profile.email;
+    _bioController.text = (profile.bio ?? '').trim();
+    _phoneController.text = (profile.phone ?? '').trim();
+
+    if (_linkController.text.trim().isEmpty) {
+      _linkController.text = 'Thêm liên kết';
+    }
+
+    if (_genderController.text.trim().isEmpty) {
+      _genderController.text = 'Nam';
+    }
   }
 
   @override
@@ -78,9 +112,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.updateAvatarSuccess)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.updateAvatarSuccess)));
       return;
     }
 
@@ -89,9 +123,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(provider.error ?? l10n.updateAvatarFailed),
-      ),
+      SnackBar(content: Text(provider.error ?? l10n.updateAvatarFailed)),
     );
   }
 
@@ -107,9 +139,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       phone: _phoneController.text.trim(),
     );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.profileSavedLocal)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.profileSavedLocal)));
 
     Navigator.pop(context, true);
   }
@@ -174,8 +206,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
     }
 
-    final avatarUrl = profile.avatarUrl;
-    if (avatarUrl != null && avatarUrl.isNotEmpty) {
+    final avatarUrl = (profile.avatarUrl ?? '').trim().normalizeClientUrl();
+    if (avatarUrl.isNotEmpty) {
       return CircleAvatar(
         radius: 36,
         backgroundColor: Colors.grey.shade300,
@@ -197,6 +229,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Consumer<ProfileProvider>(
       builder: (context, provider, _) {
         final profile = provider.profile ?? widget.initialProfile;
+        if (!_didHydrateFromApi && provider.profile != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _bindProfileToForm(provider.profile!);
+            _didHydrateFromApi = true;
+          });
+        }
 
         return Scaffold(
           backgroundColor: Colors.white,
@@ -230,6 +269,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (provider.isLoading)
+                    const LinearProgressIndicator(
+                      minHeight: 2,
+                      color: Color(0xFF0095F6),
+                    ),
                   if (provider.isSaving)
                     const LinearProgressIndicator(
                       minHeight: 2,
@@ -317,7 +361,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                   _buildRowDivider(),
                   const SizedBox(height: 10),
-                  Text(l10n.personalInfo, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  Text(
+                    l10n.personalInfo,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   _buildFlatFieldRow(
                     label: l10n.emailLabel,

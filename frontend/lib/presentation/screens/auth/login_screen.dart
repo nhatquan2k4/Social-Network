@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final l10n = context.l10n;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFfff0),
+      backgroundColor: const Color(0xFFFFffff),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

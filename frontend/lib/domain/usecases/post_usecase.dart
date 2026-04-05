@@ -35,6 +35,24 @@ class PostUsecase {
     return repository.reportPost(postId: postId, reason: reason);
   }
 
+  Future<PostEntity> updatePost({
+    required String postId,
+    required String content,
+    List<Map<String, dynamic>> media = const [],
+    List<String> imagePaths = const [],
+  }) {
+    return repository.updatePost(
+      postId: postId,
+      content: content,
+      media: media,
+      imagePaths: imagePaths,
+    );
+  }
+
+  Future<void> deletePost(String postId) {
+    return repository.deletePost(postId);
+  }
+
   Future<PostCommentEntity> addComment(
     String postId,
     String content, {

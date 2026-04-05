@@ -9,6 +9,7 @@ import 'package:frontend/presentation/widgets/common/empty_state.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/presentation/providers/friend_provider.dart';
 import 'package:frontend/presentation/providers/chat_provider.dart';
+import 'package:frontend/presentation/providers/profile_provider.dart';
 import 'package:frontend/presentation/screens/chat/chat_screen.dart';
 
 class MessagesScreen extends StatefulWidget {
@@ -35,6 +36,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final myProfile = context.watch<ProfileProvider>().profile;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -198,6 +200,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
       ),
       bottomNavigationBar: BottomNav(
         currentIndex: _currentIndex,
+        profileAvatarUrl: myProfile?.avatarUrl,
+        profileDisplayName: myProfile?.displayName,
         onTap: (index) {
           if (index == _currentIndex) return;
 
@@ -205,9 +209,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
           final targetRoute = BottomNavRouteController.routeForIndex(index);
           if (targetRoute == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.pageNotImplemented)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(l10n.pageNotImplemented)));
             return;
           }
 

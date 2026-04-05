@@ -3,6 +3,7 @@ import 'package:frontend/core/l10n/l10n.dart';
 import 'package:frontend/core/routes/app_routes.dart';
 import 'package:frontend/presentation/controllers/common/bottom_nav_route_controller.dart';
 import 'package:frontend/presentation/providers/feed_provider.dart';
+import 'package:frontend/presentation/providers/profile_provider.dart';
 import 'package:frontend/presentation/screens/profile/friend_profile_screen.dart';
 import 'package:frontend/presentation/widgets/common/bottom_nav.dart';
 import 'package:frontend/presentation/widgets/common/follow_status_chip.dart';
@@ -96,7 +97,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
   int _currentIndex = 1;
 
   bool get _isSearchMode {
-    return _searchFocusNode.hasFocus || _searchController.text.trim().isNotEmpty;
+    return _searchFocusNode.hasFocus ||
+        _searchController.text.trim().isNotEmpty;
   }
 
   List<_RecentSearchUser> _buildRecentUsers(FeedProvider feedProvider) {
@@ -186,6 +188,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final myProfile = context.watch<ProfileProvider>().profile;
     final feedProvider = context.watch<FeedProvider>();
     final recentUsers = _buildRecentUsers(feedProvider);
     final filteredRecentUsers = _filteredRecentUsers(recentUsers);
@@ -296,15 +299,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
       bottomNavigationBar: BottomNav(
         currentIndex: _currentIndex,
+        profileAvatarUrl: myProfile?.avatarUrl,
+        profileDisplayName: myProfile?.displayName,
         onTap: (index) => BottomNavRouteController.handleTabSelection(
           context: context,
           currentIndex: _currentIndex,
           nextIndex: index,
           onIndexChanged: (next) => setState(() => _currentIndex = next),
           onUnsupportedDestination: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.pageNotImplemented)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(l10n.pageNotImplemented)));
           },
         ),
       ),
@@ -325,7 +330,8 @@ class _ExploreGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalSpacing = (_crossAxisCount - 1) * _gridSpacing;
-        final tileWidth = (constraints.maxWidth - totalSpacing) / _crossAxisCount;
+        final tileWidth =
+            (constraints.maxWidth - totalSpacing) / _crossAxisCount;
         final tileHeight = tileWidth * _tileHeightRatio;
 
         return GridView.builder(
@@ -344,11 +350,7 @@ class _ExploreGrid extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 Image.asset(imagePath, fit: BoxFit.cover),
-                const Positioned(
-                  top: 6,
-                  right: 6,
-                  child: _GridOverlayIcon(),
-                ),
+                const Positioned(top: 6, right: 6, child: _GridOverlayIcon()),
               ],
             );
           },
@@ -401,8 +403,8 @@ class _RecentSearchList extends StatelessWidget {
             itemCount: users.length,
             itemBuilder: (context, index) {
               final user = users[index];
-              final avatarProvider = (user.avatarUrl != null &&
-                      user.avatarUrl!.trim().isNotEmpty)
+              final avatarProvider =
+                  (user.avatarUrl != null && user.avatarUrl!.trim().isNotEmpty)
                   ? NetworkImage(user.avatarUrl!.trim()) as ImageProvider
                   : (user.avatarAssetPath != null &&
                         user.avatarAssetPath!.trim().isNotEmpty)

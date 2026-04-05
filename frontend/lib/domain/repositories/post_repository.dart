@@ -18,6 +18,15 @@ abstract class PostRepository {
 
   Future<void> reportPost({required String postId, required String reason});
 
+  Future<PostEntity> updatePost({
+    required String postId,
+    required String content,
+    List<Map<String, dynamic>> media = const [],
+    List<String> imagePaths = const [],
+  });
+
+  Future<void> deletePost(String postId);
+
   Future<PostCommentEntity> addComment(
     String postId,
     String content, {

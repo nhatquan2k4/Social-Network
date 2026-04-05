@@ -13,6 +13,23 @@ class ProfileProvider extends ChangeNotifier {
   bool isLoading = false;
   bool isSaving = false;
   String? error;
+  Future<void>? _ensureMyProfileFuture;
+
+  Future<void> ensureMyProfileLoaded() {
+    if (profile != null || isLoading) {
+      return Future.value();
+    }
+
+    if (_ensureMyProfileFuture != null) {
+      return _ensureMyProfileFuture!;
+    }
+
+    _ensureMyProfileFuture = fetchProfile('me').whenComplete(() {
+      _ensureMyProfileFuture = null;
+    });
+
+    return _ensureMyProfileFuture!;
+  }
 
   Future<void> fetchProfile(String userId) async {
     try {

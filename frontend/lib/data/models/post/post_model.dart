@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import '../../../core/utils/url_normalizer.dart';
 import '../../../domain/entities/post_entity.dart';
 
 import 'post_comment_model.dart';
@@ -125,7 +126,7 @@ class PostModel {
     final map = _authorMap(value);
     final raw = map?['avatarUrl'];
     if (raw is String && raw.trim().isNotEmpty) {
-      return raw.trim();
+      return raw.trim().normalizeClientUrl();
     }
     return null;
   }
@@ -148,7 +149,9 @@ class PostModel {
             (item) => {
               'bucket': _safeString(item['bucket']),
               'objectKey': _safeString(item['objectKey']),
-              'mediaUrl': item['mediaUrl']?.toString(),
+              'mediaUrl': item['mediaUrl'] == null
+                  ? null
+                  : item['mediaUrl'].toString().normalizeClientUrl(),
               'mimeType': _safeString(item['mimeType']),
               'size': (item['size'] is num)
                   ? (item['size'] as num).toInt()

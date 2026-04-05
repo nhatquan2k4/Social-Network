@@ -49,15 +49,28 @@ export class PostService {
   }
 
   private formatPost(post: PostDocumentLike) {
-    const media = (post.media || []).map((item) => ({
+    const normalizedPost: any =
+      post && typeof (post as any).toObject === "function"
+        ? (post as any).toObject()
+        : post;
+
+    const media = (normalizedPost.media || []).map((item: any) => ({
       ...item,
       mediaUrl: buildMediaUrl(item.bucket, item.objectKey),
     }));
 
+    const normalizedId =
+      normalizedPost?._id != null
+        ? normalizedPost._id.toString()
+        : normalizedPost?.id != null
+        ? normalizedPost.id.toString()
+        : undefined;
+
     return {
-      ...post,
+      ...normalizedPost,
+      ...(normalizedId ? { _id: normalizedId } : {}),
       media,
-      likesCount: post.likes?.length || 0,
+      likesCount: normalizedPost.likes?.length || 0,
     };
   }
 

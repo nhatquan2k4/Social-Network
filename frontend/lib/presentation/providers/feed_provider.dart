@@ -6,6 +6,7 @@ import 'package:frontend/data/services/local_storage_service.dart';
 
 import '../../domain/entities/post_comment_entity.dart';
 import '../../domain/entities/post_entity.dart';
+import '../../domain/entities/post_media_entity.dart';
 import '../../domain/usecases/post_usecase.dart';
 
 class FeedProvider extends ChangeNotifier {
@@ -114,11 +115,17 @@ class FeedProvider extends ChangeNotifier {
     if (normalizedId.isEmpty || _hiddenPostIds.contains(normalizedId)) return;
 
     _hiddenPostIds.add(normalizedId);
-    await _localStorage.saveStringList(_hiddenPostsKey, _hiddenPostIds.toList());
+    await _localStorage.saveStringList(
+      _hiddenPostsKey,
+      _hiddenPostIds.toList(),
+    );
     notifyListeners();
   }
 
-  Future<void> reportPost({required String postId, required String reason}) async {
+  Future<void> reportPost({
+    required String postId,
+    required String reason,
+  }) async {
     final normalizedReason = reason.trim();
     if (normalizedReason.isEmpty) {
       error = 'Ly do bao cao khong hop le';
@@ -148,6 +155,136 @@ class FeedProvider extends ChangeNotifier {
     } catch (e) {
       error = 'Khong the gui bao cao: $e';
       notifyListeners();
+    }
+  }
+
+  Future<bool> deletePost(String postId) async {
+    final normalizedId = postId.trim();
+    if (normalizedId.isEmpty) {
+      error = 'Khong tim thay bai viet de xoa';
+      notifyListeners();
+      return false;
+    }
+
+    final index = _posts.indexWhere((post) => post.id == normalizedId);
+    if (index == -1) {
+      error = 'Khong tim thay bai viet';
+      notifyListeners();
+      return false;
+    }
+
+    try {
+      await postUsecase.deletePost(normalizedId);
+
+      _posts.removeAt(index);
+      _hiddenPostIds.remove(normalizedId);
+      await _localStorage.saveStringList(
+        _hiddenPostsKey,
+        _hiddenPostIds.toList(),
+      );
+
+      error = null;
+      notifyListeners();
+      return true;
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final message = e.response?.data is Map<String, dynamic>
+          ? (e.response?.data['message']?.toString())
+          : null;
+
+      if (status == 401 || status == 403) {
+        requiresAuth = true;
+        error =
+            message ?? 'Phien dang nhap da het han. Vui long dang nhap lai.';
+      } else {
+        error = message ?? 'Khong the xoa bai viet';
+      }
+
+      notifyListeners();
+      return false;
+    } catch (e) {
+      error = 'Khong the xoa bai viet: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updatePostContent({
+    required String postId,
+    required String content,
+    List<PostMediaEntity>? retainedMedia,
+    List<String> newImagePaths = const [],
+  }) async {
+    final normalizedId = postId.trim();
+    final normalizedContent = content.trim();
+
+    if (normalizedId.isEmpty) {
+      error = 'Khong tim thay bai viet de sua';
+      notifyListeners();
+      return false;
+    }
+
+    final index = _posts.indexWhere((post) => post.id == normalizedId);
+    if (index == -1) {
+      error = 'Khong tim thay bai viet';
+      notifyListeners();
+      return false;
+    }
+
+    final keepMedia = retainedMedia ?? _posts[index].media;
+    final hasMediaAfterUpdate =
+        keepMedia.isNotEmpty ||
+        newImagePaths.any((path) => path.trim().isNotEmpty);
+
+    if (normalizedContent.isEmpty && !hasMediaAfterUpdate) {
+      error = 'Bai viet can co noi dung hoac it nhat mot anh';
+      notifyListeners();
+      return false;
+    }
+
+    try {
+      final mediaPayload = keepMedia
+          .map(
+            (item) => {
+              'bucket': item.bucket,
+              'objectKey': item.objectKey,
+              'mimeType': item.mimeType,
+              'size': item.size,
+            },
+          )
+          .toList(growable: false);
+
+      final updatedPost = await postUsecase.updatePost(
+        postId: normalizedId,
+        content: normalizedContent,
+        media: mediaPayload,
+        imagePaths: newImagePaths,
+      );
+
+      _posts[index] = updatedPost;
+      error = null;
+      notifyListeners();
+      return true;
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final message = e.response?.data is Map<String, dynamic>
+          ? (e.response?.data['message']?.toString())
+          : null;
+
+      if (status == 401 || status == 403) {
+        requiresAuth = true;
+        error =
+            message ?? 'Phien dang nhap da het han. Vui long dang nhap lai.';
+      } else {
+        error = message ?? 'Khong the sua bai viet';
+      }
+
+      notifyListeners();
+      return false;
+    } catch (e) {
+      error = 'Khong the sua bai viet: $e';
+      notifyListeners();
+      return false;
     }
   }
 

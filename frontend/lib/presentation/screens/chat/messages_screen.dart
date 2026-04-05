@@ -7,8 +7,10 @@ import 'package:frontend/presentation/controllers/common/bottom_nav_route_contro
 import 'package:frontend/presentation/providers/mock_chat_store.dart';
 import 'package:frontend/presentation/screens/chat/chat_screen.dart';
 import 'package:frontend/presentation/screens/chat/group/chat_group_create_screen.dart';
+import 'package:frontend/presentation/providers/profile_provider.dart';
 import 'package:frontend/presentation/widgets/common/bottom_nav.dart';
 import 'package:frontend/presentation/widgets/common/bell_status_icon.dart';
+import 'package:provider/provider.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -39,6 +41,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final myProfile = context.watch<ProfileProvider>().profile;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F8),
@@ -123,7 +126,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     child: AnimatedBuilder(
                       animation: _chatStore,
                       builder: (context, _) {
-                        final pendingCount = _chatStore.pendingConversationCount;
+                        final pendingCount =
+                            _chatStore.pendingConversationCount;
                         return Row(
                           children: [
                             Text(
@@ -178,7 +182,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   return Center(
                     child: Text(
                       l10n.noConversationFound,
-                      style: const TextStyle(color: Color(0xFF7B7B80), fontSize: 14),
+                      style: const TextStyle(
+                        color: Color(0xFF7B7B80),
+                        fontSize: 14,
+                      ),
                     ),
                   );
                 }
@@ -223,7 +230,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                             icon: item.isPinned
                                 ? Icons.push_pin
                                 : Icons.push_pin_outlined,
-                            label: item.isPinned ? l10n.unpinAction : l10n.pinAction,
+                            label: item.isPinned
+                                ? l10n.unpinAction
+                                : l10n.pinAction,
                           ),
                           SlidableAction(
                             onPressed: (_) {
@@ -237,7 +246,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                           ),
                           SlidableAction(
                             onPressed: (_) async {
-                              final shouldDelete = await _confirmDeleteConversation();
+                              final shouldDelete =
+                                  await _confirmDeleteConversation();
                               if (!shouldDelete) return;
                               _chatStore.deleteConversation(item.id);
                               _showToast(l10n.chatDeleted);
@@ -423,15 +433,17 @@ class _MessagesScreenState extends State<MessagesScreen> {
       ),
       bottomNavigationBar: BottomNav(
         currentIndex: _currentIndex,
+        profileAvatarUrl: myProfile?.avatarUrl,
+        profileDisplayName: myProfile?.displayName,
         onTap: (index) => BottomNavRouteController.handleTabSelection(
           context: context,
           currentIndex: _currentIndex,
           nextIndex: index,
           onIndexChanged: (next) => setState(() => _currentIndex = next),
           onUnsupportedDestination: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.pageNotImplemented)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(l10n.pageNotImplemented)));
           },
         ),
       ),

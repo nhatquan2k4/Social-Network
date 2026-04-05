@@ -7,6 +7,7 @@ import 'package:frontend/presentation/providers/feed_provider.dart';
 import 'package:frontend/presentation/screens/profile/friend_profile_screen.dart';
 import 'package:frontend/presentation/widgets/common/error_display.dart';
 import 'package:frontend/presentation/widgets/feed/comments_sheet.dart';
+import 'package:frontend/presentation/widgets/feed/edit_post_bottom_sheet.dart';
 import 'package:frontend/presentation/widgets/feed/post_card.dart';
 import 'package:intl/intl.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -15,12 +16,14 @@ import 'package:provider/provider.dart';
 class PostDetailArgs {
   const PostDetailArgs({
     required this.postId,
+    this.sequencePostIds = const [],
     this.highlightCommentId,
     this.autoReplyCommentId,
     this.openCommentsOnLoad = false,
   });
 
   final String postId;
+  final List<String> sequencePostIds;
   final String? highlightCommentId;
   final String? autoReplyCommentId;
   final bool openCommentsOnLoad;
@@ -64,6 +67,7 @@ class _PostDetailScreenState extends State<PostDetailScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _loadCurrentUser();
       await _ensurePostLoaded();
+      await _ensureSequencePostsLoaded();
       if (!mounted) return;
       setState(() => _isLoading = false);
       _openCommentsIfNeeded();
@@ -87,11 +91,12 @@ class _PostDetailScreenState extends State<PostDetailScreen>
 
     try {
       final decoded = JwtDecoder.decode(token);
-      _currentUserId = (decoded['userId'] ??
-              decoded['_id'] ??
-              decoded['id'] ??
-              decoded['sub'])
-          ?.toString();
+      _currentUserId =
+          (decoded['userId'] ??
+                  decoded['_id'] ??
+                  decoded['id'] ??
+                  decoded['sub'])
+              ?.toString();
     } catch (_) {
       _currentUserId = null;
     }
@@ -102,6 +107,107 @@ class _PostDetailScreenState extends State<PostDetailScreen>
     if (postId.isEmpty) return;
 
     await context.read<FeedProvider>().ensurePostById(postId);
+  }
+
+  List<String> _normalizedSequenceIds() {
+    final seen = <String>{};
+    final result = <String>[];
+
+    final current = widget.args.postId.trim();
+    if (current.isNotEmpty && seen.add(current)) {
+      result.add(current);
+    }
+
+    for (final rawId in widget.args.sequencePostIds) {
+      final id = rawId.trim();
+      if (id.isEmpty) continue;
+      if (!seen.add(id)) continue;
+      result.add(id);
+    }
+
+    return result;
+  }
+
+  Future<void> _ensureSequencePostsLoaded() async {
+    final feedProvider = context.read<FeedProvider>();
+    for (final postId in _normalizedSequenceIds()) {
+      await feedProvider.ensurePostById(postId);
+    }
+  }
+
+  List<PostEntity> _resolveScrollablePosts({
+    required FeedProvider feedProvider,
+    required PostEntity primaryPost,
+  }) {
+    final sequenceIds = _normalizedSequenceIds();
+    if (sequenceIds.length <= 1) {
+      return [primaryPost];
+    }
+
+    final currentId = widget.args.postId.trim();
+    final currentIndex = sequenceIds.indexOf(currentId);
+    final startIndex = currentIndex >= 0 ? currentIndex : 0;
+    final candidateIds = sequenceIds.sublist(startIndex);
+
+    final posts = <PostEntity>[];
+    final seen = <String>{};
+
+    for (final postId in candidateIds) {
+      final item = feedProvider.postById(postId);
+      if (item == null) continue;
+      if (!seen.add(item.id)) continue;
+      posts.add(item);
+    }
+
+    if (posts.isEmpty) {
+      return [primaryPost];
+    }
+
+    if (posts.first.id != primaryPost.id && seen.add(primaryPost.id)) {
+      posts.insert(0, primaryPost);
+    }
+
+    return posts;
+  }
+
+  Widget _buildPostCardItem({
+    required FeedProvider feedProvider,
+    required PostEntity post,
+  }) {
+    final isLikedByMe =
+        _currentUserId != null && post.likes.contains(_currentUserId);
+    final isFollowingAuthor = feedProvider.isFollowingAuthor(
+      post.authorId,
+      currentUserId: _currentUserId,
+    );
+    final isOwnPost = _currentUserId != null && post.authorId == _currentUserId;
+
+    return PostCard(
+      post: post,
+      isLikedByMe: isLikedByMe,
+      isFollowing: isFollowingAuthor,
+      onLike: () => _handleLike(
+        feedProvider: feedProvider,
+        post: post,
+        isCurrentlyLiked: isLikedByMe,
+      ),
+      onComment: () => _openCommentsSheet(post),
+      onViewComments: () => _openCommentsSheet(post),
+      onShare: () {},
+      onSave: () {},
+      onMore: () => _showPostMoreActions(
+        feedProvider: feedProvider,
+        post: post,
+        isOwnPost: isOwnPost,
+      ),
+      onFollowTap: isOwnPost
+          ? null
+          : () => feedProvider.toggleFollowAuthor(
+              authorId: post.authorId,
+              currentUserId: _currentUserId,
+            ),
+      onAuthorTap: () => _openAuthorProfile(post),
+    );
   }
 
   Future<void> _openCommentsSheet(PostEntity post) async {
@@ -118,6 +224,153 @@ class _PostDetailScreenState extends State<PostDetailScreen>
         autoFocusComposer: (widget.args.autoReplyCommentId ?? '').isNotEmpty,
       ),
     );
+  }
+
+  Future<void> _showPostMoreActions({
+    required FeedProvider feedProvider,
+    required PostEntity post,
+    required bool isOwnPost,
+  }) async {
+    if (!isOwnPost) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tính năng đang phát triển')),
+      );
+      return;
+    }
+
+    final action = await showModalBottomSheet<_PostDetailMoreAction>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD7D7DC),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.edit_outlined),
+                  title: const Text(
+                    'Sửa bài viết',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  onTap: () =>
+                      Navigator.pop(sheetContext, _PostDetailMoreAction.edit),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.delete_outline, color: Colors.red),
+                  title: const Text(
+                    'Xóa bài viết',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onTap: () =>
+                      Navigator.pop(sheetContext, _PostDetailMoreAction.delete),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.close),
+                  title: const Text('Hủy'),
+                  onTap: () =>
+                      Navigator.pop(sheetContext, _PostDetailMoreAction.cancel),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!mounted || action == null || action == _PostDetailMoreAction.cancel) {
+      return;
+    }
+
+    if (action == _PostDetailMoreAction.edit) {
+      final draft = await showEditPostBottomSheet(context: context, post: post);
+
+      if (!mounted || draft == null) return;
+
+      final success = await feedProvider.updatePostContent(
+        postId: post.id,
+        content: draft.content,
+        retainedMedia: draft.retainedMedia,
+        newImagePaths: draft.newImagePaths,
+      );
+      if (!mounted) return;
+
+      if (success) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Đã cập nhật bài viết')));
+      } else {
+        final message = feedProvider.error ?? 'Không thể sửa bài viết';
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+        feedProvider.clearError();
+      }
+      return;
+    }
+
+    // action == delete
+
+    final confirmDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Xóa bài viết?'),
+          content: const Text('Hành động này không thể hoàn tác.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmDelete != true || !mounted) return;
+
+    final success = await feedProvider.deletePost(post.id);
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Đã xóa bài viết')));
+
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      return;
+    }
+
+    final message = feedProvider.error ?? 'Không thể xóa bài viết';
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+    feedProvider.clearError();
   }
 
   List<_FlattenedComment> _buildFlattenedComments(
@@ -226,7 +479,9 @@ class _PostDetailScreenState extends State<PostDetailScreen>
 
     final message = feedProvider.error;
     if (message != null && message.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
       feedProvider.clearError();
     }
   }
@@ -284,65 +539,42 @@ class _PostDetailScreenState extends State<PostDetailScreen>
             );
           }
 
-          final isLikedByMe =
-              _currentUserId != null && post.likes.contains(_currentUserId);
-          final isFollowingAuthor = feedProvider.isFollowingAuthor(
-            post.authorId,
-            currentUserId: _currentUserId,
-          );
-          final isOwnPost =
-              _currentUserId != null && post.authorId == _currentUserId;
           final flattenedComments = _buildFlattenedComments(post.comments);
           _tryAutoHighlightInTab(flattenedComments);
+          final sequencePosts = _resolveScrollablePosts(
+            feedProvider: feedProvider,
+            primaryPost: post,
+          );
 
           return ListView(
             padding: const EdgeInsets.only(top: 6, bottom: 16),
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
+              const SizedBox(height: 8),
+              if (_selectedTab == 0)
+                Column(
                   children: [
-                    Expanded(
-                      child: _DetailTabButton(
-                        title: 'Bài viết',
-                        isSelected: _selectedTab == 0,
-                        onTap: () => setState(() => _selectedTab = 0),
+                    for (var i = 0; i < sequencePosts.length; i++) ...[
+                      _buildPostCardItem(
+                        feedProvider: feedProvider,
+                        post: sequencePosts[i],
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _DetailTabButton(
-                        title: 'Bình luận',
-                        isSelected: _selectedTab == 1,
-                        onTap: () => setState(() => _selectedTab = 1),
+                      if (i < sequencePosts.length - 1)
+                        const SizedBox(height: 8),
+                    ],
+                    const SizedBox(height: 10),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        'Đã là bài viết cuối cùng',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Color(0xFF8C8C93),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              if (_selectedTab == 0)
-                PostCard(
-                  post: post,
-                  isLikedByMe: isLikedByMe,
-                  isFollowing: isFollowingAuthor,
-                  onLike: () => _handleLike(
-                    feedProvider: feedProvider,
-                    post: post,
-                    isCurrentlyLiked: isLikedByMe,
-                  ),
-                  onComment: () => _openCommentsSheet(post),
-                  onViewComments: () => _openCommentsSheet(post),
-                  onShare: () {},
-                  onSave: () {},
-                  onMore: () {},
-                  onFollowTap: isOwnPost
-                      ? null
-                      : () => feedProvider.toggleFollowAuthor(
-                            authorId: post.authorId,
-                            currentUserId: _currentUserId,
-                          ),
-                  onAuthorTap: () => _openAuthorProfile(post),
                 )
               else
                 _InlineCommentsTab(
@@ -366,47 +598,13 @@ class _PostDetailScreenState extends State<PostDetailScreen>
   }
 }
 
+enum _PostDetailMoreAction { edit, delete, cancel }
+
 class _FlattenedComment {
   const _FlattenedComment({required this.comment, required this.depth});
 
   final PostCommentEntity comment;
   final int depth;
-}
-
-class _DetailTabButton extends StatelessWidget {
-  const _DetailTabButton({
-    required this.title,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final String title;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: onTap,
-      child: Container(
-        height: 34,
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF1689F6) : const Color(0xFFEDEDEF),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          title,
-          style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF1F1F23),
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _InlineCommentsTab extends StatelessWidget {
@@ -457,7 +655,10 @@ class _InlineCommentsTab extends StatelessWidget {
             final indent = (item.depth * 18.0).clamp(0.0, 72.0).toDouble();
             final author = _formatCommentAuthor(comment.authorId);
             final isHighlighted = highlightedCommentId == comment.id;
-            final rowKey = commentKeys.putIfAbsent(comment.id, () => GlobalKey());
+            final rowKey = commentKeys.putIfAbsent(
+              comment.id,
+              () => GlobalKey(),
+            );
 
             return Padding(
               key: rowKey,
@@ -501,7 +702,9 @@ class _InlineCommentsTab extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                DateFormat('HH:mm dd/MM').format(comment.createdAt),
+                                DateFormat(
+                                  'HH:mm dd/MM',
+                                ).format(comment.createdAt),
                                 style: const TextStyle(
                                   color: Colors.black45,
                                   fontSize: 11,

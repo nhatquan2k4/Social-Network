@@ -1,12 +1,23 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:frontend/core/utils/url_normalizer.dart';
+import 'package:frontend/presentation/providers/profile_provider.dart';
+import 'package:provider/provider.dart';
 
-class BottomNav extends StatelessWidget {
+class BottomNav extends StatefulWidget {
   final int currentIndex;
   final ValueChanged<int>? onTap;
+  final String? profileAvatarUrl;
+  final String? profileDisplayName;
 
-  const BottomNav({super.key, this.currentIndex = 0, this.onTap});
+  const BottomNav({
+    super.key,
+    this.currentIndex = 0,
+    this.onTap,
+    this.profileAvatarUrl,
+    this.profileDisplayName,
+  });
 
   static const _items = [
     Icons.home_outlined,
@@ -17,6 +28,38 @@ class BottomNav extends StatelessWidget {
   static const _activeColor = Color(0xFF141414);
   static const _inactiveColor = Color(0xFF383C44);
   static const _selectedPillColor = Color(0xFFD9E0F8);
+
+  @override
+  State<BottomNav> createState() => _BottomNavState();
+}
+
+class _BottomNavState extends State<BottomNav> {
+  bool _didRequestProfile = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _ensureProfileDataIfNeeded();
+  }
+
+  @override
+  void didUpdateWidget(covariant BottomNav oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_didRequestProfile) return;
+    _ensureProfileDataIfNeeded();
+  }
+
+  void _ensureProfileDataIfNeeded() {
+    final hasAvatar = (widget.profileAvatarUrl ?? '').trim().isNotEmpty;
+    final hasDisplayName = (widget.profileDisplayName ?? '').trim().isNotEmpty;
+    if (hasAvatar || hasDisplayName || _didRequestProfile) return;
+
+    _didRequestProfile = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<ProfileProvider>().ensureMyProfileLoaded();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,9 +92,13 @@ class BottomNav extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _navIcon(index: 0, icon: _items[0]),
-                  _navIcon(index: 1, icon: _items[1]),
-                  _navIcon(index: 2, icon: _items[2], isChatTab: true),
+                  _navIcon(index: 0, icon: BottomNav._items[0]),
+                  _navIcon(index: 1, icon: BottomNav._items[1]),
+                  _navIcon(
+                    index: 2,
+                    icon: BottomNav._items[2],
+                    isChatTab: true,
+                  ),
                   _profileTab(),
                 ],
               ),
@@ -63,11 +110,50 @@ class BottomNav extends StatelessWidget {
   }
 
   Widget _profileTab() {
-    final isSelected = currentIndex == 3;
+    final isSelected = widget.currentIndex == 3;
+    final avatarUrl = (widget.profileAvatarUrl ?? '')
+        .trim()
+        .normalizeClientUrl();
+    final displayName = (widget.profileDisplayName ?? '').trim();
+    final fallbackInitial = displayName.isNotEmpty
+        ? displayName[0].toUpperCase()
+        : 'H';
+
+    final avatarContent = avatarUrl.isNotEmpty
+        ? ClipOval(
+            child: Image.network(
+              avatarUrl,
+              width: 34,
+              height: 34,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) {
+                return Center(
+                  child: Text(
+                    fallbackInitial,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                );
+              },
+            ),
+          )
+        : Center(
+            child: Text(
+              fallbackInitial,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          );
 
     return InkWell(
       borderRadius: BorderRadius.circular(22),
-      onTap: () => onTap?.call(3),
+      onTap: () => widget.onTap?.call(3),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
@@ -76,7 +162,7 @@ class BottomNav extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected
-              ? _selectedPillColor
+              ? BottomNav._selectedPillColor
               : Colors.white.withValues(alpha: 0.35),
           shape: BoxShape.circle,
           border: Border.all(
@@ -102,14 +188,7 @@ class BottomNav extends StatelessWidget {
             backgroundColor: isSelected
                 ? const Color(0xFF5B3F31)
                 : const Color(0xFF8D6B56),
-            child: const Text(
-              'h',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            child: avatarContent,
           ),
         ),
       ),
@@ -121,11 +200,11 @@ class BottomNav extends StatelessWidget {
     required IconData icon,
     bool isChatTab = false,
   }) {
-    final isSelected = index == currentIndex;
+    final isSelected = index == widget.currentIndex;
 
     return InkWell(
       borderRadius: BorderRadius.circular(30),
-      onTap: () => onTap?.call(index),
+      onTap: () => widget.onTap?.call(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
@@ -134,7 +213,7 @@ class BottomNav extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected
-              ? _selectedPillColor
+              ? BottomNav._selectedPillColor
               : Colors.white.withValues(alpha: 0.28),
           shape: BoxShape.circle,
           border: Border.all(
@@ -174,12 +253,16 @@ class BottomNav extends StatelessWidget {
               Icon(
                 icon,
                 size: 34,
-                color: isSelected ? _activeColor : _inactiveColor,
+                color: isSelected
+                    ? BottomNav._activeColor
+                    : BottomNav._inactiveColor,
               ),
             if (isChatTab)
               _LucideSendIcon(
                 size: 29,
-                color: isSelected ? _activeColor : _inactiveColor,
+                color: isSelected
+                    ? BottomNav._activeColor
+                    : BottomNav._inactiveColor,
               ),
           ],
         ),
