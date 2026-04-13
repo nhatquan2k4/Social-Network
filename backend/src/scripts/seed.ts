@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import { UserModel as User } from "../routes/users/users.model";
+import { UserModel as User } from "../routes/users/shared/users.model";
 
 dotenv.config();
 
