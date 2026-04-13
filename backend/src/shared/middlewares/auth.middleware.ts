@@ -1,6 +1,6 @@
 ﻿import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
-import { UserModel as User } from '../../routes/users/users.model';
+import { UserModel as User } from '../../routes/users/shared/users.model';
 
 // authorization middleware - xac minh user la ai
 export const protectedRoute = async ( req: Request, res: Response, next: NextFunction ) => {

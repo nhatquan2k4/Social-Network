@@ -1,5 +1,5 @@
-﻿import { ConversationModel as Conversation } from '../../routes/conversations/conversations.model';
-import { FriendModel as Friend } from '../../routes/friends/friends.model';
+﻿import { ConversationModel as Conversation } from '../../routes/conversations/shared/conversations.model';
+import { FriendModel as Friend } from '../../routes/friends/shared/friends.model';
 import { Request, Response, NextFunction } from 'express';
 
 // Helper function to ensure consistent ordering of user IDs

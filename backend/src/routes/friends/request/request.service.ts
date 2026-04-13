@@ -1,0 +1,136 @@
+import { Types } from "mongoose";
+import { UserRepository } from "../../users/shared/users.repo";
+import { NotificationService } from "../../notifications/notifications.service";
+import {
+    FriendRepository,
+    FriendRequestRepository,
+} from "../shared/friends.repo";
+import {
+    AlreadyFriendsError,
+    FriendRequestAcceptForbiddenError,
+    FriendRequestNotFoundError,
+    FriendRequestPendingError,
+    FriendRequestRejectForbiddenError,
+    FriendSelfRequestError,
+    FriendUserNotFoundError,
+} from "../shared/friends.errors";
+
+export class RequestService {
+    private friendRepository: FriendRepository;
+    private friendRequestRepository: FriendRequestRepository;
+    private userRepository: UserRepository;
+    private notificationService: NotificationService;
+
+    constructor() {
+        this.friendRepository = new FriendRepository();
+        this.friendRequestRepository = new FriendRequestRepository();
+        this.userRepository = new UserRepository();
+        this.notificationService = new NotificationService();
+    }
+
+    async sendFriendRequest(from: Types.ObjectId, to: string, message?: string) {
+        if (from.toString() === to) {
+            throw new FriendSelfRequestError();
+        }
+
+        const userExists = await this.userRepository.exists(to);
+        if (!userExists) {
+            throw new FriendUserNotFoundError();
+        }
+
+        let userA = from.toString();
+        let userB = to;
+        if (userA > userB) {
+            [userA, userB] = [userB, userA];
+        }
+
+        const [alreadyFriends, pendingRequest] = await Promise.all([
+            this.friendRepository.findByUsers(userA, userB),
+            this.friendRequestRepository.findBetweenUsers(from, to as any),
+        ]);
+
+        if (alreadyFriends) {
+            throw new AlreadyFriendsError();
+        }
+
+        if (pendingRequest) {
+            throw new FriendRequestPendingError();
+        }
+
+        const request = await this.friendRequestRepository.create(from, to as any, message);
+
+        await this.notificationService.createNotification({
+            recipientId: new Types.ObjectId(to),
+            actorId: from,
+            type: "FRIEND_REQUEST",
+            title: "Loi moi ket ban moi",
+            body: "Ban vua nhan duoc mot loi moi ket ban.",
+            entityType: "friend_request",
+            entityId: request._id.toString(),
+            metadata: {
+                requestId: request._id.toString(),
+            },
+        });
+
+        return request;
+    }
+
+    async acceptFriendRequest(requestId: string, userId: Types.ObjectId) {
+        const request = await this.friendRequestRepository.findById(requestId);
+        if (!request) {
+            throw new FriendRequestNotFoundError();
+        }
+
+        if (request.to.toString() !== userId.toString()) {
+            throw new FriendRequestAcceptForbiddenError();
+        }
+
+        await this.friendRepository.create(request.from, request.to);
+        await this.friendRequestRepository.deleteById(requestId);
+
+        await this.notificationService.createNotification({
+            recipientId: request.from,
+            actorId: request.to,
+            type: "FRIEND_ACCEPTED",
+            title: "Loi moi ket ban duoc chap nhan",
+            body: "Loi moi ket ban cua ban da duoc chap nhan.",
+            entityType: "friend_request",
+            entityId: requestId,
+        });
+
+        const from = await this.userRepository.findByIdWithFields(
+            request.from,
+            "username displayName avatarUrl",
+        );
+
+        return {
+            _id: from?._id,
+            displayName: from?.displayName,
+            avatarUrl: from?.avatarUrl,
+        };
+    }
+
+    async rejectFriendRequest(requestId: string, userId: Types.ObjectId) {
+        const request = await this.friendRequestRepository.findById(requestId);
+        if (!request) {
+            throw new FriendRequestNotFoundError();
+        }
+
+        if (request.to.toString() !== userId.toString()) {
+            throw new FriendRequestRejectForbiddenError();
+        }
+
+        await this.friendRequestRepository.deleteById(requestId);
+    }
+
+    async getAllFriendRequests(userId: Types.ObjectId) {
+        const populateFields = "_id username displayName avatarUrl";
+
+        const [sent, received] = await Promise.all([
+            this.friendRequestRepository.findSentByUserId(userId, populateFields),
+            this.friendRequestRepository.findReceivedByUserId(userId, populateFields),
+        ]);
+
+        return { sent, received };
+    }
+}
