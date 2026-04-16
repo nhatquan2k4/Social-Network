@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { NotificationRepository } from './notifications.repo';
+import { emitNotificationNew } from '../../shared/socket/socket.emitter';
 
 export type NotificationType = 'FRIEND_REQUEST' | 'FRIEND_ACCEPTED' | 'POST_LIKED' | 'POST_COMMENTED' | 'COMMENT_REPLIED';
 
@@ -26,7 +27,7 @@ export class NotificationService {
       return null;
     }
 
-    return this.notificationRepository.create({
+    const notification = await this.notificationRepository.create({
       recipientId: params.recipientId,
       actorId: params.actorId,
       type: params.type,
@@ -36,6 +37,10 @@ export class NotificationService {
       entityId: params.entityId,
       metadata: params.metadata,
     });
+
+    emitNotificationNew(params.recipientId.toString(), notification);
+
+    return notification;
   }
 
   async getMyNotifications(userId: Types.ObjectId, page: number, limit: number, unreadOnly: boolean) {
