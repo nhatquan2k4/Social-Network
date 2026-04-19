@@ -1,0 +1,31 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: social-network-mongodb-dev
+    restart: unless-stopped
+    ports:
+      # Mở lại port để bạn có thể kết nối bằng MongoDB Compass
+      - "27018:27018" 
+    environment:
+      MONGO_INITDB_DATABASE: social_network
+    volumes:
+      - mongodb_dev_data:/data/db
+
+  minio:
+    image: minio/minio:latest
+    container_name: social-network-minio-dev
+    restart: unless-stopped
+    ports:
+      # Mở port để truy cập giao diện quản trị MinIO trên trình duyệt
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_dev_data:/data
+
+volumes:
+  mongodb_dev_data:
+  minio_dev_data:

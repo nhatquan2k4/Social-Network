@@ -4,8 +4,7 @@ services:
     container_name: social-network-mongodb
     restart: unless-stopped
     command: ["--port", "27018"]
-    ports:
-      - "27018:27018"
+    # Đã xóa phần 'ports' ở đây. Database giờ chỉ có thể được truy cập nội bộ bởi Backend.
     environment:
       MONGO_INITDB_DATABASE: social_network
     volumes:
@@ -36,45 +35,15 @@ services:
       retries: 5
 
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # Đã thay đổi: Jenkins sẽ build và push image này, VPS chỉ việc kéo về chạy
+    image: ${DOCKERHUB_USERNAME}/social-network-backend:latest
     container_name: social-network-backend
     restart: unless-stopped
     ports:
       - "3001:3001"
-    environment:
-      PORT: 3001
-      NODE_ENV: ${NODE_ENV:-development}
-      ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET:-replace_with_a_strong_secret}
-      MONGODB_CONNECTIONSTRING: mongodb://mongodb:27018/social_network
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio}
-      MINIO_PORT: ${MINIO_PORT:-9000}
-      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
-      MINIO_BUCKET_POSTS: ${MINIO_BUCKET_POSTS:-social-posts}
-      MINIO_BUCKET_MESSAGES: ${MINIO_BUCKET_MESSAGES:-social-messages}
-      MINIO_BUCKET_AVATARS: ${MINIO_BUCKET_AVATARS:-social-avatars}
-      MINIO_PUBLIC_BASE_URL: ${MINIO_PUBLIC_BASE_URL:-http://localhost:9000}
-      MEDIA_MAX_FILE_SIZE: ${MEDIA_MAX_FILE_SIZE:-5242880}
-      MEDIA_MAX_FILES: ${MEDIA_MAX_FILES:-10}
-      MEDIA_POST_MAX_DIMENSION: ${MEDIA_POST_MAX_DIMENSION:-1920}
-      MEDIA_MESSAGE_MAX_DIMENSION: ${MEDIA_MESSAGE_MAX_DIMENSION:-1280}
-      MEDIA_AVATAR_MAX_DIMENSION: ${MEDIA_AVATAR_MAX_DIMENSION:-512}
-      MEDIA_POST_QUALITY: ${MEDIA_POST_QUALITY:-82}
-      MEDIA_MESSAGE_QUALITY: ${MEDIA_MESSAGE_QUALITY:-78}
-      MEDIA_AVATAR_QUALITY: ${MEDIA_AVATAR_QUALITY:-80}
-      MEDIA_MESSAGE_REQUIRE_CONVERSATION_ID: ${MEDIA_MESSAGE_REQUIRE_CONVERSATION_ID:-true}
-      MAIL_FROM: ${MAIL_FROM:-Social Network <no-reply@socialnetwork.local>}
-      SMTP_HOST: ${SMTP_HOST:-}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USER: ${SMTP_USER:-}
-      SMTP_PASS: ${SMTP_PASS:-}
-      SMTP_SECURE: ${SMTP_SECURE:-false}
-      EMAIL_VERIFICATION_TOKEN_TTL_SECONDS: ${EMAIL_VERIFICATION_TOKEN_TTL_SECONDS:-900}
-      EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS: ${EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS:-60}
-      EMAIL_VERIFICATION_REDIRECT_URL: ${EMAIL_VERIFICATION_REDIRECT_URL:-http://localhost:3000/verify-email}
+    # Đã thay đổi: Tự động nạp toàn bộ danh sách biến từ file .env ẩn trên máy chủ
+    env_file:
+      - .env
     depends_on:
       mongodb:
         condition: service_healthy
