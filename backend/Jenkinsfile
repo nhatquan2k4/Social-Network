@@ -1,0 +1,81 @@
+pipeline {
+    agent any
+
+    environment {
+        // ── Thay bằng username Docker Hub của bạn ──
+        DOCKERHUB_USERNAME = 'nhatquan2k4'
+        IMAGE_NAME         = "${DOCKERHUB_USERNAME}/social-network-backend"
+        IMAGE_TAG          = "${BUILD_NUMBER}"
+
+        // ── Thư mục chứa app trên VPS ──────────────────────────
+        DEPLOY_DIR         = '/opt/mochi-app'
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '5'))
+        timeout(time: 20, unit: 'MINUTES')
+        timestamps()
+    }
+
+    stages {
+        // ── Bước 1: Kéo code mới nhất về ──────────────────────
+        stage('Checkout') {
+            steps {
+                checkout scm
+                echo "Checkout hoàn tất - Branch: ${env.GIT_BRANCH}"
+            }
+        }
+
+        // ── Bước 2: Đóng gói ứng dụng ─────────────────────────
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
+                echo "Đã đóng gói Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+
+        // ── Bước 3: Đẩy image lên kho lưu trữ ─────────────────
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-hub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_TOKEN'
+                )]) {
+                    sh "echo '${DOCKER_TOKEN}' | docker login -u '${DOCKER_USER}' --password-stdin"
+                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker push ${IMAGE_NAME}:latest"
+                    sh "docker logout"
+                }
+            }
+        }
+
+        // ── Bước 4: Chạy ứng dụng trên VPS ────────────────────
+        stage('Deploy') {
+            steps {
+                withCredentials([
+                    file(credentialsId: 'prod-env-file', variable: 'ENV_FILE')
+                ]) {
+                    sh """
+                        mkdir -p ${DEPLOY_DIR}
+                        cp \${ENV_FILE} ${DEPLOY_DIR}/.env
+                        chmod 600 ${DEPLOY_DIR}/.env
+                    """
+                    sh "cp docker-compose.yml ${DEPLOY_DIR}/docker-compose.yml"
+                    sh """
+                        docker compose -f ${DEPLOY_DIR}/docker-compose.yml pull backend
+                        docker compose -f ${DEPLOY_DIR}/docker-compose.yml up -d --force-recreate backend
+                        docker image prune -f
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
+            cleanWs()
+        }
+    }
+}
