@@ -29,7 +29,7 @@ pipeline {
         // ── Bước 2: Đóng gói ứng dụng ─────────────────────────
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
+                sh "cd backend && docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
                 echo "Đã đóng gói Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
@@ -61,7 +61,7 @@ pipeline {
                         cp \${ENV_FILE} ${DEPLOY_DIR}/.env
                         chmod 600 ${DEPLOY_DIR}/.env
                     """
-                    sh "cp docker-compose.yml ${DEPLOY_DIR}/docker-compose.yml"
+                    sh "cp backend/docker-compose.yml ${DEPLOY_DIR}/docker-compose.yml"
                     sh """
                         docker compose -f ${DEPLOY_DIR}/docker-compose.yml pull backend
                         docker compose -f ${DEPLOY_DIR}/docker-compose.yml up -d --force-recreate backend
