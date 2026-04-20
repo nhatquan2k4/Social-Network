@@ -1,5 +1,5 @@
-import { SOCKET_EVENTS, SOCKET_ROOMS } from "./socket.events";
-import { getSocketIO } from "./socket.server";
+import { SOCKET_EVENTS, SOCKET_ROOMS } from "./socket.events.js";
+import { getSocketIO } from "./socket.server.js";
 
 const withSocket = (action: (io: ReturnType<typeof getSocketIO>) => void) => {
     try {

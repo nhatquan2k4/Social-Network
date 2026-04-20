@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { Types } from 'mongoose';
-import { envConfig } from '../../../shared/config/env';
+import { envConfig } from '../../../shared/config/env.js';
 import { sendEmailVerificationEmail } from '../../../shared/utils/email.service.js';
 import { EmailVerificationTokenRepository, UserRepository } from './auth.repo.js';
 import { ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from './auth.constants.js';

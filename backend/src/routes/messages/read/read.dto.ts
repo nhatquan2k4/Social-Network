@@ -3,8 +3,8 @@ import {
     DEFAULT_MESSAGE_HISTORY_LIMIT,
     MAX_MESSAGE_HISTORY_LIMIT,
     MESSAGE_ERROR_MESSAGES,
-} from "../shared/messages.constants";
-import { InvalidCursorError } from "../shared/messages.errors";
+} from "../shared/messages.constants.js";
+import { InvalidCursorError } from "../shared/messages.errors.js";
 
 export interface MarkReadInput {
     conversationId: string;

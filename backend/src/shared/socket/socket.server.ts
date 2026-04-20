@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
-import { ConversationService } from "../../routes/conversations/conversation/conversation.service";
-import { UserModel } from "../../routes/users/shared/users.model";
-import { SOCKET_EVENTS, SOCKET_ROOMS } from "./socket.events";
+import { ConversationService } from "../../routes/conversations/conversation/conversation.service.js";
+import { UserModel } from "../../routes/users/shared/users.model.js";
+import { SOCKET_EVENTS, SOCKET_ROOMS } from "./socket.events.js";
 
 type AccessTokenPayload = {
     userId: string;
