@@ -41,3 +41,10 @@ export class InvalidEmojiError extends Error {
         this.name = "InvalidEmojiError";
     }
 }
+
+export class InvalidCursorError extends Error {
+    constructor() {
+        super(MESSAGE_ERROR_MESSAGES.INVALID_CURSOR);
+        this.name = "InvalidCursorError";
+    }
+}

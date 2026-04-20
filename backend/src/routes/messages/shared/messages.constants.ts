@@ -8,6 +8,8 @@ export const MESSAGE_ERROR_MESSAGES = {
     INVALID_MESSAGE_ID: "messageId khong hop le",
     INVALID_IDS: "conversationId hoac messageId khong hop le",
     INVALID_MEDIA: "Thieu media hop le",
+    INVALID_CURSOR: "cursor khong hop le",
+    INVALID_LIMIT: "limit khong hop le",
 } as const;
 
 export const MESSAGE_SUCCESS_MESSAGES = {
@@ -21,3 +23,5 @@ export const MESSAGE_SUCCESS_MESSAGES = {
 } as const;
 
 export const DEFAULT_REACTION_MAX_LENGTH = 32;
+export const DEFAULT_MESSAGE_HISTORY_LIMIT = 30;
+export const MAX_MESSAGE_HISTORY_LIMIT = 50;
