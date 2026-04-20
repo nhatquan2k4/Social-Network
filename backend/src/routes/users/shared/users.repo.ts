@@ -1,4 +1,4 @@
-import { UserModel as User } from './users.model';
+import { UserModel as User } from './users.model.js';
 import { Types } from 'mongoose';
 
 export class UserRepository {

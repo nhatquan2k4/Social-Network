@@ -1,5 +1,5 @@
 import { Document } from 'mongoose';
-import type { ConversationModel } from '../routes/conversations/shared/conversations.model';
+import type { ConversationModel } from '../routes/conversations/shared/conversations.model.js';
 
 interface UserDocument extends Document {
   username: string;

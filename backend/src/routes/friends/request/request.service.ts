@@ -1,10 +1,10 @@
 import { Types } from "mongoose";
-import { UserRepository } from "../../users/shared/users.repo";
-import { NotificationService } from "../../notifications/notifications.service";
+import { UserRepository } from "../../users/shared/users.repo.js";
+import { NotificationService } from "../../notifications/notifications.service.js";
 import {
     FriendRepository,
     FriendRequestRepository,
-} from "../shared/friends.repo";
+} from "../shared/friends.repo.js";
 import {
     AlreadyFriendsError,
     FriendRequestAcceptForbiddenError,
@@ -13,7 +13,7 @@ import {
     FriendRequestRejectForbiddenError,
     FriendSelfRequestError,
     FriendUserNotFoundError,
-} from "../shared/friends.errors";
+} from "../shared/friends.errors.js";
 
 export class RequestService {
     private friendRepository: FriendRepository;

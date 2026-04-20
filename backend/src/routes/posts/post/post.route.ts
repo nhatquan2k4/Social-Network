@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
-import { protectedRoute } from "../../../shared/middlewares/auth.middleware";
-import { createPost, deletePost, getPostById, updatePost } from "./post.controller";
+import { protectedRoute } from "../../../shared/middlewares/auth.middleware.js";
+import { createPost, deletePost, getPostById, updatePost } from "./post.controller.js";
 
 const router = express.Router();
 

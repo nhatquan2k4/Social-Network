@@ -1,5 +1,5 @@
 ﻿import { Types } from 'mongoose';
-import { NotificationModel as Notification } from './notifications.model';
+import { NotificationModel as Notification } from './notifications.model.js';
 
 interface CreateNotificationInput {
 	recipientId: Types.ObjectId;

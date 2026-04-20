@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
-import { protectedRoute } from '../../../shared/middlewares/auth.middleware';
-import { getMe, getUserProfile, updateAvatar, updateMe } from './profile.controller';
+import { protectedRoute } from '../../../shared/middlewares/auth.middleware.js';
+import { getMe, getUserProfile, updateAvatar, updateMe } from './profile.controller.js';
 
 const router = express.Router();
 

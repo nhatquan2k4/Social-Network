@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { LogoutService } from './logout.service';
+import { LogoutService } from './logout.service.js';
 
 const logoutService = new LogoutService();
 const isProduction = process.env.NODE_ENV === 'production';

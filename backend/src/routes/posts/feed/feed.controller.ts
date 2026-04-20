@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { FeedService } from "./feed.service";
+import { FeedService } from "./feed.service.js";
 
 const feedService = new FeedService();
 

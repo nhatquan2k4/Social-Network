@@ -1,6 +1,6 @@
 import express from 'express';
-import { protectedRoute } from '../../../shared/middlewares/auth.middleware';
-import { getUserPosts } from './user-posts.controller';
+import { protectedRoute } from '../../../shared/middlewares/auth.middleware.js';
+import { getUserPosts } from './user-posts.controller.js';
 
 const router = express.Router();
 

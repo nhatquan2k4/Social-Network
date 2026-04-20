@@ -1,1 +1,1 @@
-export type { UploadedMedia } from '../upload/upload.service';
+export type { UploadedMedia } from '../upload/upload.service.js';

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { RegisterService } from './register.service';
+import { RegisterService } from './register.service.js';
 
 const registerService = new RegisterService();
 

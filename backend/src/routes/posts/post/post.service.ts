@@ -1,8 +1,8 @@
 import { Types } from "mongoose";
-import { PostRepository, PostMediaInput } from "../shared/posts.repo";
-import { POST_ERROR_MESSAGES } from "../shared/posts.constants";
-import { formatPost } from "../shared/posts.util";
-import { UpdatePostPayload } from "./post.dto";
+import { PostRepository, PostMediaInput } from "../shared/posts.repo.js";
+import { POST_ERROR_MESSAGES } from "../shared/posts.constants.js";
+import { formatPost } from "../shared/posts.util.js";
+import { UpdatePostPayload } from "./post.dto.js";
 
 export class PostService {
     private postRepository: PostRepository;

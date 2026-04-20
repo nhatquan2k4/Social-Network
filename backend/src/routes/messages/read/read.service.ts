@@ -1,12 +1,12 @@
 import { Types } from "mongoose";
-import { MessageRepository } from "../shared/messages.repo";
-import { MessageNotFoundError } from "../shared/messages.errors";
-import { enrichMessageMedia } from "../shared/messages.util";
+import { MessageRepository } from "../shared/messages.repo.js";
+import { MessageNotFoundError } from "../shared/messages.errors.js";
+import { enrichMessageMedia } from "../shared/messages.util.js";
 import {
     decodeMessageHistoryCursor,
     encodeMessageHistoryCursor,
     parseMessageHistoryLimit,
-} from "./read.dto";
+} from "./read.dto.js";
 
 export class ReadService {
     private messageRepository: MessageRepository;

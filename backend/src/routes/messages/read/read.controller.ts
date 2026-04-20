@@ -2,9 +2,9 @@ import { Request, Response } from "express";
 import {
     MESSAGE_ERROR_MESSAGES,
     MESSAGE_SUCCESS_MESSAGES,
-} from "../shared/messages.constants";
-import { InvalidCursorError, MessageNotFoundError } from "../shared/messages.errors";
-import { ReadService } from "./read.service";
+} from "../shared/messages.constants.js";
+import { InvalidCursorError, MessageNotFoundError } from "../shared/messages.errors.js";
+import { ReadService } from "./read.service.js";
 
 const readService = new ReadService();
 

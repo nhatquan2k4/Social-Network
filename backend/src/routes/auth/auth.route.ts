@@ -1,9 +1,9 @@
 import express from 'express';
-import registerRoute from './register/register.route';
-import loginRoute from './login/login.route';
-import logoutRoute from './logout/logout.route';
-import verifyEmailRoute from './email-verification/verify/verify.route';
-import resendEmailRoute from './email-verification/resend/resend.route';
+import registerRoute from './register/register.route.js';
+import loginRoute from './login/login.route.js';
+import logoutRoute from './logout/logout.route.js';
+import verifyEmailRoute from './email-verification/verify/verify.route.js';
+import resendEmailRoute from './email-verification/resend/resend.route.js';
 
 const router = express.Router();
 

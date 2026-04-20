@@ -1,5 +1,5 @@
-import { EmailVerificationTokenRepository, UserRepository } from '../../shared/auth.repo';
-import { hashVerificationToken } from '../../shared/auth.util';
+import { EmailVerificationTokenRepository, UserRepository } from '../../shared/auth.repo.js';
+import { hashVerificationToken } from '../../shared/auth.util.js';
 
 export class VerifyEmailService {
     private userRepository: UserRepository;

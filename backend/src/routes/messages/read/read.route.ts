@@ -1,11 +1,11 @@
 import express from "express";
-import { protectedRoute } from "../../../shared/middlewares/auth.middleware";
-import { checkConversationMembership } from "../../../shared/middlewares/friend.middleware";
+import { protectedRoute } from "../../../shared/middlewares/auth.middleware.js";
+import { checkConversationMembership } from "../../../shared/middlewares/friend.middleware.js";
 import {
     getConversationMessages,
     markMessageAsRead,
     markMessagesAsReadBulk,
-} from "./read.controller";
+} from "./read.controller.js";
 
 const router = express.Router();
 

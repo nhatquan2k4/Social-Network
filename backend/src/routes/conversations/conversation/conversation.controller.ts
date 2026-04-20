@@ -3,15 +3,15 @@ import type { Types } from "mongoose";
 import {
     CreateConversationRequest,
     GetConversationsQuery,
-} from "./conversation.dto";
-import { ConversationService } from "./conversation.service";
+} from "./conversation.dto.js";
+import { ConversationService } from "./conversation.service.js";
 import {
     ConversationNotFoundError,
     ConversationTypeInvalidError,
     GroupLeaveOnlyError,
     GroupMemberNotFoundError,
-} from "../shared/conversations.errors";
-import { emitConversationSeen } from "../../../shared/socket/socket.emitter";
+} from "../shared/conversations.errors.js";
+import { emitConversationSeen } from "../../../shared/socket/socket.emitter.js";
 
 const conversationService = new ConversationService();
 

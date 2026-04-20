@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import {
     POST_ERROR_MESSAGES,
     POST_SUCCESS_MESSAGES,
-} from "../shared/posts.constants";
-import { LikeService } from "./like.service";
+} from "../shared/posts.constants.js";
+import { LikeService } from "./like.service.js";
 
 const likeService = new LikeService();
 

@@ -1,4 +1,4 @@
-import { CONVERSATION_ERROR_MESSAGES } from "./conversations.constants";
+import { CONVERSATION_ERROR_MESSAGES } from "./conversations.constants.js";
 
 export class ConversationTypeInvalidError extends Error {
     constructor() {
