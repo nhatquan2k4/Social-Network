@@ -1,4 +1,4 @@
-import { envConfig } from '../../../../shared/config/env';
+import { envConfig } from '../../../../shared/config/env.js';
 import {
     EmailVerificationTokenRepository,
     UserRepository,
