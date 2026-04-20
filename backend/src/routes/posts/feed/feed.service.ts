@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
-import { FriendModel as Friend } from "../../friends/shared/friends.model";
-import { PostRepository } from "../shared/posts.repo";
-import { formatPost } from "../shared/posts.util";
+import { FriendModel as Friend } from "../../friends/shared/friends.model.js";
+import { PostRepository } from "../shared/posts.repo.js";
+import { formatPost } from "../shared/posts.util.js";
 
 export class FeedService {
     private postRepository: PostRepository;

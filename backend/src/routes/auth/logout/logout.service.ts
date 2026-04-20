@@ -1,4 +1,4 @@
-import { SessionRepository } from '../shared/auth.repo';
+import { SessionRepository } from '../shared/auth.repo.js';
 
 export class LogoutService {
     private sessionRepository: SessionRepository;

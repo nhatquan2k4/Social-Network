@@ -1,4 +1,4 @@
-import { MESSAGE_ERROR_MESSAGES } from "./messages.constants";
+import { MESSAGE_ERROR_MESSAGES } from "./messages.constants.js";
 
 export class MessageNotFoundError extends Error {
     constructor() {
@@ -39,5 +39,12 @@ export class InvalidEmojiError extends Error {
     constructor() {
         super(MESSAGE_ERROR_MESSAGES.INVALID_EMOJI);
         this.name = "InvalidEmojiError";
+    }
+}
+
+export class InvalidCursorError extends Error {
+    constructor() {
+        super(MESSAGE_ERROR_MESSAGES.INVALID_CURSOR);
+        this.name = "InvalidCursorError";
     }
 }

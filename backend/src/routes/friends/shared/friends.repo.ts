@@ -1,7 +1,7 @@
 import {
     FriendModel as Friend,
     FriendRequestModel as FriendRequest,
-} from "./friends.model";
+} from "./friends.model.js";
 import { Types } from "mongoose";
 
 export class FriendRepository {

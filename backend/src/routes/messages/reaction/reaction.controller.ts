@@ -2,14 +2,14 @@ import { Request, Response } from "express";
 import {
     MESSAGE_ERROR_MESSAGES,
     MESSAGE_SUCCESS_MESSAGES,
-} from "../shared/messages.constants";
+} from "../shared/messages.constants.js";
 import {
     ConversationAccessDeniedError,
     ConversationNotFoundError,
     InvalidEmojiError,
     MessageNotFoundError,
-} from "../shared/messages.errors";
-import { ReactionService } from "./reaction.service";
+} from "../shared/messages.errors.js";
+import { ReactionService } from "./reaction.service.js";
 
 const reactionService = new ReactionService();
 

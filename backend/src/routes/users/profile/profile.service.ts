@@ -1,11 +1,11 @@
 import { Types } from 'mongoose';
-import { FriendRepository } from '../../friends/shared/friends.repo';
-import { MediaService } from '../../media/upload/upload.service';
-import { PostRepository } from '../../posts/shared/posts.repo';
-import { UserRepository } from '../shared/users.repo';
-import { ensureValidObjectId } from '../shared/users.util';
-import { UserNotFoundError } from '../shared/users.errors';
-import { UpdateProfileDto } from './profile.dto';
+import { FriendRepository } from '../../friends/shared/friends.repo.js';
+import { MediaService } from '../../media/upload/upload.service.js';
+import { PostRepository } from '../../posts/shared/posts.repo.js';
+import { UserRepository } from '../shared/users.repo.js';
+import { ensureValidObjectId } from '../shared/users.util.js';
+import { UserNotFoundError } from '../shared/users.errors.js';
+import { UpdateProfileDto } from './profile.dto.js';
 
 export class ProfileService {
     private userRepository: UserRepository;

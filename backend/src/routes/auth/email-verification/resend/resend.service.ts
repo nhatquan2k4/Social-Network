@@ -2,8 +2,8 @@ import { envConfig } from '../../../../shared/config/env';
 import {
     EmailVerificationTokenRepository,
     UserRepository,
-} from '../../shared/auth.repo';
-import { issueEmailVerification } from '../../shared/auth.util';
+} from '../../shared/auth.repo.js';
+import { issueEmailVerification } from '../../shared/auth.util.js';
 
 export class ResendEmailVerificationService {
     private userRepository: UserRepository;

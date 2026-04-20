@@ -2,9 +2,9 @@ import { Types } from 'mongoose';
 import {
     EmailVerificationTokenModel as EmailVerificationToken,
     SessionModel as Session,
-} from './auth.model';
+} from './auth.model.js';
 
-export { UserRepository } from '../../users/shared/users.repo';
+export { UserRepository } from '../../users/shared/users.repo.js';
 
 export class SessionRepository {
     async create(sessionData: {

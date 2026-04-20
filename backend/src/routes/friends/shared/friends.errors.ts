@@ -1,4 +1,4 @@
-import { FRIEND_ERROR_MESSAGES } from "./friends.constants";
+import { FRIEND_ERROR_MESSAGES } from "./friends.constants.js";
 
 export class MissingFriendRecipientError extends Error {
     constructor() {

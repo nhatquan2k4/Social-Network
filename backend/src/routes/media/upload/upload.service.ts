@@ -6,13 +6,13 @@ import {
     getBucketByPurpose,
     MediaPurpose,
     minioClient,
-} from '../../../shared/config/minio';
-import { ALLOWED_MEDIA_MIME_TYPES } from '../shared/media.constants';
+} from '../../../shared/config/minio.js';
+import { ALLOWED_MEDIA_MIME_TYPES } from '../shared/media.constants.js';
 import {
     MediaFileTooLargeError,
     MediaFilesLimitExceededError,
     UnsupportedMediaTypeError,
-} from '../shared/media.errors';
+} from '../shared/media.errors.js';
 
 export interface UploadedMedia {
     bucket: string;

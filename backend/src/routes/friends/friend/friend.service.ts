@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { FriendRepository } from "../shared/friends.repo";
+import { FriendRepository } from "../shared/friends.repo.js";
 
 export class FriendService {
     private friendRepository: FriendRepository;

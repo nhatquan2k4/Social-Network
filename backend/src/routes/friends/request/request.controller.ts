@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { FRIEND_SUCCESS_MESSAGES } from "../shared/friends.constants";
+import { FRIEND_SUCCESS_MESSAGES } from "../shared/friends.constants.js";
 import {
     AlreadyFriendsError,
     FriendRequestAcceptForbiddenError,
@@ -10,8 +10,8 @@ import {
     FriendUserNotFoundError,
     MissingFriendRequestIdError,
     MissingFriendRecipientError,
-} from "../shared/friends.errors";
-import { RequestService } from "./request.service";
+} from "../shared/friends.errors.js";
+import { RequestService } from "./request.service.js";
 
 const requestService = new RequestService();
 

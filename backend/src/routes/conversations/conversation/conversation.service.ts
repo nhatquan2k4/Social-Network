@@ -1,18 +1,18 @@
 import { Types } from "mongoose";
-import { MessageRepository } from "../../messages/shared/messages.repo";
-import { ConversationRepository } from "../shared/conversations.repo";
+import { MessageRepository } from "../../messages/shared/messages.repo.js";
+import { ConversationRepository } from "../shared/conversations.repo.js";
 import {
     CONVERSATION_ERROR_MESSAGES,
     CONVERSATION_TYPES,
-} from "../shared/conversations.constants";
+} from "../shared/conversations.constants.js";
 import {
     ConversationNotFoundError,
     ConversationTypeInvalidError,
     GroupLeaveOnlyError,
     GroupMemberNotFoundError,
     GroupOwnerNotFoundError,
-} from "../shared/conversations.errors";
-import { mapConversationParticipants } from "../shared/conversations.util";
+} from "../shared/conversations.errors.js";
+import { mapConversationParticipants } from "../shared/conversations.util.js";
 
 export class ConversationService {
     private conversationRepository: ConversationRepository;
@@ -21,6 +21,36 @@ export class ConversationService {
     constructor() {
         this.conversationRepository = new ConversationRepository();
         this.messageRepository = new MessageRepository();
+    }
+
+    private pickParticipantId(participant: any): string {
+        if (!participant) {
+            return "";
+        }
+
+        const rawId = participant._id ?? participant.userId?._id ?? participant.userId;
+        return rawId ? rawId.toString() : "";
+    }
+
+    private buildDirectRecipientMeta(participants: any[], meId: string) {
+        if (!Array.isArray(participants) || participants.length === 0) {
+            return {
+                recipientId: "",
+                recipientDisplayName: "",
+                recipientAvatarUrl: null,
+            };
+        }
+
+        const other =
+            participants.find(
+                (participant: any) => this.pickParticipantId(participant) !== meId,
+            ) ?? participants[0];
+
+        return {
+            recipientId: this.pickParticipantId(other),
+            recipientDisplayName: other?.displayName ?? "",
+            recipientAvatarUrl: other?.avatarUrl ?? null,
+        };
     }
 
     async createConversation(
@@ -66,9 +96,16 @@ export class ConversationService {
             { path: "lastMessage.senderId", select: "displayName avatarUrl" },
         ]);
 
+        const participants = mapConversationParticipants(conversation.participants || []);
+        const directMeta =
+            type === CONVERSATION_TYPES.DIRECT
+                ? this.buildDirectRecipientMeta(participants, userId.toString())
+                : {};
+
         return {
             ...conversation.toObject(),
-            participants: mapConversationParticipants(conversation.participants || []),
+            participants,
+            ...directMeta,
         };
     }
 
@@ -85,11 +122,20 @@ export class ConversationService {
             conversations = await this.conversationRepository.findByUserId(userId);
         }
 
-        return conversations.map((conversation: any) => ({
-            ...conversation.toObject(),
-            unreadCounts: conversation.unreadCounts || {},
-            participants: mapConversationParticipants(conversation.participants || []),
-        }));
+        return conversations.map((conversation: any) => {
+            const participants = mapConversationParticipants(conversation.participants || []);
+            const directMeta =
+                conversation.type === CONVERSATION_TYPES.DIRECT
+                    ? this.buildDirectRecipientMeta(participants, userId.toString())
+                    : {};
+
+            return {
+                ...conversation.toObject(),
+                unreadCounts: conversation.unreadCounts || {},
+                participants,
+                ...directMeta,
+            };
+        });
     }
 
     async getUserConversationsForSocketIO(userId: string | Types.ObjectId) {

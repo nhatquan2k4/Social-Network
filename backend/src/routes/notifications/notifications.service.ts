@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
-import { NotificationRepository } from './notifications.repo';
-import { emitNotificationNew } from '../../shared/socket/socket.emitter';
+import { NotificationRepository } from './notifications.repo.js';
+import { emitNotificationNew } from '../../shared/socket/socket.emitter.js';
 
 export type NotificationType = 'FRIEND_REQUEST' | 'FRIEND_ACCEPTED' | 'POST_LIKED' | 'POST_COMMENTED' | 'COMMENT_REPLIED';
 

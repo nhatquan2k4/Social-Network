@@ -1,4 +1,4 @@
-import { PostMediaInput } from "../shared/posts.repo";
+import { PostMediaInput } from "../shared/posts.repo.js";
 
 export interface UpdatePostPayload {
     content?: string;

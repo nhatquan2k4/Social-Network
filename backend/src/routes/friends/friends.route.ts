@@ -1,6 +1,6 @@
 import express from "express";
-import requestRoute from "./request/request.route";
-import friendRoute from "./friend/friend.route";
+import requestRoute from "./request/request.route.js";
+import friendRoute from "./friend/friend.route.js";
 
 const router = express.Router();
 

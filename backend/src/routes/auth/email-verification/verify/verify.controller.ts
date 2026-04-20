@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { VerifyEmailService } from './verify.service';
+import { VerifyEmailService } from './verify.service.js';
 
 const verifyEmailService = new VerifyEmailService();
 

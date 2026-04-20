@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { LoginService } from './login.service';
+import { LoginService } from './login.service.js';
 
 const loginService = new LoginService();
 const isProduction = process.env.NODE_ENV === 'production';

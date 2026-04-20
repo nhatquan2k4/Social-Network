@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
-import { EmailVerificationTokenRepository, UserRepository } from '../shared/auth.repo';
-import { issueEmailVerification } from '../shared/auth.util';
-import { RegisterDto } from './register.dto';
+import { EmailVerificationTokenRepository, UserRepository } from '../shared/auth.repo.js';
+import { issueEmailVerification } from '../shared/auth.util.js';
+import { RegisterDto } from './register.dto.js';
 
 export class RegisterService {
     private userRepository: UserRepository;

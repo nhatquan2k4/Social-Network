@@ -1,4 +1,4 @@
-import { MEDIA_ERROR_MESSAGES } from './media.constants';
+import { MEDIA_ERROR_MESSAGES } from './media.constants.js';
 
 export class UnsupportedMediaTypeError extends Error {
     constructor() {

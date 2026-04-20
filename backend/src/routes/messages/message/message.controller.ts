@@ -2,14 +2,14 @@ import { Request, Response } from "express";
 import {
     MESSAGE_ERROR_MESSAGES,
     MESSAGE_SUCCESS_MESSAGES,
-} from "../shared/messages.constants";
+} from "../shared/messages.constants.js";
 import {
     ConversationNotFoundError,
     MissingContentOrMediaError,
     MissingConversationIdError,
-} from "../shared/messages.errors";
-import { mergeMediaFromRequest } from "../shared/messages.util";
-import { MessageService } from "./message.service";
+} from "../shared/messages.errors.js";
+import { mergeMediaFromRequest } from "../shared/messages.util.js";
+import { MessageService } from "./message.service.js";
 
 const messageService = new MessageService();
 

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-export { UserModel } from '../../users/shared/users.model';
+export { UserModel } from '../../users/shared/users.model.js';
 
 const sessionSchema = new mongoose.Schema(
     {

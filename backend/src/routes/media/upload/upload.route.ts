@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
-import { protectedRoute } from '../../../shared/middlewares/auth.middleware';
-import { uploadMedia } from './upload.controller';
+import { protectedRoute } from '../../../shared/middlewares/auth.middleware.js';
+import { uploadMedia } from './upload.controller.js';
 
 const router = express.Router();
 

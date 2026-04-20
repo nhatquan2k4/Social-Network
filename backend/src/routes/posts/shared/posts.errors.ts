@@ -1,4 +1,4 @@
-import { POST_ERROR_MESSAGES } from "./posts.constants";
+import { POST_ERROR_MESSAGES } from "./posts.constants.js";
 
 export class PostNotFoundError extends Error {
     constructor() {

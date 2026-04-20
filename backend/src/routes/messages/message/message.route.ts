@@ -1,10 +1,10 @@
 import express from "express";
 import multer from "multer";
-import { protectedRoute } from "../../../shared/middlewares/auth.middleware";
+import { protectedRoute } from "../../../shared/middlewares/auth.middleware.js";
 import {
     checkFriendship,
     checkGroupMembership,
-} from "../../../shared/middlewares/friend.middleware";
+} from "../../../shared/middlewares/friend.middleware.js";
 import {
     sendDirectMediaMessage,
     sendDirectMessage,
@@ -12,7 +12,7 @@ import {
     sendGroupMediaMessage,
     sendGroupMessage,
     sendGroupTextMessage,
-} from "./message.controller";
+} from "./message.controller.js";
 
 const router = express.Router();
 
