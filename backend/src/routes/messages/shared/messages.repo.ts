@@ -16,8 +16,39 @@ export class MessageRepository {
         return await Message.create(messageData);
     }
 
-    async findByConversationId(conversationId: string, query: any, limit: number) {
-        return await Message.find(query).sort({ createdAt: -1 }).limit(limit);
+    async findByConversationId(
+        conversationId: string,
+        options: {
+            limit: number;
+            cursor?: {
+                createdAt: Date;
+                id: Types.ObjectId;
+            };
+        },
+    ) {
+        const query: Record<string, unknown> = {
+            conversationId,
+        };
+
+        if (options.cursor) {
+            query.$or = [
+                {
+                    createdAt: {
+                        $lt: options.cursor.createdAt,
+                    },
+                },
+                {
+                    createdAt: options.cursor.createdAt,
+                    _id: {
+                        $lt: options.cursor.id,
+                    },
+                },
+            ];
+        }
+
+        return await Message.find(query)
+            .sort({ createdAt: -1, _id: -1 })
+            .limit(options.limit);
     }
 
     async findByIdAndConversationId(messageId: string, conversationId: string) {

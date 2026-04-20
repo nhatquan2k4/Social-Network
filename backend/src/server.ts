@@ -1,4 +1,5 @@
 import express from "express";
+import { createServer } from "http";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors, { CorsOptions } from "cors";
@@ -16,10 +17,12 @@ import { ensureMediaBuckets } from "./shared/config/minio.js";
 import { connectDB } from "./shared/db/mongoose.js";
 import { envConfig } from "./shared/config/env.js";
 import { errorHandler } from "./shared/errors/error-handler.js";
+import { initializeSocketIO } from "./shared/socket/socket.server.js";
 
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
 
 const PORT = envConfig.port;
 const failOnMediaBootstrapError =
@@ -101,7 +104,16 @@ connectDB()
 	})
 	.then(() => {
 		console.log("Media storage bootstrap completed");
-		startHttpServer();
+
+		initializeSocketIO(httpServer);
+		console.log("Socket.IO initialized");
+
+		httpServer.listen(PORT, () => {
+			console.log(`Server is running on port localhost:${PORT}`);
+			console.log(
+				`Swagger documentation available at http://localhost:${PORT}/api-docs`,
+			);
+		});
 	})
 	.catch((error) => {
 		console.error("Server bootstrap failed (continuing to start HTTP server):", error);

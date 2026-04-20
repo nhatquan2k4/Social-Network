@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import { ConversationRepository } from "../../conversations/shared/conversations.repo.js";
 import { updateConversationAfterCreateMessage } from "../../../shared/utils/message.helper.js";
 import { MessageRepository } from "../shared/messages.repo.js";
+import { emitMessageNew } from "../../../shared/socket/socket.emitter.js";
 import {
     ConversationNotFoundError,
     MissingContentOrMediaError,
@@ -60,6 +61,8 @@ export class MessageService {
         await updateConversationAfterCreateMessage(conversation, message, senderId);
         await conversation.save();
 
+        emitMessageNew(conversation._id.toString(), enrichMessageMedia(message));
+
         return enrichMessageMedia(message);
     }
 
@@ -90,6 +93,8 @@ export class MessageService {
 
         await updateConversationAfterCreateMessage(conversation, message, senderId);
         await conversation.save();
+
+        emitMessageNew(conversation._id.toString(), enrichMessageMedia(message));
 
         return enrichMessageMedia(message);
     }

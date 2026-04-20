@@ -2,6 +2,11 @@ import { Types } from "mongoose";
 import { MessageRepository } from "../shared/messages.repo.js";
 import { MessageNotFoundError } from "../shared/messages.errors.js";
 import { enrichMessageMedia } from "../shared/messages.util.js";
+import {
+    decodeMessageHistoryCursor,
+    encodeMessageHistoryCursor,
+    parseMessageHistoryLimit,
+} from "./read.dto.js";
 
 export class ReadService {
     private messageRepository: MessageRepository;
@@ -65,6 +70,39 @@ export class ReadService {
             modifiedCount: result.modifiedCount,
             matchedCount: result.matchedCount,
             readUntil: readUntil ? readUntil.toISOString() : null,
+        };
+    }
+
+    async getConversationMessages(
+        conversationId: string,
+        rawLimit?: unknown,
+        rawCursor?: unknown,
+    ) {
+        const limit = parseMessageHistoryLimit(rawLimit);
+        const cursor = decodeMessageHistoryCursor(rawCursor);
+
+        const rawMessages = await this.messageRepository.findByConversationId(conversationId, {
+            limit: limit + 1,
+            cursor,
+        });
+
+        const hasMore = rawMessages.length > limit;
+        const pageMessages = hasMore ? rawMessages.slice(0, limit) : rawMessages;
+        const messages = pageMessages.map((message) => enrichMessageMedia(message));
+
+        const oldestMessage = pageMessages[pageMessages.length - 1];
+        const nextCursor =
+            hasMore && oldestMessage
+                ? encodeMessageHistoryCursor(oldestMessage.createdAt, oldestMessage._id)
+                : null;
+
+        return {
+            data: messages,
+            pageInfo: {
+                hasMore,
+                limit,
+                nextCursor,
+            },
         };
     }
 }

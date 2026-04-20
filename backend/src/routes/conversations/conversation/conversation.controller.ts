@@ -11,6 +11,7 @@ import {
     GroupLeaveOnlyError,
     GroupMemberNotFoundError,
 } from "../shared/conversations.errors.js";
+import { emitConversationSeen } from "../../../shared/socket/socket.emitter.js";
 
 const conversationService = new ConversationService();
 
@@ -85,6 +86,16 @@ export const markAsSeen = async (req: Request, res: Response) => {
         const userId = req.user!._id.toString();
 
         const result = await conversationService.markAsSeen(conversationId as string, userId);
+
+        if ("seenBy" in result && "myUnreadCount" in result) {
+            emitConversationSeen({
+                conversationId: conversationId as string,
+                userId,
+                seenBy: result.seenBy,
+                myUnreadCount: result.myUnreadCount,
+            });
+        }
+
         return res.status(200).json(result);
     } catch (error: any) {
         console.error("Loi khi mark as seen", error);
