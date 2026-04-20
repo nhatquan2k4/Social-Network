@@ -1,9 +1,9 @@
 import express from "express";
-import { protectedRoute } from "../../../shared/middlewares/auth.middleware";
+import { protectedRoute } from "../../../shared/middlewares/auth.middleware.js";
 import {
     addOrUpdateMessageReaction,
     removeMessageReaction,
-} from "./reaction.controller";
+} from "./reaction.controller.js";
 
 const router = express.Router();
 

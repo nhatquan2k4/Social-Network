@@ -1,8 +1,8 @@
 import express from "express";
-import feedRoute from "./feed/feed.route";
-import postRoute from "./post/post.route";
-import likeRoute from "./like/like.route";
-import commentRoute from "./comment/comment.route";
+import feedRoute from "./feed/feed.route.js";
+import postRoute from "./post/post.route.js";
+import likeRoute from "./like/like.route.js";
+import commentRoute from "./comment/comment.route.js";
 
 const router = express.Router();
 

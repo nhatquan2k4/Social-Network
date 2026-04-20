@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
-import { MediaService } from "../../media/upload/upload.service";
+import { MediaService } from "../../media/upload/upload.service.js";
 import {
     POST_ERROR_MESSAGES,
     POST_SUCCESS_MESSAGES,
-} from "../shared/posts.constants";
+} from "../shared/posts.constants.js";
 import {
     normalizeUploadedMedia,
     parseManualMedia,
-} from "../shared/posts.util";
-import { PostService } from "./post.service";
+} from "../shared/posts.util.js";
+import { PostService } from "./post.service.js";
 
 const postService = new PostService();
 const mediaService = new MediaService();

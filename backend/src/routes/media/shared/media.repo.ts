@@ -4,4 +4,4 @@ export {
     buildMediaUrl,
     getBucketByPurpose,
     minioConfig,
-} from '../../../shared/config/minio';
+} from '../../../shared/config/minio.js';

@@ -1,5 +1,5 @@
 import express from 'express';
-import { resendEmailVerification } from './resend.controller';
+import { resendEmailVerification } from './resend.controller.js';
 
 const router = express.Router();
 /**

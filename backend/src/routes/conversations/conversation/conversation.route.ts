@@ -1,15 +1,15 @@
 import express from "express";
-import { protectedRoute } from "../../../shared/middlewares/auth.middleware";
+import { protectedRoute } from "../../../shared/middlewares/auth.middleware.js";
 import {
     checkConversationMembership,
     checkFriendship,
-} from "../../../shared/middlewares/friend.middleware";
+} from "../../../shared/middlewares/friend.middleware.js";
 import {
     createConversation,
     getConversations,
     leaveGroupConversation,
     markAsSeen,
-} from "./conversation.controller";
+} from "./conversation.controller.js";
 
 const router = express.Router();
 

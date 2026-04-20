@@ -3,14 +3,14 @@ import type { Types } from "mongoose";
 import {
     CreateConversationRequest,
     GetConversationsQuery,
-} from "./conversation.dto";
-import { ConversationService } from "./conversation.service";
+} from "./conversation.dto.js";
+import { ConversationService } from "./conversation.service.js";
 import {
     ConversationNotFoundError,
     ConversationTypeInvalidError,
     GroupLeaveOnlyError,
     GroupMemberNotFoundError,
-} from "../shared/conversations.errors";
+} from "../shared/conversations.errors.js";
 
 const conversationService = new ConversationService();
 

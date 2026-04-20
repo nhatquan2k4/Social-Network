@@ -1,6 +1,6 @@
 import express from "express";
-import { protectedRoute } from "../../../shared/middlewares/auth.middleware";
-import { toggleLikePost } from "./like.controller";
+import { protectedRoute } from "../../../shared/middlewares/auth.middleware.js";
+import { toggleLikePost } from "./like.controller.js";
 
 const router = express.Router();
 

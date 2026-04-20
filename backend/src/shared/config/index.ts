@@ -1,3 +1,3 @@
-﻿export * from './env';
-export * from './minio';
-export * from './swagger';
+﻿export * from './env.js';
+export * from './minio.js';
+export * from './swagger.js';

@@ -1,12 +1,12 @@
 import { Types } from "mongoose";
-import { NotificationService } from "../../notifications/notifications.service";
-import { PostRepository } from "../shared/posts.repo";
-import { POST_ERROR_MESSAGES } from "../shared/posts.constants";
+import { NotificationService } from "../../notifications/notifications.service.js";
+import { PostRepository } from "../shared/posts.repo.js";
+import { POST_ERROR_MESSAGES } from "../shared/posts.constants.js";
 import {
     buildCommentTree,
     collectDescendantCommentIds,
     formatComment,
-} from "../shared/posts.util";
+} from "../shared/posts.util.js";
 
 export class CommentService {
     private postRepository: PostRepository;

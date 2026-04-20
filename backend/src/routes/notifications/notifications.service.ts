@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { NotificationRepository } from './notifications.repo';
+import { NotificationRepository } from './notifications.repo.js';
 
 export type NotificationType = 'FRIEND_REQUEST' | 'FRIEND_ACCEPTED' | 'POST_LIKED' | 'POST_COMMENTED' | 'COMMENT_REPLIED';
 

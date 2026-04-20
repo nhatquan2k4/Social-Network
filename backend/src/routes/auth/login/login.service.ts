@@ -1,9 +1,9 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { SessionRepository, UserRepository } from '../shared/auth.repo';
-import { generateRefreshToken } from '../shared/auth.util';
-import { ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from '../shared/auth.constants';
-import { LoginDto } from './login.dto';
+import { SessionRepository, UserRepository } from '../shared/auth.repo.js';
+import { generateRefreshToken } from '../shared/auth.util.js';
+import { ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from '../shared/auth.constants.js';
+import { LoginDto } from './login.dto.js';
 
 export class LoginService {
     private userRepository: UserRepository;

@@ -1,4 +1,4 @@
-import { MESSAGE_ERROR_MESSAGES } from "./messages.constants";
+import { MESSAGE_ERROR_MESSAGES } from "./messages.constants.js";
 
 export class MessageNotFoundError extends Error {
     constructor() {

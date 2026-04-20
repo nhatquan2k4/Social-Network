@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { buildMediaUrl } from "../../../shared/config/minio";
+import { buildMediaUrl } from "../../../shared/config/minio.js";
 
 interface PopulatedUser {
     _id: Types.ObjectId;

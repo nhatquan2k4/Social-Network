@@ -1,8 +1,8 @@
 import { Types } from 'mongoose';
-import { buildMediaUrl } from '../../../shared/config/minio';
-import { PostRepository } from '../../posts/shared/posts.repo';
-import { UserRepository } from '../shared/users.repo';
-import { ensureValidObjectId, normalizePagination } from '../shared/users.util';
+import { buildMediaUrl } from '../../../shared/config/minio.js';
+import { PostRepository } from '../../posts/shared/posts.repo.js';
+import { UserRepository } from '../shared/users.repo.js';
+import { ensureValidObjectId, normalizePagination } from '../shared/users.util.js';
 
 export class UserPostsService {
     private userRepository: UserRepository;

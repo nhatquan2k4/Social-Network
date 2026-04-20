@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { buildMediaUrl } from "../../../shared/config/minio";
+import { buildMediaUrl } from "../../../shared/config/minio.js";
 
 export interface PostDocumentLike {
     _id: any;

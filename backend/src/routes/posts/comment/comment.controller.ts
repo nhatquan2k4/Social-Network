@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import {
     POST_ERROR_MESSAGES,
     POST_SUCCESS_MESSAGES,
-} from "../shared/posts.constants";
-import { CommentService } from "./comment.service";
+} from "../shared/posts.constants.js";
+import { CommentService } from "./comment.service.js";
 
 const commentService = new CommentService();
 

@@ -3,7 +3,7 @@ import {
     DEFAULT_POSTS_LIMIT,
     DEFAULT_POSTS_PAGE,
     MAX_POSTS_LIMIT,
-} from './users.constants';
+} from './users.constants.js';
 
 export const ensureValidObjectId = (userId: string) => {
     if (!Types.ObjectId.isValid(userId)) {

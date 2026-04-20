@@ -1,18 +1,18 @@
 import { Types } from "mongoose";
-import { MessageRepository } from "../../messages/shared/messages.repo";
-import { ConversationRepository } from "../shared/conversations.repo";
+import { MessageRepository } from "../../messages/shared/messages.repo.js";
+import { ConversationRepository } from "../shared/conversations.repo.js";
 import {
     CONVERSATION_ERROR_MESSAGES,
     CONVERSATION_TYPES,
-} from "../shared/conversations.constants";
+} from "../shared/conversations.constants.js";
 import {
     ConversationNotFoundError,
     ConversationTypeInvalidError,
     GroupLeaveOnlyError,
     GroupMemberNotFoundError,
     GroupOwnerNotFoundError,
-} from "../shared/conversations.errors";
-import { mapConversationParticipants } from "../shared/conversations.util";
+} from "../shared/conversations.errors.js";
+import { mapConversationParticipants } from "../shared/conversations.util.js";
 
 export class ConversationService {
     private conversationRepository: ConversationRepository;

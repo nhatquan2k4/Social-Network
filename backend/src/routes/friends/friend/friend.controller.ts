@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { FriendService } from "./friend.service";
+import { FriendService } from "./friend.service.js";
 
 const friendService = new FriendService();
 

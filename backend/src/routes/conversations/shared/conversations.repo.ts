@@ -1,4 +1,4 @@
-import { ConversationModel as Conversation } from "./conversations.model";
+import { ConversationModel as Conversation } from "./conversations.model.js";
 import { Types } from "mongoose";
 
 export class ConversationRepository {

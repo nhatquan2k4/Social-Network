@@ -1,6 +1,6 @@
 import express from 'express';
-import profileRoute from './profile/profile.route';
-import userPostsRoute from './posts/user-posts.route';
+import profileRoute from './profile/profile.route.js';
+import userPostsRoute from './posts/user-posts.route.js';
 
 const router = express.Router();
 

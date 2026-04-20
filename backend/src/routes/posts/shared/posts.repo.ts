@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { PostModel as Post } from "./posts.model";
+import { PostModel as Post } from "./posts.model.js";
 
 export interface PostMediaInput {
     bucket: string;

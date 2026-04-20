@@ -1,7 +1,7 @@
 import express from "express";
-import { protectedRoute } from "../../../shared/middlewares/auth.middleware";
-import { checkConversationMembership } from "../../../shared/middlewares/friend.middleware";
-import { markMessageAsRead, markMessagesAsReadBulk } from "./read.controller";
+import { protectedRoute } from "../../../shared/middlewares/auth.middleware.js";
+import { checkConversationMembership } from "../../../shared/middlewares/friend.middleware.js";
+import { markMessageAsRead, markMessagesAsReadBulk } from "./read.controller.js";
 
 const router = express.Router();
 

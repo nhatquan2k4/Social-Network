@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ResendEmailVerificationService } from './resend.service';
+import { ResendEmailVerificationService } from './resend.service.js';
 
 const resendEmailVerificationService = new ResendEmailVerificationService();
 

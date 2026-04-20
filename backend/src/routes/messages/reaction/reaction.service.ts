@@ -1,16 +1,16 @@
 import { Types } from "mongoose";
-import { ConversationRepository } from "../../conversations/shared/conversations.repo";
-import { MessageRepository } from "../shared/messages.repo";
+import { ConversationRepository } from "../../conversations/shared/conversations.repo.js";
+import { MessageRepository } from "../shared/messages.repo.js";
 import {
     DEFAULT_REACTION_MAX_LENGTH,
-} from "../shared/messages.constants";
+} from "../shared/messages.constants.js";
 import {
     ConversationAccessDeniedError,
     ConversationNotFoundError,
     InvalidEmojiError,
     MessageNotFoundError,
-} from "../shared/messages.errors";
-import { enrichMessageMedia } from "../shared/messages.util";
+} from "../shared/messages.errors.js";
+import { enrichMessageMedia } from "../shared/messages.util.js";
 
 export class ReactionService {
     private conversationRepository: ConversationRepository;

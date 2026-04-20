@@ -1,14 +1,14 @@
 import { Types } from "mongoose";
-import { ConversationRepository } from "../../conversations/shared/conversations.repo";
-import { updateConversationAfterCreateMessage } from "../../../shared/utils/message.helper";
-import { MessageRepository } from "../shared/messages.repo";
+import { ConversationRepository } from "../../conversations/shared/conversations.repo.js";
+import { updateConversationAfterCreateMessage } from "../../../shared/utils/message.helper.js";
+import { MessageRepository } from "../shared/messages.repo.js";
 import {
     ConversationNotFoundError,
     MissingContentOrMediaError,
     MissingConversationIdError,
-} from "../shared/messages.errors";
-import { enrichMessageMedia, sanitizeMedia } from "../shared/messages.util";
-import { MessageMediaInput } from "./message.dto";
+} from "../shared/messages.errors.js";
+import { enrichMessageMedia, sanitizeMedia } from "../shared/messages.util.js";
+import { MessageMediaInput } from "./message.dto.js";
 
 export class MessageService {
     private conversationRepository: ConversationRepository;

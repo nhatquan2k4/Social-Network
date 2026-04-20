@@ -1,4 +1,4 @@
-import { MessageModel as Message } from "./messages.model";
+import { MessageModel as Message } from "./messages.model.js";
 import { Types } from "mongoose";
 
 export class MessageRepository {

@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-import { MediaPurpose } from '../../../shared/config/minio';
-import { MediaService } from './upload.service';
-import { MEDIA_PURPOSES } from '../shared/media.constants';
+import { MediaPurpose } from '../../../shared/config/minio.js';
+import { MediaService } from './upload.service.js';
+import { MEDIA_PURPOSES } from '../shared/media.constants.js';
 import {
     MediaFileTooLargeError,
     MediaFilesLimitExceededError,
     UnsupportedMediaTypeError,
-} from '../shared/media.errors';
+} from '../shared/media.errors.js';
 
 const mediaService = new MediaService();
 

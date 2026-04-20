@@ -1,7 +1,7 @@
 import express from "express";
-import messageRoute from "./message/message.route";
-import reactionRoute from "./reaction/reaction.route";
-import readRoute from "./read/read.route";
+import messageRoute from "./message/message.route.js";
+import reactionRoute from "./reaction/reaction.route.js";
+import readRoute from "./read/read.route.js";
 
 const router = express.Router();
 
