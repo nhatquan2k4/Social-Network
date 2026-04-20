@@ -580,9 +580,13 @@ const options: swaggerJsdoc.Options = {
 		],
 	},
 	apis: [
-		"./src/routes/*.ts",
+		// Dành cho môi trường Local (Dev)
 		"./src/routes/**/*.ts",
-		"./src/controller/*.ts",
+		"./src/controller/**/*.ts",
+		
+		// Dành cho môi trường Production (Docker/VPS)
+		"./dist/routes/**/*.js",
+		"./dist/controller/**/*.js"
 	],
 };
 
