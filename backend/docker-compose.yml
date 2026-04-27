@@ -35,13 +35,13 @@ services:
       retries: 5
 
   backend:
-    # Đã thay đổi: Jenkins sẽ build và push image này, VPS chỉ việc kéo về chạy
+    # Jenkins sẽ build và push image này, VPS chỉ việc kéo về chạy
     image: ${DOCKERHUB_USERNAME}/social-network-backend:latest
     container_name: social-network-backend
     restart: unless-stopped
     ports:
       - "3001:3001"
-    # Đã thay đổi: Tự động nạp toàn bộ danh sách biến từ file .env ẩn trên máy chủ
+    # Tự động nạp toàn bộ danh sách biến từ file .env ẩn trên máy chủ
     env_file:
       - .env
     depends_on:
