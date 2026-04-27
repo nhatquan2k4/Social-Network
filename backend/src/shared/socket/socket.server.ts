@@ -3,6 +3,7 @@ import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import { ConversationService } from "../../routes/conversations/conversation/conversation.service";
 import { UserModel } from "../../routes/users/shared/users.model";
+import { envConfig } from "../config/env";
 import { SOCKET_EVENTS, SOCKET_ROOMS } from "./socket.events";
 
 type AccessTokenPayload = {
@@ -15,15 +16,16 @@ type AccessTokenPayload = {
 let io: Server | null = null;
 const conversationService = new ConversationService();
 
-const allowedOrigins = [
+const localDevOrigins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
-    ...(process.env.CORS_ORIGIN
-        ? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
-        : []),
 ];
+
+const allowedOrigins = envConfig.isDevelopment
+    ? [...localDevOrigins, ...envConfig.corsOrigins]
+    : envConfig.corsOrigins;
 
 const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
 
@@ -51,7 +53,7 @@ const attachSocketAuth = (socketServer: Server) => {
 
             const decoded = jwt.verify(
                 token,
-                process.env.ACCESS_TOKEN_SECRET as string,
+                envConfig.jwtSecret,
             ) as AccessTokenPayload;
 
             const user = await UserModel.findById(decoded.userId)
@@ -119,9 +121,12 @@ export const initializeSocketIO = (httpServer: HttpServer) => {
                 }
 
                 if (
-                    allowedOrigins.includes(origin) ||
-                    localDevOriginPattern.test(origin)
+                    allowedOrigins.includes(origin)
                 ) {
+                    return callback(null, true);
+                }
+
+                if (envConfig.isDevelopment && localDevOriginPattern.test(origin)) {
                     return callback(null, true);
                 }
 

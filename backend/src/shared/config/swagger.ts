@@ -1,7 +1,7 @@
 ﻿import swaggerJsdoc from "swagger-jsdoc";
+import { envConfig } from "./env";
 
-const port = process.env.PORT || "3001";
-const swaggerServerUrl = process.env.SWAGGER_SERVER_URL || `http://localhost:${port}`;
+const swaggerServerUrl = envConfig.swaggerServerUrl;
 
 const options: swaggerJsdoc.Options = {
 	definition: {
@@ -18,7 +18,7 @@ const options: swaggerJsdoc.Options = {
 		servers: [
 			{
 				url: swaggerServerUrl,
-				description: "Development server",
+				description: envConfig.isProduction ? "Production server" : "Development server",
 			},
 		],
 		components: {

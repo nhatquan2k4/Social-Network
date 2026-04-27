@@ -4,6 +4,7 @@ import { SessionRepository, UserRepository } from '../shared/auth.repo';
 import { generateRefreshToken } from '../shared/auth.util';
 import { ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from '../shared/auth.constants';
 import { LoginDto } from './login.dto';
+import { envConfig } from '../../../shared/config/env';
 
 export class LoginService {
     private userRepository: UserRepository;
@@ -32,7 +33,7 @@ export class LoginService {
                 userId: user._id,
                 username: user.username,
             },
-            process.env.ACCESS_TOKEN_SECRET as string,
+            envConfig.jwtSecret,
             { expiresIn: ACCESS_TOKEN_TTL },
         );
 

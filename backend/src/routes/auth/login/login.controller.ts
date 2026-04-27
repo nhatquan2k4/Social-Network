@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import { LoginService } from './login.service';
+import { envConfig } from '../../../shared/config/env';
 
 const loginService = new LoginService();
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = envConfig.isProduction;
 
 export const login = async (req: Request, res: Response) => {
     try {

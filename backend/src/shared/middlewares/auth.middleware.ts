@@ -1,6 +1,7 @@
 ﻿import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { UserModel as User } from '../../routes/users/shared/users.model';
+import { envConfig } from '../config/env';
 
 // authorization middleware - xac minh user la ai
 export const protectedRoute = async ( req: Request, res: Response, next: NextFunction ) => {
@@ -18,7 +19,7 @@ export const protectedRoute = async ( req: Request, res: Response, next: NextFun
 		// xac nhan token hop le
 		let decoded: any;
 		try {
-			decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string);
+			decoded = jwt.verify(token, envConfig.jwtSecret);
 		} catch (err) {
 			return res
 			.status(403)

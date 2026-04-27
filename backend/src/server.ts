@@ -15,7 +15,7 @@ import notificationRoutes from "./routes/notifications/notifications.route";
 import { swaggerSpec } from "./shared/config/swagger";
 import { ensureMediaBuckets } from "./shared/config/minio";
 import { connectDB } from "./shared/db/mongoose";
-import { envConfig } from "./shared/config/env";
+import { envConfig, validateEnvForStartup } from "./shared/config/env";
 import { errorHandler } from "./shared/errors/error-handler";
 import { initializeSocketIO } from "./shared/socket/socket.server";
 
@@ -25,19 +25,18 @@ const app = express();
 const httpServer = createServer(app);
 
 const PORT = envConfig.port;
-const failOnMediaBootstrapError =
-	process.env.NODE_ENV === "production" ||
-	process.env.MINIO_STRICT_STARTUP === "true";
+const failOnMediaBootstrapError = envConfig.minioStrictStartup;
 
-const allowedOrigins = [
+const localDevOrigins = [
 	"http://localhost:3000",
 	"http://127.0.0.1:3000",
 	"http://localhost:8080",
 	"http://127.0.0.1:8080",
-	...(process.env.CORS_ORIGIN
-		? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
-		: []),
 ];
+
+const allowedOrigins = envConfig.isDevelopment
+	? [...localDevOrigins, ...envConfig.corsOrigins]
+	: envConfig.corsOrigins;
 
 const localDevOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
 
@@ -47,7 +46,11 @@ const corsOptions: CorsOptions = {
 			return callback(null, true);
 		}
 
-		if (allowedOrigins.includes(origin) || localDevOriginPattern.test(origin)) {
+		if (allowedOrigins.includes(origin)) {
+			return callback(null, true);
+		}
+
+		if (envConfig.isDevelopment && localDevOriginPattern.test(origin)) {
 			return callback(null, true);
 		}
 
@@ -81,13 +84,22 @@ app.get("/", (req, res) => {
 app.use(errorHandler);
 
 const startHttpServer = () => {
-	app.listen(PORT, () => {
+	httpServer.listen(PORT, () => {
 		console.log(`Server is running on port localhost:${PORT}`);
 		console.log(
 			`Swagger documentation available at http://localhost:${PORT}/api-docs`,
 		);
 	});
 };
+
+try {
+	validateEnvForStartup();
+} catch (error) {
+	console.error("Environment validation failed:", error);
+	process.exit(1);
+}
+
+console.info(`Booting server in ${envConfig.nodeEnv} mode`);
 
 connectDB()
 	.then(() => {
@@ -116,9 +128,14 @@ connectDB()
 		});
 	})
 	.catch((error) => {
-		console.error("Server bootstrap failed (continuing to start HTTP server):", error);
-		// Start the HTTP server anyway so developer can access routes like /api-docs
-		// while DB or MinIO is unavailable. Remove or guard this in production.
+		console.error("Server bootstrap failed:", error);
+		if (envConfig.isProduction) {
+			process.exit(1);
+		}
+
+		console.warn(
+			"Starting HTTP server in development mode even though bootstrap failed.",
+		);
 		startHttpServer();
 	});
 

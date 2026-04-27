@@ -1,21 +1,10 @@
 ﻿import { Client } from "minio";
+import { envConfig } from "./env";
 
 export type MediaPurpose = "post" | "message" | "avatar";
 
-const minioPort = Number(process.env.MINIO_PORT || "9000");
-
 export const minioConfig = {
-	endPoint: process.env.MINIO_ENDPOINT || "localhost",
-	port: Number.isNaN(minioPort) ? 9000 : minioPort,
-	useSSL: process.env.MINIO_USE_SSL === "true",
-	accessKey: process.env.MINIO_ACCESS_KEY || "minioadmin",
-	secretKey: process.env.MINIO_SECRET_KEY || "minioadmin",
-	publicBaseUrl: process.env.MINIO_PUBLIC_BASE_URL || "http://localhost:9000",
-	buckets: {
-		post: process.env.MINIO_BUCKET_POSTS || "social-posts",
-		message: process.env.MINIO_BUCKET_MESSAGES || "social-messages",
-		avatar: process.env.MINIO_BUCKET_AVATARS || "social-avatars",
-	},
+	...envConfig.minio,
 };
 
 export const minioClient = new Client({
