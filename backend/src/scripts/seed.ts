@@ -7,7 +7,7 @@ dotenv.config();
 
 const connectionString =
   process.env.MONGODB_CONNECTIONSTRING ||
-  "mongodb://localhost:27018/social_network";
+  "mongodb://localhost:27017/social_network";
 
 async function seed() {
   try {

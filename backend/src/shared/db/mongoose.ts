@@ -4,7 +4,7 @@ const connectDB = async () => {
 	try {
 		const connectionString =
 			process.env.MONGODB_CONNECTIONSTRING ||
-			'mongodb://localhost:27018/social_network';
+			'mongodb://localhost:/social_network';
 
 		await mongoose.connect(connectionString);
 		console.log('Lien ket Database thanh cong');
