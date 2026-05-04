@@ -4,6 +4,7 @@ import { Server, Socket } from "socket.io";
 import { ConversationService } from "../../routes/conversations/conversation/conversation.service.js";
 import { UserModel } from "../../routes/users/shared/users.model.js";
 import { SOCKET_EVENTS, SOCKET_ROOMS } from "./socket.events.js";
+import { PresenceService } from "./presence.service.js";
 
 type AccessTokenPayload = {
     userId: string;
@@ -72,6 +73,8 @@ const attachSocketAuth = (socketServer: Server) => {
 };
 
 const registerSocketEvents = (socketServer: Server) => {
+    const presenceService = PresenceService.getInstance();
+
     socketServer.on("connection", async (socket) => {
         const userId = socket.data.userId as string;
 
@@ -87,6 +90,15 @@ const registerSocketEvents = (socketServer: Server) => {
         socket.emit(SOCKET_EVENTS.CONNECTED, {
             userId,
             joinedConversationCount: conversationIds.length,
+        });
+
+        // ── Presence tracking ──
+        await presenceService.handleConnect(userId);
+
+        socket.on("disconnect", () => {
+            presenceService.handleDisconnect(userId).catch((err) => {
+                console.error("Presence disconnect error:", err);
+            });
         });
 
         socket.on("conversation:join", async (conversationId: string) => {
