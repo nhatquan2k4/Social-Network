@@ -7,12 +7,16 @@ import {
     encodeMessageHistoryCursor,
     parseMessageHistoryLimit,
 } from "./read.dto.js";
+import { ConversationRepository } from "../../conversations/shared/conversations.repo.js";
+import { emitMessageSeen } from "../../../shared/socket/socket.emitter.js";
 
 export class ReadService {
     private messageRepository: MessageRepository;
+    private conversationRepository: ConversationRepository;
 
     constructor() {
         this.messageRepository = new MessageRepository();
+        this.conversationRepository = new ConversationRepository();
     }
 
     private async getMessageOrThrow(messageId: string, conversationId: string) {
@@ -65,6 +69,16 @@ export class ReadService {
             userId,
             readUntil,
         );
+
+        // Phase 4: sync unreadCount = 0 cho user này ở conversation
+        await this.conversationRepository.updateMarkAsSeen(conversationId, userId.toString());
+
+        // Phase 3: emit realtime sau khi DB save thành công
+        emitMessageSeen({
+            conversationId,
+            seenByUserId: userId.toString(),
+            seenAt: new Date().toISOString(),
+        });
 
         return {
             modifiedCount: result.modifiedCount,

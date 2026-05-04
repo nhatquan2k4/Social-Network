@@ -88,6 +88,20 @@ const postSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
+        isHidden: {
+            type: Boolean,
+            default: false,
+            index: true,
+        },
+        hiddenAt: {
+            type: Date,
+            default: null,
+        },
+        hiddenReason: {
+            type: String,
+            trim: true,
+            maxlength: 500,
+        },
     },
     {
         timestamps: true,

@@ -44,3 +44,37 @@ export const emitNotificationNew = (recipientId: string, notification: unknown) 
         });
     });
 };
+
+export const emitMessageSeen = (payload: {
+    conversationId: string;
+    seenByUserId: string;
+    seenAt: string;
+}) => {
+    withSocket((io) => {
+        io.to(SOCKET_ROOMS.conversation(payload.conversationId)).emit(
+            SOCKET_EVENTS.MESSAGE_SEEN,
+            payload,
+        );
+    });
+};
+
+export const emitUserPresence = (
+    userId: string,
+    isOnline: boolean,
+    targetFriendIds: string[],
+) => {
+    withSocket((io) => {
+        const event = isOnline
+            ? SOCKET_EVENTS.USER_ONLINE
+            : SOCKET_EVENTS.USER_OFFLINE;
+        const payload = {
+            userId,
+            isOnline,
+            timestamp: new Date().toISOString(),
+        };
+
+        for (const friendId of targetFriendIds) {
+            io.to(SOCKET_ROOMS.user(friendId)).emit(event, payload);
+        }
+    });
+};

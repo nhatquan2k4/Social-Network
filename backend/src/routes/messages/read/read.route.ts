@@ -80,6 +80,50 @@ router.get(
 
 /**
  * @swagger
+ * /api/messages/{conversationId}/messages/seen:
+ *   patch:
+ *     summary: Danh dau da seen toan bo tin nhan trong conversation (alias moi)
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: conversationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               lastMessageId:
+ *                 type: string
+ *                 description: Neu co, danh dau da seen den message nay
+ *     responses:
+ *       200:
+ *         description: Da seen va emit realtime message:seen
+ *       400:
+ *         description: Du lieu khong hop le
+ *       401:
+ *         description: Chua xac thuc
+ *       403:
+ *         description: Khong co quyen truy cap conversation
+ *       500:
+ *         description: Loi he thong
+ */
+router.patch(
+    "/:conversationId/messages/seen",
+    protectedRoute,
+    checkConversationMembership,
+    markMessagesAsReadBulk,
+);
+
+
+/**
+ * @swagger
  * /api/messages/{conversationId}/messages/{messageId}/read:
  *   patch:
  *     summary: Danh dau tin nhan da doc
@@ -116,51 +160,6 @@ router.patch(
     protectedRoute,
     checkConversationMembership,
     markMessageAsRead,
-);
-
-/**
- * @swagger
- * /api/messages/{conversationId}/messages/read-all:
- *   patch:
- *     summary: Danh dau da doc nhieu tin nhan trong conversation
- *     tags: [Messages]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: conversationId
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: false
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               lastMessageId:
- *                 type: string
- *                 description: Neu co, danh dau da doc den message nay
- *     responses:
- *       200:
- *         description: Da danh dau da doc hang loat
- *       400:
- *         description: Du lieu khong hop le
- *       401:
- *         description: Chua xac thuc
- *       403:
- *         description: Khong co quyen truy cap conversation
- *       404:
- *         description: Khong tim thay tin nhan
- *       500:
- *         description: Loi he thong
- */
-router.patch(
-    "/:conversationId/messages/read-all",
-    protectedRoute,
-    checkConversationMembership,
-    markMessagesAsReadBulk,
 );
 
 export default router;

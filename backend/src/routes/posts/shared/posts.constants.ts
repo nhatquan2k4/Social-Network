@@ -9,6 +9,11 @@ export const POST_ERROR_MESSAGES = {
     COMMENT_NOT_FOUND: "Comment khong ton tai",
     COMMENT_DELETE_FORBIDDEN: "Khong co quyen xoa comment nay",
     MEDIA_JSON_INVALID: "Media JSON khong hop le",
+    REPORT_REASON_REQUIRED: "Ly do report la bat buoc",
+    REPORT_REASON_INVALID: "Ly do report khong hop le",
+    REPORT_OWN_POST: "Khong the report bai viet cua chinh minh",
+    REPORT_DUPLICATE: "Ban da report bai viet nay roi",
+    REPORT_NOT_FOUND: "Report khong ton tai",
 } as const;
 
 export const POST_SUCCESS_MESSAGES = {
@@ -18,4 +23,17 @@ export const POST_SUCCESS_MESSAGES = {
     LIKE_UPDATED: "Cap nhat like thanh cong",
     COMMENT_CREATED: "Tao comment thanh cong",
     COMMENT_DELETED: "Xoa comment thanh cong",
+    REPORT_CREATED: "Report bai viet thanh cong",
 } as const;
+
+export const REPORT_REASONS = [
+    "spam",
+    "harassment",
+    "hate_speech",
+    "violence",
+    "nudity",
+    "false_information",
+    "other",
+] as const;
+
+export type ReportReason = (typeof REPORT_REASONS)[number];
