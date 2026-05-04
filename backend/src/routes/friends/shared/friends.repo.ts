@@ -27,6 +27,21 @@ export class FriendRepository {
             $or: [{ userA: userId }, { userB: userId }],
         });
     }
+
+    async getFriendIds(userId: Types.ObjectId): Promise<string[]> {
+        const friends = await Friend.find({
+            $or: [{ userA: userId }, { userB: userId }],
+        })
+            .select("userA userB")
+            .lean();
+
+        const uid = userId.toString();
+        return friends.map((f) => {
+            const a = (f.userA as Types.ObjectId).toString();
+            const b = (f.userB as Types.ObjectId).toString();
+            return a === uid ? b : a;
+        });
+    }
 }
 
 export class FriendRequestRepository {

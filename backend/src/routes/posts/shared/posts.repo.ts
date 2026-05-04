@@ -27,6 +27,7 @@ export class PostRepository {
 
     async findFeed(preferredAuthorIds: Types.ObjectId[], skip: number, limit: number) {
         const data = await Post.aggregate([
+            { $match: { isHidden: { $ne: true } } },
             {
                 $addFields: {
                     priority: {
@@ -51,15 +52,15 @@ export class PostRepository {
     }
 
     async countAll() {
-        return Post.countDocuments();
+        return Post.countDocuments({ isHidden: { $ne: true } });
     }
 
     async countByAuthorId(authorId: string | Types.ObjectId) {
-        return Post.countDocuments({ authorId });
+        return Post.countDocuments({ authorId, isHidden: { $ne: true } });
     }
 
     async findByAuthorId(authorId: string | Types.ObjectId, skip: number, limit: number) {
-        return Post.find({ authorId })
+        return Post.find({ authorId, isHidden: { $ne: true } })
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
@@ -122,5 +123,30 @@ export class PostRepository {
 
     async save(post: any) {
         return post.save();
+    }
+
+    async hidePost(postId: string, reason?: string) {
+        return Post.findByIdAndUpdate(
+            postId,
+            {
+                $set: {
+                    isHidden: true,
+                    hiddenAt: new Date(),
+                    ...(reason ? { hiddenReason: reason } : {}),
+                },
+            },
+            { new: true },
+        );
+    }
+
+    async unhidePost(postId: string) {
+        return Post.findByIdAndUpdate(
+            postId,
+            {
+                $set: { isHidden: false },
+                $unset: { hiddenAt: 1, hiddenReason: 1 },
+            },
+            { new: true },
+        );
     }
 }

@@ -108,4 +108,54 @@ export class UserRepository {
             { new: true },
         ).select('-hashedPassword');
     }
+    async searchByDisplayName(
+        name: string,
+        currentUserId: Types.ObjectId,
+        page: number,
+        limit: number,
+    ) {
+        const regex = new RegExp(name, 'i');
+        const skip = (page - 1) * limit;
+
+        const [users, total] = await Promise.all([
+            User.find({
+                displayName: { $regex: regex },
+                _id: { $ne: currentUserId },
+            })
+                .select('_id username displayName avatarUrl bio')
+                .sort({ displayName: 1, _id: 1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            User.countDocuments({
+                displayName: { $regex: regex },
+                _id: { $ne: currentUserId },
+            }),
+        ]);
+
+        return { users, total };
+    }
+
+    async updateLastSeenAt(userId: string | Types.ObjectId, date: Date) {
+        return await User.updateOne(
+            { _id: userId },
+            { $set: { lastSeenAt: date } },
+        );
+    }
+
+    async getLastSeenBatch(userIds: string[]): Promise<Map<string, Date | null>> {
+        const objectIds = userIds.map((id) => new Types.ObjectId(id));
+        const users = await User.find({ _id: { $in: objectIds } })
+            .select('_id lastSeenAt')
+            .lean();
+
+        const map = new Map<string, Date | null>();
+        for (const u of users) {
+            map.set(
+                (u._id as Types.ObjectId).toString(),
+                (u as Record<string, unknown>).lastSeenAt as Date | null ?? null,
+            );
+        }
+        return map;
+    }
 }

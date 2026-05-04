@@ -12,6 +12,7 @@ import conversationRoutes from "./routes/conversations/conversations.route.js";
 import mediaRoutes from "./routes/media/media.route.js";
 import postRoutes from "./routes/posts/posts.route.js";
 import notificationRoutes from "./routes/notifications/notifications.route.js";
+import adminRoutes from "./routes/admin/admin.route.js";
 import { swaggerSpec } from "./shared/config/swagger.js";
 import { ensureMediaBuckets } from "./shared/config/minio.js";
 import { connectDB } from "./shared/db/mongoose.js";
@@ -73,6 +74,7 @@ app.use("/api/conversations", conversationRoutes);
 app.use("/api/media", mediaRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
 	res.send("Hello World!");
