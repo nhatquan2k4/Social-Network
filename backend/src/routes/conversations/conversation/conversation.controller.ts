@@ -19,6 +19,7 @@ export const createConversation = async (req: Request, res: Response) => {
     try {
         const { type, name, memberIds, recipientId } = req.body as CreateConversationRequest;
         const userId = req.user!._id;
+        const meId = userId.toString();
 
         if (type === "direct") {
             const targetId = recipientId || memberIds?.[0];
@@ -38,17 +39,25 @@ export const createConversation = async (req: Request, res: Response) => {
         }
 
         if (type === "group") {
-            if (!name || !memberIds || !Array.isArray(memberIds) || memberIds.length === 0) {
+            const normalizedName = name?.toString().trim() ?? "";
+            const normalizedMembers = Array.isArray(memberIds)
+                ? memberIds
+                    .map((id) => id?.toString().trim())
+                    .filter((id): id is string => Boolean(id) && id !== meId)
+                : [];
+            const uniqueMembers = Array.from(new Set(normalizedMembers));
+
+            if (!normalizedName || uniqueMembers.length === 0) {
                 return res.status(400).json({
-                    message: "Ten nhom va danh sach thanh vien la bat buoc cho group conversation",
+                    message: "Ten nhom va danh sach thanh vien la bat buoc",
                 });
             }
 
             const conversation = await conversationService.createConversation(
                 userId,
                 type,
-                memberIds,
-                name,
+                uniqueMembers,
+                normalizedName,
             );
             return res.status(201).json({ conversation });
         }

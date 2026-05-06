@@ -14,6 +14,10 @@ export const checkFriendship = async (
 ) => {
 	try {
 		const me = req.user!._id.toString();
+		const type = req.body?.type;
+		const memberIds = Array.isArray(req.body?.memberIds)
+			? req.body.memberIds
+			: [];
 
 		// Lay recipientId tu body, query, hoac memberIds[0] neu type la direct
 		let recipientId = req.body?.recipientId ?? req.query?.recipientId ?? null;
@@ -28,6 +32,36 @@ export const checkFriendship = async (
 		}
 
 		if (!recipientId) {
+			if (type === "group") {
+				if (memberIds.length === 0) {
+					return res
+						.status(400)
+						.json({ message: "MemberIds khong duoc trong" });
+				}
+
+				const invalidMembers: string[] = [];
+				for (const memberId of memberIds) {
+					const memberText = (memberId ?? "").toString().trim();
+					if (!memberText || memberText === me) {
+						continue;
+					}
+
+					const [userA, userB] = pair(me, memberText);
+					const isFriend = await Friend.findOne({ userA, userB });
+					if (!isFriend) {
+						invalidMembers.push(memberText);
+					}
+				}
+
+				if (invalidMembers.length > 0) {
+					return res
+						.status(403)
+						.json({ message: "Thanh vien khong phai ban be" });
+				}
+
+				return next();
+			}
+
 			return res
 				.status(400)
 				.json({ message: "Can cung cap recipientId hoac memberIds" });

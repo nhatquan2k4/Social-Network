@@ -27,3 +27,21 @@ export class InvalidEmailError extends Error {
         super('Vui long cung cap email hop le');
     }
 }
+
+export class InvalidRefreshTokenError extends Error {
+    constructor() {
+        super('Refresh token khong hop le hoac da het han');
+    }
+}
+
+export class WrongCurrentPasswordError extends Error {
+    constructor() {
+        super('Mat khau hien tai khong chinh xac');
+    }
+}
+
+export class UserNotFoundByEmailError extends Error {
+    constructor() {
+        super('Khong tim thay nguoi dung voi email nay');
+    }
+}

@@ -64,3 +64,39 @@ export const sendEmailVerificationEmail = async (
 
     return { sent: true, verifyLink };
 };
+
+export const sendForgotPasswordEmail = async (
+    recipientEmail: string,
+    displayName: string,
+    newPassword: string,
+) => {
+    const transporter = getTransporter();
+
+    if (!transporter) {
+        console.warn('SMTP is not configured. Forgot password email was not sent.');
+        console.info(`New password for ${recipientEmail}: ${newPassword}`);
+        return { sent: false };
+    }
+
+    const subject = 'Mat khau moi tai khoan Social Network';
+    const text = [
+        `Chao ${displayName},`,
+        '',
+        'Chung toi nhan duoc yeu cau dat lai mat khau cua ban.',
+        'Mat khau moi cua ban la:',
+        '',
+        `    ${newPassword}`,
+        '',
+        'Vui long dang nhap va doi mat khau ngay sau khi nhan duoc email nay.',
+        'Neu ban khong yeu cau dat lai mat khau, vui long bo qua email nay.',
+    ].join('\n');
+
+    await transporter.sendMail({
+        from: envConfig.mailFrom,
+        to: recipientEmail,
+        subject,
+        text,
+    });
+
+    return { sent: true };
+};

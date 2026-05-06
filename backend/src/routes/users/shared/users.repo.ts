@@ -158,4 +158,12 @@ export class UserRepository {
         }
         return map;
     }
+
+    async updatePassword(userId: string | Types.ObjectId, hashedPassword: string) {
+        return await User.findByIdAndUpdate(
+            userId,
+            { $set: { hashedPassword } },
+            { new: true },
+        );
+    }
 }
