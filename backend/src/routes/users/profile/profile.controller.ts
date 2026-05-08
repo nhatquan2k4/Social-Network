@@ -84,7 +84,8 @@ export const updateAvatar = async (req: Request, res: Response) => {
 export const getUserProfile = async (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
-        const data = await profileService.getUserProfile(userId as string);
+        const requesterId = req.user!._id;
+        const data = await profileService.getUserProfile(userId as string, requesterId);
 
         return res.status(200).json({ data });
     } catch (error: any) {
@@ -94,6 +95,9 @@ export const getUserProfile = async (req: Request, res: Response) => {
         }
         if (error.message === 'Nguoi dung khong ton tai') {
             return res.status(404).json({ message: error.message });
+        }
+        if (error.message === 'Khong the thuc hien hanh dong nay vi da co quan he block') {
+            return res.status(403).json({ message: error.message });
         }
 
         return res.status(500).json({ message: 'Loi server' });

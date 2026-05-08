@@ -10,6 +10,7 @@ export const MESSAGE_ERROR_MESSAGES = {
     INVALID_MEDIA: "Thieu media hop le",
     INVALID_CURSOR: "cursor khong hop le",
     INVALID_LIMIT: "limit khong hop le",
+    DELETE_FORBIDDEN: "Khong co quyen go tin nhan nay",
 } as const;
 
 export const MESSAGE_SUCCESS_MESSAGES = {
@@ -20,6 +21,7 @@ export const MESSAGE_SUCCESS_MESSAGES = {
     REACTION_REMOVED: "Da go reaction tin nhan",
     READ_MARKED: "Da danh dau tin nhan da doc",
     READ_BULK_MARKED: "Da danh dau nhieu tin nhan da doc",
+    DELETED_FOR_EVERYONE: "Da go tin nhan",
 } as const;
 
 export const DEFAULT_REACTION_MAX_LENGTH = 32;

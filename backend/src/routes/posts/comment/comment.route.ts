@@ -4,6 +4,7 @@ import {
     createPostComment,
     deletePostComment,
     getPostComments,
+    updatePostComment,
 } from "./comment.controller.js";
 
 const router = express.Router();
@@ -61,6 +62,36 @@ router.get("/:postId/comments", protectedRoute, getPostComments);
 /**
  * @swagger
  * /api/posts/{postId}/comments/{commentId}:
+ *   patch:
+ *     summary: Chinh sua comment cua post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Chinh sua comment thanh cong
  *   delete:
  *     summary: Xoa comment cua post
  *     tags: [Posts]
@@ -81,6 +112,7 @@ router.get("/:postId/comments", protectedRoute, getPostComments);
  *       200:
  *         description: Xoa comment thanh cong
  */
+router.patch("/:postId/comments/:commentId", protectedRoute, updatePostComment);
 router.delete("/:postId/comments/:commentId", protectedRoute, deletePostComment);
 
 export default router;

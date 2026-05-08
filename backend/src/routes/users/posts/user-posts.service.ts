@@ -1,5 +1,9 @@
 import { Types } from 'mongoose';
 import { buildMediaUrl } from '../../../shared/config/minio.js';
+import {
+    BlockRepository,
+} from '../../friends/shared/friends.repo.js';
+import { BlockedInteractionError } from '../../friends/shared/friends.errors.js';
 import { PostRepository } from '../../posts/shared/posts.repo.js';
 import { UserRepository } from '../shared/users.repo.js';
 import { ensureValidObjectId, normalizePagination } from '../shared/users.util.js';
@@ -7,19 +11,30 @@ import { ensureValidObjectId, normalizePagination } from '../shared/users.util.j
 export class UserPostsService {
     private userRepository: UserRepository;
     private postRepository: PostRepository;
+    private blockRepository: BlockRepository;
 
     constructor() {
         this.userRepository = new UserRepository();
         this.postRepository = new PostRepository();
+        this.blockRepository = new BlockRepository();
     }
 
-    async execute(userId: string, page: number, limit: number) {
+    async execute(userId: string, requesterId: Types.ObjectId, page: number, limit: number) {
         ensureValidObjectId(userId);
         const normalizedUserId = new Types.ObjectId(userId);
 
-        const exists = await this.userRepository.exists(normalizedUserId);
+        const [exists, blockRelation] = await Promise.all([
+            this.userRepository.exists(normalizedUserId),
+            requesterId.toString() === normalizedUserId.toString()
+                ? Promise.resolve(null)
+                : this.blockRepository.findBetweenUsers(requesterId, normalizedUserId),
+        ]);
         if (!exists) {
             throw new Error('Nguoi dung khong ton tai');
+        }
+
+        if (blockRelation) {
+            throw new BlockedInteractionError();
         }
 
         const { page: safePage, limit: safeLimit, skip } = normalizePagination(page, limit);

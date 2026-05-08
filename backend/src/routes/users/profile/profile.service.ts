@@ -1,5 +1,9 @@
 import { Types } from 'mongoose';
-import { FriendRepository } from '../../friends/shared/friends.repo.js';
+import {
+    BlockRepository,
+    FriendRepository,
+} from '../../friends/shared/friends.repo.js';
+import { BlockedInteractionError } from '../../friends/shared/friends.errors.js';
 import { MediaService } from '../../media/upload/upload.service.js';
 import { PostRepository } from '../../posts/shared/posts.repo.js';
 import { UserRepository } from '../shared/users.repo.js';
@@ -11,12 +15,14 @@ export class ProfileService {
     private userRepository: UserRepository;
     private postRepository: PostRepository;
     private friendRepository: FriendRepository;
+    private blockRepository: BlockRepository;
     private mediaService: MediaService;
 
     constructor() {
         this.userRepository = new UserRepository();
         this.postRepository = new PostRepository();
         this.friendRepository = new FriendRepository();
+        this.blockRepository = new BlockRepository();
         this.mediaService = new MediaService();
     }
 
@@ -28,18 +34,25 @@ export class ProfileService {
         return user;
     }
 
-    async getUserProfile(userId: string) {
+    async getUserProfile(userId: string, requesterId: Types.ObjectId) {
         ensureValidObjectId(userId);
         const normalizedUserId = new Types.ObjectId(userId);
 
-        const [user, postsCount, friendsCount] = await Promise.all([
+        const [user, postsCount, friendsCount, blockRelation] = await Promise.all([
             this.userRepository.findProfileById(normalizedUserId),
             this.postRepository.countByAuthorId(normalizedUserId),
             this.friendRepository.countByUserId(normalizedUserId),
+            requesterId.toString() === normalizedUserId.toString()
+                ? Promise.resolve(null)
+                : this.blockRepository.findBetweenUsers(requesterId, normalizedUserId),
         ]);
 
         if (!user) {
             throw new Error('Nguoi dung khong ton tai');
+        }
+
+        if (blockRelation) {
+            throw new BlockedInteractionError();
         }
 
         return {
