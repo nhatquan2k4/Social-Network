@@ -47,16 +47,26 @@ export class MessageRepository {
         }
 
         return await Message.find(query)
+            .populate({
+                path: "senderId",
+                select: "displayName avatarUrl username",
+            })
             .sort({ createdAt: -1, _id: -1 })
             .limit(options.limit);
     }
 
     async findByIdAndConversationId(messageId: string, conversationId: string) {
-        return await Message.findOne({ _id: messageId, conversationId });
+        return await Message.findOne({ _id: messageId, conversationId }).populate({
+            path: "senderId",
+            select: "displayName avatarUrl username",
+        });
     }
 
     async findById(messageId: string) {
-        return await Message.findById(messageId);
+        return await Message.findById(messageId).populate({
+            path: "senderId",
+            select: "displayName avatarUrl username",
+        });
     }
 
     async upsertReaction(

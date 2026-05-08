@@ -58,6 +58,8 @@ export class MessageService {
             media: safeMedia,
         });
 
+        await message.populate("senderId", "displayName avatarUrl username");
+
         await updateConversationAfterCreateMessage(conversation, message, senderId);
         await conversation.save();
 
@@ -90,6 +92,8 @@ export class MessageService {
             content,
             media: safeMedia,
         });
+
+        await message.populate("senderId", "displayName avatarUrl username");
 
         await updateConversationAfterCreateMessage(conversation, message, senderId);
         await conversation.save();
