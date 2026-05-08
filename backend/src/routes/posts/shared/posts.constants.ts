@@ -8,6 +8,7 @@ export const POST_ERROR_MESSAGES = {
     PARENT_COMMENT_NOT_FOUND: "Comment cha khong ton tai",
     COMMENT_NOT_FOUND: "Comment khong ton tai",
     COMMENT_DELETE_FORBIDDEN: "Khong co quyen xoa comment nay",
+    COMMENT_UPDATE_FORBIDDEN: "Khong co quyen chinh sua comment nay",
     MEDIA_JSON_INVALID: "Media JSON khong hop le",
     REPORT_REASON_REQUIRED: "Ly do report la bat buoc",
     REPORT_REASON_INVALID: "Ly do report khong hop le",
@@ -22,6 +23,7 @@ export const POST_SUCCESS_MESSAGES = {
     DELETED: "Xoa post thanh cong",
     LIKE_UPDATED: "Cap nhat like thanh cong",
     COMMENT_CREATED: "Tao comment thanh cong",
+    COMMENT_UPDATED: "Chinh sua comment thanh cong",
     COMMENT_DELETED: "Xoa comment thanh cong",
     REPORT_CREATED: "Report bai viet thanh cong",
 } as const;

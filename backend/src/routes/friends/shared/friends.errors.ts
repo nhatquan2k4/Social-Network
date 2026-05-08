@@ -62,3 +62,24 @@ export class FriendRequestRejectForbiddenError extends Error {
         this.name = "FriendRequestRejectForbiddenError";
     }
 }
+
+export class MissingBlockUserError extends Error {
+    constructor() {
+        super(FRIEND_ERROR_MESSAGES.MISSING_BLOCK_USER);
+        this.name = "MissingBlockUserError";
+    }
+}
+
+export class FriendSelfBlockError extends Error {
+    constructor() {
+        super(FRIEND_ERROR_MESSAGES.SELF_BLOCK);
+        this.name = "FriendSelfBlockError";
+    }
+}
+
+export class BlockedInteractionError extends Error {
+    constructor() {
+        super(FRIEND_ERROR_MESSAGES.BLOCKED_INTERACTION);
+        this.name = "BlockedInteractionError";
+    }
+}

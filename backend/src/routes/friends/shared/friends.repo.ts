@@ -1,6 +1,7 @@
 import {
     FriendModel as Friend,
     FriendRequestModel as FriendRequest,
+    UserBlockModel as UserBlock,
 } from "./friends.model.js";
 import { Types } from "mongoose";
 
@@ -70,6 +71,36 @@ export class FriendRequestRepository {
     async findReceivedByUserId(userId: Types.ObjectId, populateFields: string) {
         return await FriendRequest.find({ to: userId })
             .populate("from", populateFields)
+            .lean();
+    }
+}
+
+export class BlockRepository {
+    async findByUsers(blockerId: string | Types.ObjectId, blockedId: string | Types.ObjectId) {
+        return await UserBlock.findOne({ blockerId, blockedId });
+    }
+
+    async findBetweenUsers(userA: string | Types.ObjectId, userB: string | Types.ObjectId) {
+        return await UserBlock.findOne({
+            $or: [
+                { blockerId: userA, blockedId: userB },
+                { blockerId: userB, blockedId: userA },
+            ],
+        });
+    }
+
+    async create(blockerId: Types.ObjectId, blockedId: Types.ObjectId) {
+        return await UserBlock.create({ blockerId, blockedId });
+    }
+
+    async deleteByUsers(blockerId: Types.ObjectId, blockedId: string | Types.ObjectId) {
+        return await UserBlock.findOneAndDelete({ blockerId, blockedId });
+    }
+
+    async findBlockedByUserId(blockerId: Types.ObjectId) {
+        return await UserBlock.find({ blockerId })
+            .populate("blockedId", "_id username displayName avatarUrl bio")
+            .sort({ createdAt: -1 })
             .lean();
     }
 }

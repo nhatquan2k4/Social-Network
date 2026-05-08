@@ -117,6 +117,42 @@ export class CommentService {
         };
     }
 
+    async updateComment(
+        postId: string,
+        commentId: string,
+        requesterId: Types.ObjectId,
+        content: string,
+    ) {
+        const normalized = (content || "").trim();
+        if (!normalized) {
+            throw new Error(POST_ERROR_MESSAGES.COMMENT_EMPTY);
+        }
+
+        const post = await this.postRepository.findRawById(postId);
+        if (!post) {
+            throw new Error(POST_ERROR_MESSAGES.POST_NOT_FOUND);
+        }
+
+        const targetComment = (post.comments || []).find(
+            (comment: any) => comment._id.toString() === commentId,
+        );
+        if (!targetComment) {
+            throw new Error(POST_ERROR_MESSAGES.COMMENT_NOT_FOUND);
+        }
+
+        const isCommentOwner = targetComment.authorId.toString() === requesterId.toString();
+        if (!isCommentOwner) {
+            throw new Error(POST_ERROR_MESSAGES.COMMENT_UPDATE_FORBIDDEN);
+        }
+
+        targetComment.content = normalized;
+        targetComment.updatedAt = new Date();
+
+        await this.postRepository.save(post);
+
+        return formatComment(targetComment as any);
+    }
+
     async deleteComment(postId: string, commentId: string, requesterId: Types.ObjectId) {
         const post = await this.postRepository.findRawById(postId);
         if (!post) {

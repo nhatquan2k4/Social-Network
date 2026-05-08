@@ -7,6 +7,13 @@ export class MessageNotFoundError extends Error {
     }
 }
 
+export class MessageDeleteForbiddenError extends Error {
+    constructor() {
+        super(MESSAGE_ERROR_MESSAGES.DELETE_FORBIDDEN);
+        this.name = "MessageDeleteForbiddenError";
+    }
+}
+
 export class ConversationNotFoundError extends Error {
     constructor() {
         super(MESSAGE_ERROR_MESSAGES.CONVERSATION_NOT_FOUND);

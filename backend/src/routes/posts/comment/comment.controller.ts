@@ -54,6 +54,41 @@ export const getPostComments = async (req: Request, res: Response) => {
     }
 };
 
+export const updatePostComment = async (req: Request, res: Response) => {
+    try {
+        const { postId, commentId } = req.params;
+        const { content } = req.body;
+        const userId = req.user!._id;
+
+        const comment = await commentService.updateComment(
+            postId as string,
+            commentId as string,
+            userId,
+            content,
+        );
+
+        return res.status(200).json({
+            message: POST_SUCCESS_MESSAGES.COMMENT_UPDATED,
+            data: comment,
+        });
+    } catch (error: any) {
+        console.error("Loi khi chinh sua comment", error);
+        if (error.message === POST_ERROR_MESSAGES.COMMENT_EMPTY) {
+            return res.status(400).json({ message: error.message });
+        }
+        if (
+            error.message === POST_ERROR_MESSAGES.POST_NOT_FOUND ||
+            error.message === POST_ERROR_MESSAGES.COMMENT_NOT_FOUND
+        ) {
+            return res.status(404).json({ message: error.message });
+        }
+        if (error.message === POST_ERROR_MESSAGES.COMMENT_UPDATE_FORBIDDEN) {
+            return res.status(403).json({ message: error.message });
+        }
+        return res.status(500).json({ message: "Loi server" });
+    }
+};
+
 export const deletePostComment = async (req: Request, res: Response) => {
     try {
         const { postId, commentId } = req.params;

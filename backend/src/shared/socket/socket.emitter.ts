@@ -23,6 +23,20 @@ export const emitMessageNew = (conversationId: string, message: unknown) => {
     });
 };
 
+export const emitMessageDeleted = (payload: {
+    conversationId: string;
+    messageId: string;
+    deletedByUserId: string;
+    deletedAt: string;
+}) => {
+    withSocket((io) => {
+        io.to(SOCKET_ROOMS.conversation(payload.conversationId)).emit(
+            SOCKET_EVENTS.MESSAGE_DELETED,
+            payload,
+        );
+    });
+};
+
 export const emitConversationSeen = (payload: {
     conversationId: string;
     userId: string;

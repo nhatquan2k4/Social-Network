@@ -54,9 +54,31 @@ friendRequestSchema.index({ from: 1, to: 1 }, { unique: true });
 friendRequestSchema.index({ from: 1 });
 friendRequestSchema.index({ to: 1 });
 
+const userBlockSchema = new mongoose.Schema(
+    {
+        blockerId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+        },
+        blockedId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+        },
+    },
+    { timestamps: true },
+);
+
+userBlockSchema.index({ blockerId: 1, blockedId: 1 }, { unique: true });
+userBlockSchema.index({ blockedId: 1 });
+
 export const FriendModel =
     mongoose.models.Friend || mongoose.model("Friend", friendSchema);
 
 export const FriendRequestModel =
     mongoose.models.FriendRequest ||
     mongoose.model("FriendRequest", friendRequestSchema);
+
+export const UserBlockModel =
+    mongoose.models.UserBlock || mongoose.model("UserBlock", userBlockSchema);
