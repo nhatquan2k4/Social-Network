@@ -26,6 +26,7 @@ export const login = async (req: Request, res: Response) => {
         return res.status(200).json({
             message: `Nguoi dung ${result.username} dang nhap thanh cong`,
             accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
             isEmailVerified: result.isEmailVerified,
         });
     } catch (error: any) {

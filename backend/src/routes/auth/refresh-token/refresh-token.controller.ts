@@ -7,7 +7,8 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 export const refreshToken = async (req: Request, res: Response) => {
     try {
-        const token = req.cookies?.refreshToken;
+        // Ưu tiên cookie (web), fallback sang body (mobile Flutter)
+        const token = req.cookies?.refreshToken ?? req.body?.refreshToken;
 
         if (!token) {
             return res
@@ -28,6 +29,7 @@ export const refreshToken = async (req: Request, res: Response) => {
         return res.status(200).json({
             message: 'Cap moi access token thanh cong',
             accessToken: result.accessToken,
+            refreshToken: result.refreshToken,   // mobile client cập nhật lại refresh token
         });
     } catch (error: any) {
         if (error instanceof InvalidRefreshTokenError) {
