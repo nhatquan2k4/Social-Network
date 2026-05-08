@@ -1,5 +1,8 @@
 ﻿import { ConversationModel as Conversation } from '../../routes/conversations/shared/conversations.model.js';
-import { FriendModel as Friend } from '../../routes/friends/shared/friends.model.js';
+import {
+	FriendModel as Friend,
+	UserBlockModel as UserBlock,
+} from '../../routes/friends/shared/friends.model.js';
 import { Request, Response, NextFunction } from 'express';
 
 // Helper function to ensure consistent ordering of user IDs
@@ -35,6 +38,19 @@ export const checkFriendship = async (
 
 		if (recipientId) {
 			const [userA, userB] = pair(me, recipientId as string);
+
+			const blockRelation = await UserBlock.findOne({
+				$or: [
+					{ blockerId: me, blockedId: recipientId },
+					{ blockerId: recipientId, blockedId: me },
+				],
+			});
+
+			if (blockRelation) {
+				return res.status(403).json({
+					message: "Khong the thuc hien hanh dong nay vi da co quan he block",
+				});
+			}
 
 			const isFriend = await Friend.findOne({ userA: userA, userB: userB });
 

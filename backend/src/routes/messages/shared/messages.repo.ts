@@ -59,6 +59,14 @@ export class MessageRepository {
         return await Message.findById(messageId);
     }
 
+    async findLatestByConversationId(conversationId: string) {
+        return await Message.findOne({ conversationId }).sort({ createdAt: -1, _id: -1 });
+    }
+
+    async deleteByIdAndConversationId(messageId: string, conversationId: string) {
+        return await Message.findOneAndDelete({ _id: messageId, conversationId });
+    }
+
     async upsertReaction(
         messageId: string,
         conversationId: string,
