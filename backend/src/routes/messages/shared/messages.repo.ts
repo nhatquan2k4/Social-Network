@@ -184,6 +184,7 @@ export class MessageRepository {
                     },
                 },
             ],
+            { updatePipeline: true },
         );
     }
 
