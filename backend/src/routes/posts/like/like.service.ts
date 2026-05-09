@@ -39,8 +39,8 @@ export class LikeService {
                 recipientId: new Types.ObjectId(postAuthorId),
                 actorId: userId,
                 type: "POST_LIKED",
-                title: "Bai viet cua ban co luot thich moi",
-                body: "Co nguoi vua thich bai viet cua ban.",
+                title: "Bài viết của bạn có lượt thích mới",
+                body: "vừa thích bài viết của bạn.",
                 entityType: "post",
                 entityId: postId,
             });
