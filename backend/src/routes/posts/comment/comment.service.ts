@@ -65,8 +65,8 @@ export class CommentService {
                 recipientId: new Types.ObjectId(postAuthorId),
                 actorId,
                 type: "POST_COMMENTED",
-                title: "Bai viet cua ban co binh luan moi",
-                body: "Co nguoi vua binh luan bai viet cua ban.",
+                title: "Bài viết của bạn có bình luận mới",
+                body: "vừa bình luận vào bài viết của bạn.",
                 entityType: "post",
                 entityId: postId,
                 metadata: {
@@ -85,8 +85,8 @@ export class CommentService {
                 recipientId: new Types.ObjectId(parentAuthorId),
                 actorId,
                 type: "COMMENT_REPLIED",
-                title: "Comment cua ban co phan hoi moi",
-                body: "Co nguoi vua tra loi comment cua ban.",
+                title: "Comment của bạn có phản hồi mới",
+                body: "vừa trả lời comment của bạn.",
                 entityType: "comment",
                 entityId: parentCommentId,
                 metadata: {
