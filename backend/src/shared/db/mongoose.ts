@@ -1,18 +1,19 @@
-﻿import mongoose from 'mongoose';
+import mongoose from "mongoose";
+import { envConfig } from "../config/env.js";
 
-const connectDB = async () => {
-	try {
-		const connectionString =
-			process.env.MONGODB_CONNECTIONSTRING ||
-			'mongodb://localhost:/social_network';
-
-		await mongoose.connect(connectionString);
-		console.log('Lien ket Database thanh cong');
-	} catch (error) {
-		console.error('Loi ket noi Database', error);
-		throw error;
-	}
+const connectDB = async (connectionString = envConfig.mongoConnectionString) => {
+    try {
+        await mongoose.connect(connectionString);
+        console.log("Lien ket Database thanh cong");
+    } catch (error) {
+        console.error("Loi ket noi Database", error);
+        throw error;
+    }
 };
 
-export { connectDB };
+const disconnectDB = async () => {
+    await mongoose.disconnect();
+};
+
+export { connectDB, disconnectDB };
 export default connectDB;

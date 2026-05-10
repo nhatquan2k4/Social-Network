@@ -1,6 +1,8 @@
 ﻿import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
-import { UserModel as User } from '../../routes/users/shared/users.model.js';
+import { UserRepository } from '../../routes/users/shared/users.repo.js';
+
+const userRepository = new UserRepository();
 
 // authorization middleware - xac minh user la ai
 export const protectedRoute = async ( req: Request, res: Response, next: NextFunction ) => {
@@ -26,7 +28,7 @@ export const protectedRoute = async ( req: Request, res: Response, next: NextFun
 		}
         
 		// tim user
-		const user = await User.findById(decoded.userId).select('-hashedPassword');
+		const user = await userRepository.findByIdWithoutPassword(decoded.userId);
 		if (!user) {
 			return res
 			.status(404)

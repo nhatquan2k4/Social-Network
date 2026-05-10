@@ -1,13 +1,17 @@
-﻿import { ConversationModel as Conversation } from '../../routes/conversations/shared/conversations.model.js';
-import {
-	FriendModel as Friend,
-	UserBlockModel as UserBlock,
-} from '../../routes/friends/shared/friends.model.js';
 import { Request, Response, NextFunction } from 'express';
+import { ConversationRepository } from '../../routes/conversations/shared/conversations.repo.js';
+import {
+	BlockRepository,
+	FriendRepository,
+} from '../../routes/friends/shared/friends.repo.js';
+
+const blockRepository = new BlockRepository();
+const conversationRepository = new ConversationRepository();
+const friendRepository = new FriendRepository();
 
 // Helper function to ensure consistent ordering of user IDs
 const pair = (userA: string, userB: string): [string, string] => {
-		return userA < userB ? [userA, userB] : [userB, userA];
+	return userA < userB ? [userA, userB] : [userB, userA];
 };
 
 export const checkFriendship = async (
@@ -50,7 +54,7 @@ export const checkFriendship = async (
 					}
 
 					const [userA, userB] = pair(me, memberText);
-					const isFriend = await Friend.findOne({ userA, userB });
+					const isFriend = await friendRepository.findByUsers(userA, userB);
 					if (!isFriend) {
 						invalidMembers.push(memberText);
 					}
@@ -73,12 +77,10 @@ export const checkFriendship = async (
 		if (recipientId) {
 			const [userA, userB] = pair(me, recipientId as string);
 
-			const blockRelation = await UserBlock.findOne({
-				$or: [
-					{ blockerId: me, blockedId: recipientId },
-					{ blockerId: recipientId, blockedId: me },
-				],
-			});
+			const blockRelation = await blockRepository.findBetweenUsers(
+				me,
+				recipientId as string,
+			);
 
 			if (blockRelation) {
 				return res.status(403).json({
@@ -86,7 +88,7 @@ export const checkFriendship = async (
 				});
 			}
 
-			const isFriend = await Friend.findOne({ userA: userA, userB: userB });
+			const isFriend = await friendRepository.findByUsers(userA, userB);
 
 			if (!isFriend) {
 				return res.status(403).json({ message: "Hai nguoi khong phai ban be" });
@@ -109,7 +111,7 @@ export const checkGroupMembership = async (
 		const { conversationId } = req.body;
 		const userId = req.user!._id;
 
-		const conversation = await Conversation.findById(conversationId);
+		const conversation = await conversationRepository.findById(conversationId);
 
 		if (!conversation) {
 			return res
@@ -148,7 +150,7 @@ export const checkConversationMembership = async (
 			return res.status(400).json({ message: "Thieu conversationId" });
 		}
 
-		const conversation = await Conversation.findById(conversationId);
+		const conversation = await conversationRepository.findById(conversationId);
 
 		if (!conversation) {
 			return res
