@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { buildMediaUrl } from "../../../shared/config/minio.js";
+import { buildMediaUrl } from "../../media/shared/media.repo.js";
 import { MediaService } from "../../media/upload/upload.service.js";
 
 interface MessageMediaInput {

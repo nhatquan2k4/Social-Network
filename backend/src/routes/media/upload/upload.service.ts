@@ -1,12 +1,7 @@
 import { randomUUID } from 'crypto';
 import path from 'path';
 import sharp from 'sharp';
-import {
-    buildMediaUrl,
-    getBucketByPurpose,
-    MediaPurpose,
-    minioClient,
-} from '../../../shared/config/minio.js';
+import { MediaRepository, type MediaPurpose } from '../shared/media.repo.js';
 import { ALLOWED_MEDIA_MIME_TYPES } from '../shared/media.constants.js';
 import {
     MediaFileTooLargeError,
@@ -33,6 +28,7 @@ export interface UploadPathContext {
 const ALLOWED_MIME_TYPES = new Set(ALLOWED_MEDIA_MIME_TYPES);
 
 export class MediaService {
+    private readonly mediaRepository: MediaRepository;
     private readonly maxFileSize: number;
     private readonly maxFiles: number;
     private readonly profileByPurpose: Record<
@@ -41,6 +37,8 @@ export class MediaService {
     >;
 
     constructor() {
+        this.mediaRepository = new MediaRepository();
+
         const fromEnv = Number(process.env.MEDIA_MAX_FILE_SIZE || '5242880');
         this.maxFileSize = Number.isNaN(fromEnv) ? 5 * 1024 * 1024 : fromEnv;
 
@@ -178,7 +176,7 @@ export class MediaService {
         ownerId: string,
         context: UploadPathContext = {},
     ): Promise<UploadedMedia[]> {
-        const bucket = getBucketByPurpose(purpose);
+        const bucket = this.mediaRepository.getBucketByPurpose(purpose);
         this.assertValidBatch(files);
 
         return Promise.all(
@@ -194,15 +192,12 @@ export class MediaService {
                     context,
                 );
 
-                await minioClient.putObject(
+                await this.mediaRepository.putObject({
                     bucket,
                     objectKey,
-                    optimized.buffer,
-                    optimized.buffer.length,
-                    {
-                        'Content-Type': optimized.mimeType,
-                    },
-                );
+                    buffer: optimized.buffer,
+                    mimeType: optimized.mimeType,
+                });
 
                 return {
                     bucket,
@@ -210,7 +205,7 @@ export class MediaService {
                     mimeType: optimized.mimeType,
                     size: optimized.buffer.length,
                     originalName: file.originalname,
-                    mediaUrl: buildMediaUrl(bucket, objectKey),
+                    mediaUrl: this.mediaRepository.buildMediaUrl(bucket, objectKey),
                     width: optimized.width,
                     height: optimized.height,
                     optimized: optimized.optimized,
@@ -224,7 +219,7 @@ export class MediaService {
     ): T & { mediaUrl: string } {
         return {
             ...media,
-            mediaUrl: buildMediaUrl(media.bucket, media.objectKey),
+            mediaUrl: this.mediaRepository.buildMediaUrl(media.bucket, media.objectKey),
         };
     }
 }

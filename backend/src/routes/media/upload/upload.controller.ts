@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { MediaPurpose } from '../../../shared/config/minio.js';
+import { type MediaPurpose } from '../shared/media.repo.js';
 import { MediaService } from './upload.service.js';
 import { MEDIA_PURPOSES } from '../shared/media.constants.js';
 import {

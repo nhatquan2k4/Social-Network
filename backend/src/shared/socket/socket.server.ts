@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import { ConversationService } from "../../routes/conversations/conversation/conversation.service.js";
-import { UserModel } from "../../routes/users/shared/users.model.js";
+import { UserRepository } from "../../routes/users/shared/users.repo.js";
 import { SOCKET_EVENTS, SOCKET_ROOMS } from "./socket.events.js";
 import { PresenceService } from "./presence.service.js";
 
@@ -15,6 +15,7 @@ type AccessTokenPayload = {
 
 let io: Server | null = null;
 const conversationService = new ConversationService();
+const userRepository = new UserRepository();
 
 const allowedOrigins = [
     "http://localhost:3000",
@@ -55,9 +56,10 @@ const attachSocketAuth = (socketServer: Server) => {
                 process.env.ACCESS_TOKEN_SECRET as string,
             ) as AccessTokenPayload;
 
-            const user = await UserModel.findById(decoded.userId)
-                .select("_id username displayName avatarUrl")
-                .lean();
+            const user = await userRepository.findByIdWithFields(
+                decoded.userId,
+                "_id username displayName avatarUrl",
+            );
 
             if (!user) {
                 return next(new Error("Nguoi dung khong ton tai"));

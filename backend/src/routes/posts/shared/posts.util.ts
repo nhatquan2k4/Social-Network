@@ -1,4 +1,4 @@
-import { buildMediaUrl } from "../../../shared/config/minio.js";
+import { buildMediaUrl } from "../../media/shared/media.repo.js";
 
 export interface PostDocumentLike {
     _id: any;

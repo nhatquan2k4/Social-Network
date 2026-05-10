@@ -14,6 +14,10 @@ export class UserRepository {
         return await User.findById(userId);
     }
 
+    async findByIdWithoutPassword(userId: string | Types.ObjectId) {
+        return await User.findById(userId).select('-hashedPassword');
+    }
+
     async exists(userId: string | Types.ObjectId) {
         return await User.exists({ _id: userId });
     }
