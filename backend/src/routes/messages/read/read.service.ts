@@ -55,6 +55,7 @@ export class ReadService {
     async markMessagesAsReadUntil(
         conversationId: string,
         userId: Types.ObjectId,
+        seenByUser: { displayName: string; avatarUrl: string },
         lastMessageId?: string,
     ) {
         let readUntil: Date | undefined;
@@ -77,6 +78,7 @@ export class ReadService {
         emitMessageSeen({
             conversationId,
             seenByUserId: userId.toString(),
+            seenByUser,
             seenAt: new Date().toISOString(),
         });
 

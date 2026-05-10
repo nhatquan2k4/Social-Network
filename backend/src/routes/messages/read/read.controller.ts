@@ -74,6 +74,10 @@ export const markMessagesAsReadBulk = async (req: Request, res: Response) => {
         const data = await readService.markMessagesAsReadUntil(
             conversationId as string,
             userId,
+            {
+                displayName: (req.user as any).displayName ?? '',
+                avatarUrl: (req.user as any).avatarUrl ?? '',
+            },
             lastMessageId,
         );
 

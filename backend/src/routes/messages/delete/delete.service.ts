@@ -42,7 +42,9 @@ export class DeleteMessageService {
     }
 
     private syncUnreadCountsAfterDelete(conversation: any, message: any) {
-        const senderId = message.senderId.toString();
+        const senderId = message.senderId._id
+            ? message.senderId._id.toString()
+            : message.senderId.toString();
         const readBy = new Set(
             (message.readBy || []).map((reader: any) => reader.userId.toString()),
         );
@@ -80,7 +82,11 @@ export class DeleteMessageService {
             throw new ConversationAccessDeniedError();
         }
 
-        if ((message as any).senderId.toString() !== requesterId.toString()) {
+        const senderIdStr = (message as any).senderId._id
+            ? (message as any).senderId._id.toString()
+            : (message as any).senderId.toString();
+
+        if (senderIdStr !== requesterId.toString()) {
             throw new MessageDeleteForbiddenError();
         }
 

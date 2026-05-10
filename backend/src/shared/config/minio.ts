@@ -1,4 +1,4 @@
-﻿import { Client } from "minio";
+import { Client } from "minio";
 
 export type MediaPurpose = "post" | "message" | "avatar";
 
@@ -59,7 +59,7 @@ export const ensureMediaBuckets = async (): Promise<void> => {
 			}
 
 			// Public buckets for rendering media directly in clients.
-			if (purpose === "post" || purpose === "avatar") {
+			if (purpose === "post" || purpose === "avatar" || purpose === "message") {
 				await minioClient.setBucketPolicy(bucket, buildPublicReadPolicy(bucket));
 			}
 		}),
