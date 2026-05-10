@@ -1,4 +1,4 @@
-import { MediaPurpose } from '../../../shared/config/minio.js';
+import { type MediaPurpose } from './media.repo.js';
 
 export const MEDIA_PURPOSES: MediaPurpose[] = ['post', 'message', 'avatar'];
 

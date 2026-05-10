@@ -37,6 +37,21 @@ export const emitMessageDeleted = (payload: {
     });
 };
 
+export const emitMessageReaction = (payload: {
+    conversationId: string;
+    messageId: string;
+    reactions: unknown[];
+    updatedByUserId: string;
+    updatedAt: string;
+}) => {
+    withSocket((io) => {
+        io.to(SOCKET_ROOMS.conversation(payload.conversationId)).emit(
+            SOCKET_EVENTS.MESSAGE_REACTION,
+            payload,
+        );
+    });
+};
+
 export const emitConversationSeen = (payload: {
     conversationId: string;
     userId: string;
@@ -62,6 +77,10 @@ export const emitNotificationNew = (recipientId: string, notification: unknown) 
 export const emitMessageSeen = (payload: {
     conversationId: string;
     seenByUserId: string;
+    seenByUser: {
+        displayName: string;
+        avatarUrl: string;
+    };
     seenAt: string;
 }) => {
     withSocket((io) => {

@@ -2,6 +2,7 @@ export const SOCKET_EVENTS = {
     CONNECTED: "connected",
     MESSAGE_NEW: "message:new",
     MESSAGE_DELETED: "message:deleted",
+    MESSAGE_REACTION: "message:reaction",
     MESSAGE_SEEN: "message:seen",
     CONVERSATION_SEEN: "conversation:seen",
     NOTIFICATION_NEW: "notification:new",

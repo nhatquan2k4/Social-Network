@@ -47,26 +47,26 @@ export class MessageRepository {
         }
 
         return await Message.find(query)
-            .populate({
-                path: "senderId",
-                select: "displayName avatarUrl username",
-            })
+            .populate([
+                { path: "senderId", select: "displayName avatarUrl username" },
+                { path: "readBy.userId", select: "displayName avatarUrl" }
+            ])
             .sort({ createdAt: -1, _id: -1 })
             .limit(options.limit);
     }
 
     async findByIdAndConversationId(messageId: string, conversationId: string) {
-        return await Message.findOne({ _id: messageId, conversationId }).populate({
-            path: "senderId",
-            select: "displayName avatarUrl username",
-        });
+        return await Message.findOne({ _id: messageId, conversationId }).populate([
+            { path: "senderId", select: "displayName avatarUrl username" },
+            { path: "readBy.userId", select: "displayName avatarUrl" }
+        ]);
     }
 
     async findById(messageId: string) {
-        return await Message.findById(messageId).populate({
-            path: "senderId",
-            select: "displayName avatarUrl username",
-        });
+        return await Message.findById(messageId).populate([
+            { path: "senderId", select: "displayName avatarUrl username" },
+            { path: "readBy.userId", select: "displayName avatarUrl" }
+        ]);
     }
 
     async findLatestByConversationId(conversationId: string) {
@@ -109,7 +109,7 @@ export class MessageRepository {
                     },
                 },
             ],
-            { new: true },
+            { new: true, updatePipeline: true },
         );
     }
 
@@ -129,7 +129,7 @@ export class MessageRepository {
                     },
                 },
             ],
-            { new: true },
+            { new: true, updatePipeline: true },
         );
     }
 
@@ -159,7 +159,7 @@ export class MessageRepository {
                     },
                 },
             ],
-            { new: true },
+            { new: true, updatePipeline: true },
         );
     }
 
