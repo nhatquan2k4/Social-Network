@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { emitMessageReaction } from "../../../shared/socket/socket.emitter.js";
 import { ConversationRepository } from "../../conversations/shared/conversations.repo.js";
 import { MessageRepository } from "../shared/messages.repo.js";
 import {
@@ -69,7 +70,19 @@ export class ReactionService {
             throw new MessageNotFoundError();
         }
 
-        return enrichMessageMedia(updated);
+        const enriched = enrichMessageMedia(updated);
+
+        const payload = {
+            conversationId,
+            messageId,
+            reactions: (updated as any).reactions || [],
+            updatedByUserId: userId.toString(),
+            updatedAt: new Date().toISOString(),
+        };
+
+        emitMessageReaction(payload);
+
+        return enriched;
     }
 
     async removeReaction(
@@ -88,6 +101,18 @@ export class ReactionService {
             throw new MessageNotFoundError();
         }
 
-        return enrichMessageMedia(updated);
+        const enriched = enrichMessageMedia(updated);
+
+        const payload = {
+            conversationId,
+            messageId,
+            reactions: (updated as any).reactions || [],
+            updatedByUserId: userId.toString(),
+            updatedAt: new Date().toISOString(),
+        };
+
+        emitMessageReaction(payload);
+
+        return enriched;
     }
 }
