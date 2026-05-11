@@ -4,8 +4,7 @@ services:
     container_name: social-network-mongodb-dev
     restart: unless-stopped
     ports:
-      # Mở lại port để bạn có thể kết nối bằng MongoDB Compass
-      - "27018:27018" 
+      - "27018:27017"
     environment:
       MONGO_INITDB_DATABASE: social_network
     volumes:
@@ -16,7 +15,6 @@ services:
     container_name: social-network-minio-dev
     restart: unless-stopped
     ports:
-      # Mở port để truy cập giao diện quản trị MinIO trên trình duyệt
       - "9000:9000"
       - "9001:9001"
     environment:
@@ -25,6 +23,24 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio_dev_data:/data
+
+  backend:
+    build:
+      context: .
+    container_name: social-network-backend-dev
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    environment:
+      MONGODB_CONNECTIONSTRING: mongodb://mongodb:27017/social_network
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_PUBLIC_BASE_URL: http://localhost:9000
+    depends_on:
+      - mongodb
+      - minio
 
 volumes:
   mongodb_dev_data:

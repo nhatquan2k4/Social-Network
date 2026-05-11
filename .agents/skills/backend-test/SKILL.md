@@ -1,6 +1,6 @@
 ---
 name: backend-test
-description: Viết hoặc mở rộng test cho backend Social Network. Dùng skill này khi người dùng yêu cầu thêm, lập kế hoạch, sửa, hoặc review Smoke E2E, unit helper tests, Auth E2E, protected route E2E, Posts E2E, Friends E2E, Messages E2E, Media tests, hoặc Socket.IO tests. Trước khi viết test, phải đọc kỹ route, controller, service, repository, model, dto, util, constants, errors, middleware liên quan để test khớp với code thật và không tự bịa endpoint, payload, dependency.
+description: Viết hoặc mở rộng test cho backend Social Network. Dùng skill này khi người dùng yêu cầu thêm, lập kế hoạch, sửa, hoặc review Smoke E2E, unit/helper tests, service unit tests, integration tests, repository tests, API E2E, Auth E2E, protected route E2E, middleware/security behavior tests, contract-ish API tests, Posts E2E, Friends E2E, Messages E2E, Media tests, hoặc Socket.IO tests. Trước khi viết test, phải đọc kỹ route, controller, service, repository, model, dto, util, constants, errors, middleware liên quan để test khớp với code thật và không tự bịa endpoint, payload, dependency.
 applyTo:
   - "backend/src/**"
   - "backend/test/**"
@@ -73,6 +73,18 @@ Nếu route, payload, status code, hoặc response field không tồn tại tron
 - Socket setup nằm ở `backend/src/shared/socket/socket.server.ts`.
 - Project đã có dependency `socket.io-client`.
 - Source và test dùng ESM import. Khi import local TypeScript module, dùng đuôi `.js`.
+
+## Loại test dùng trong project
+
+Dùng các loại test này theo mục tiêu cụ thể, ưu tiên test hành vi public trước rồi mới đi sâu vào chi tiết nội bộ khi thật sự có giá trị:
+
+- Unit test: dùng cho helper, validator, util, và domain/entity logic thuần nếu sau này có business rule thật. Không start Express, không connect Mongo, không chạm MinIO, không mở socket.
+- Service unit test: dùng sau unit helper test, chỉ khi service có thể nhận dependency nhẹ mà không cần refactor lớn. Không tạo abstraction lớn chỉ để test một service.
+- Integration test: dùng cho service/repo/model phối hợp với Mongo test database riêng, nhất là query phức tạp, state transition, duplicate/unique behavior, hoặc persistence behavior khó cover gọn qua unit test.
+- API E2E test: là xương sống cho flow chính. Start app bằng `createApp()`, listen port ngẫu nhiên, gọi HTTP bằng `fetch`, và assert status code + response shape public API.
+- Middleware/security behavior test: ưu tiên test qua API E2E cho `auth.middleware.ts`, `admin.middleware.ts`, `friend.middleware.ts`, ownership checks, thiếu token, token sai, user thường truy cập admin route, hoặc user A thao tác tài nguyên của user B.
+- Contract-ish test: assert contract public của API như status code, response field, cookie/header quan trọng, và error shape. Không assert implementation detail khi HTTP behavior đã đủ.
+- Repository test: chỉ thêm khi repository có query/state phức tạp đáng kiểm tra trực tiếp. Nếu test cần cleanup DB, phải tuân thủ quy tắc DB test an toàn bên dưới.
 
 ## Thứ tự test từ dễ đến khó
 
@@ -363,4 +375,3 @@ Nếu command fail vì thiếu external test service an toàn, nói rõ nguyên 
 - Không tạo helper lớn trước khi thấy setup lặp lại.
 - Không làm yếu production code chỉ để test pass.
 - Không assert implementation detail khi assert HTTP behavior là đủ.
-
