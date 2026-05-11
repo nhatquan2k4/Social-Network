@@ -1,8 +1,14 @@
 import { Types } from 'mongoose';
 import { NotificationRepository } from './notifications.repo.js';
 import { emitNotificationNew } from '../../shared/socket/socket.emitter.js';
+import { UserModel } from '../users/shared/users.model.js';
 
-export type NotificationType = 'FRIEND_REQUEST' | 'FRIEND_ACCEPTED' | 'POST_LIKED' | 'POST_COMMENTED' | 'COMMENT_REPLIED';
+export type NotificationType =
+  | 'FRIEND_REQUEST'
+  | 'FRIEND_ACCEPTED'
+  | 'POST_LIKED'
+  | 'POST_COMMENTED'
+  | 'COMMENT_REPLIED';
 
 interface CreateNotificationParams {
   recipientId: Types.ObjectId;
@@ -15,11 +21,56 @@ interface CreateNotificationParams {
   metadata?: Record<string, unknown>;
 }
 
+export type FcmPlatform = 'android' | 'ios' | 'web';
+
 export class NotificationService {
   private notificationRepository: NotificationRepository;
 
   constructor() {
     this.notificationRepository = new NotificationRepository();
+  }
+
+  async saveFcmToken(
+    userId: Types.ObjectId,
+    token: string,
+    platform: FcmPlatform = 'android',
+  ) {
+    if (!token) {
+      throw new Error('Thieu FCM token');
+    }
+
+    const safePlatform: FcmPlatform =
+      platform === 'ios' || platform === 'web' || platform === 'android'
+        ? platform
+        : 'android';
+
+    await UserModel.updateOne(
+      { _id: userId },
+      {
+        $pull: {
+          fcmTokens: {
+            token,
+          },
+        },
+      },
+    );
+
+    await UserModel.updateOne(
+      { _id: userId },
+      {
+        $push: {
+          fcmTokens: {
+            token,
+            platform: safePlatform,
+            updatedAt: new Date(),
+          },
+        },
+      },
+    );
+
+    return {
+      message: 'Luu FCM token thanh cong',
+    };
   }
 
   async createNotification(params: CreateNotificationParams) {
@@ -43,13 +94,23 @@ export class NotificationService {
     return notification;
   }
 
-  async getMyNotifications(userId: Types.ObjectId, page: number, limit: number, unreadOnly: boolean) {
+  async getMyNotifications(
+    userId: Types.ObjectId,
+    page: number,
+    limit: number,
+    unreadOnly: boolean,
+  ) {
     const safePage = Math.max(1, page);
     const safeLimit = Math.max(1, Math.min(limit, 50));
     const skip = (safePage - 1) * safeLimit;
 
     const [items, total, unreadCount] = await Promise.all([
-      this.notificationRepository.findByRecipient(userId, skip, safeLimit, unreadOnly),
+      this.notificationRepository.findByRecipient(
+        userId,
+        skip,
+        safeLimit,
+        unreadOnly,
+      ),
       this.notificationRepository.countByRecipient(userId, unreadOnly),
       this.notificationRepository.countByRecipient(userId, true),
     ]);
@@ -65,7 +126,10 @@ export class NotificationService {
   }
 
   async markAsRead(notificationId: string, userId: Types.ObjectId) {
-    const updated = await this.notificationRepository.markRead(notificationId, userId);
+    const updated = await this.notificationRepository.markRead(
+      notificationId,
+      userId,
+    );
 
     if (!updated) {
       throw new Error('Thong bao khong ton tai');
