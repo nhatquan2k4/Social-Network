@@ -4,6 +4,7 @@ import {
   getMyNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
+  saveFcmToken,
 } from './notifications.controller.js';
 
 const router = express.Router();
@@ -34,6 +35,34 @@ const router = express.Router();
  *         description: Danh sach thong bao
  */
 router.get('/', protectedRoute, getMyNotifications);
+
+/**
+ * @swagger
+ * /api/notifications/fcm-token:
+ *   post:
+ *     summary: Luu FCM token cua thiet bi
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *               platform:
+ *                 type: string
+ *                 enum: [android, ios, web]
+ *     responses:
+ *       200:
+ *         description: Luu FCM token thanh cong
+ */
+router.post('/fcm-token', protectedRoute, saveFcmToken);
 
 /**
  * @swagger
