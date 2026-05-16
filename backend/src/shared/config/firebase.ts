@@ -1,12 +1,14 @@
 import * as admin from 'firebase-admin';
-import * as path from 'path';
+import { createRequire } from 'module';
 
-// Đường dẫn tới file JSON cấu hình của bạn
-const serviceAccount = require(path.resolve(__dirname, './firebase-service-account.json'));
+// Tạo hàm require tương thích với môi trường ES Module
+const require = createRequire(import.meta.url);
+
+// Nạp file json chứa khóa bí mật
+const serviceAccount = require('./firebase-service-account.json');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-// Xuất đối tượng messaging để sử dụng ở các nơi khác trong dự án
 export const fcm = admin.messaging();
