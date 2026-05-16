@@ -99,6 +99,27 @@ router.patch('/:notificationId/read', protectedRoute, markNotificationAsRead);
  */
 router.patch('/read-all', protectedRoute, markAllNotificationsAsRead);
 
+/**
+ * @swagger
+ * /api/notifications/test-send:
+ *   post:
+ *     summary: Gui thong bao test den mot thiet bi (Chi dung de dev)
+ *     tags: [Notifications]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Đã gửi thành công
+ */
 router.post('/test-send', testSendNotification);
 
 export default router;
