@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { NotificationRepository } from './notifications.repo.js';
 import { emitNotificationNew } from '../../shared/socket/socket.emitter.js';
 import { UserModel } from '../users/shared/users.model.js';
+import { fcm } from '../../shared/config/firebase.js';
 
 export type NotificationType =
   | 'FRIEND_REQUEST'
@@ -140,5 +141,19 @@ export class NotificationService {
 
   async markAllAsRead(userId: Types.ObjectId) {
     return this.notificationRepository.markAllRead(userId);
+  }
+
+  // Thêm hàm test này vào trong class
+  async sendTestNotification(deviceToken: string) {
+    const message = {
+      notification: {
+        title: 'Thông báo từ Backend! 🚀',
+        body: 'Cấu hình FCM đã thành công ',
+      },
+      token: deviceToken,
+    };
+
+    // Ra lệnh cho Firebase gửi thông báo
+    return await fcm.send(message);
   }
 }

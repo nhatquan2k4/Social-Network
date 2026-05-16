@@ -108,3 +108,19 @@ export const saveFcmToken = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const testSendNotification = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ message: 'Thiếu device token để gửi' });
+    }
+
+    const response = await notificationService.sendTestNotification(token);
+    return res.status(200).json({ message: 'Đã gửi thành công!', response });
+  } catch (error) {
+    console.error('Lỗi khi gửi test notification:', error);
+    return res.status(500).json({ message: 'Lỗi server khi gửi thông báo', error });
+  }
+};
