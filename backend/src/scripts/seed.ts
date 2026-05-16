@@ -13,29 +13,57 @@ async function seed() {
   try {
     await mongoose.connect(connectionString);
 
-    const username = "seed_user";
-    const email = "seed.user@example.com";
-
-    const existingUser = await User.findOne({
-      $or: [{ username }, { email }],
-    });
-
-    if (existingUser) {
-      console.log("Seed user already exists, skipping insert.");
-      return;
-    }
-
     const hashedPassword = await bcrypt.hash("Password123!", 10);
 
-    await User.create({
-      username,
-      hashedPassword,
-      email,
-      displayName: "Seed User",
-      bio: "Seed data for local MongoDB testing.",
+    // ── 1. Seed user thường ──────────────────────────────────────
+    const seedUsername = "seed_user";
+    const seedEmail = "seed.user@example.com";
+
+    const existingSeedUser = await User.findOne({
+      $or: [{ username: seedUsername }, { email: seedEmail }],
     });
 
-    console.log("Seed user inserted successfully.");
+    if (existingSeedUser) {
+      console.log("Seed user already exists, skipping.");
+    } else {
+      await User.create({
+        username: seedUsername,
+        hashedPassword,
+        email: seedEmail,
+        displayName: "Seed User",
+        bio: "Seed data for local MongoDB testing.",
+      });
+      console.log("Seed user inserted successfully.");
+    }
+
+    // ── 2. Seed admin ────────────────────────────────────────────
+    const adminUsername = "admin";
+    const adminEmail = "admin@example.com";
+
+    const existingAdmin = await User.findOne({
+      $or: [{ username: adminUsername }, { email: adminEmail }],
+    });
+
+    if (existingAdmin) {
+      // Đảm bảo role = admin nếu tài khoản đã tồn tại nhưng chưa có role
+      if (existingAdmin.role !== "admin") {
+        existingAdmin.role = "admin";
+        await existingAdmin.save();
+        console.log("Existing admin account updated to role=admin.");
+      } else {
+        console.log("Admin account already exists, skipping.");
+      }
+    } else {
+      await User.create({
+        username: adminUsername,
+        hashedPassword,
+        email: adminEmail,
+        displayName: "Admin",
+        bio: "System administrator account.",
+        role: "admin",
+      });
+      console.log("Admin account inserted successfully.");
+    }
   } catch (error) {
     console.error("Seed failed:", error);
     process.exitCode = 1;

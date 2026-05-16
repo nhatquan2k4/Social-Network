@@ -5,6 +5,7 @@ import {
   markAllNotificationsAsRead,
   markNotificationAsRead,
   saveFcmToken,
+  testSendNotification,
 } from './notifications.controller.js';
 
 const router = express.Router();
@@ -97,5 +98,7 @@ router.patch('/:notificationId/read', protectedRoute, markNotificationAsRead);
  *         description: Da danh dau tat ca notification da doc
  */
 router.patch('/read-all', protectedRoute, markAllNotificationsAsRead);
+
+router.post('/test-send', testSendNotification);
 
 export default router;

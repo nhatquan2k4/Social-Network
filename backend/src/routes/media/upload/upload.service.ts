@@ -25,10 +25,15 @@ export interface UploadPathContext {
     conversationId?: string;
 }
 
+export type MediaStorage = Pick<
+    MediaRepository,
+    "getBucketByPurpose" | "buildMediaUrl" | "putObject"
+>;
+
 const ALLOWED_MIME_TYPES = new Set(ALLOWED_MEDIA_MIME_TYPES);
 
 export class MediaService {
-    private readonly mediaRepository: MediaRepository;
+    private readonly mediaRepository: MediaStorage;
     private readonly maxFileSize: number;
     private readonly maxFiles: number;
     private readonly profileByPurpose: Record<
@@ -36,8 +41,8 @@ export class MediaService {
         { maxDimension: number; quality: number }
     >;
 
-    constructor() {
-        this.mediaRepository = new MediaRepository();
+    constructor(mediaRepository: MediaStorage = new MediaRepository()) {
+        this.mediaRepository = mediaRepository;
 
         const fromEnv = Number(process.env.MEDIA_MAX_FILE_SIZE || '5242880');
         this.maxFileSize = Number.isNaN(fromEnv) ? 5 * 1024 * 1024 : fromEnv;

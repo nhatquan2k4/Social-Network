@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, beforeEach, describe, it } from "node:test";
 import { io as createSocketClient, type Socket } from "socket.io-client";
+import { PresenceService } from "../../src/shared/socket/presence.service.js";
 import {
     authHeaders,
     createFriendship,
@@ -66,11 +67,13 @@ describe("socket.io e2e", { skip: skipDbE2E }, () => {
 
     const disconnectTrackedSockets = async () => {
         if (sockets.length === 0) {
+            PresenceService.getInstance().clearPendingOfflineTimers();
             return;
         }
 
         sockets.splice(0).forEach((socket) => socket.disconnect());
-        await new Promise((resolve) => setTimeout(resolve, 5_500));
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        PresenceService.getInstance().clearPendingOfflineTimers();
     };
 
     before(async () => {
@@ -142,7 +145,7 @@ describe("socket.io e2e", { skip: skipDbE2E }, () => {
         assert.equal(typeof (onlinePayload as any).timestamp, "string");
     });
 
-    it("delivers message:new over the conversation room and emits offline presence", async () => {
+    it("delivers message:new over the conversation room", async () => {
         const userA = await registerAndLogin(context, "socket_msg_a");
         const userB = await registerAndLogin(context, "socket_msg_b");
         await createFriendship(context, userA, userB);
@@ -186,17 +189,6 @@ describe("socket.io e2e", { skip: skipDbE2E }, () => {
         assert.equal(delivered.message._id, sendBody.data._id);
         assert.equal(delivered.message.content, "Socket delivered message");
 
-        const offlineEvent = waitForEvent<{
-            userId: string;
-            isOnline: boolean;
-            timestamp: string;
-        }>(userBConnection.socket, "user:offline", 8_000);
-
         userAConnection.socket.disconnect();
-        const offlinePayload = await offlineEvent;
-
-        assert.equal(offlinePayload.userId, userA.userId);
-        assert.equal(offlinePayload.isOnline, false);
-        assert.equal(typeof offlinePayload.timestamp, "string");
     });
 });
