@@ -1,13 +1,32 @@
 import { Types } from "mongoose";
 import { FriendRepository } from "../../routes/friends/shared/friends.repo.js";
 import { UserRepository } from "../../routes/users/shared/users.repo.js";
-import { InMemoryPresenceStore, PresenceStore } from "./presence.store.js";
+import { InMemoryPresenceStore, type PresenceStore } from "./presence.store.js";
 import { emitUserPresence } from "./socket.emitter.js";
 
 export interface UserStatus {
     userId: string;
     isOnline: boolean;
     lastSeenAt: string | null;
+}
+
+type PresenceFriendRepository = Pick<FriendRepository, "getFriendIds">;
+type PresenceUserRepository = Pick<
+    UserRepository,
+    "getLastSeenBatch" | "updateLastSeenAt"
+>;
+type PresenceEmitter = (
+    userId: string,
+    isOnline: boolean,
+    friendIds: string[],
+) => void;
+
+export interface PresenceServiceOptions {
+    store?: PresenceStore;
+    friendRepository?: PresenceFriendRepository;
+    userRepository?: PresenceUserRepository;
+    offlineDelayMs?: number;
+    emitPresence?: PresenceEmitter;
 }
 
 /**
@@ -23,19 +42,26 @@ export class PresenceService {
 
     private store: PresenceStore;
     private offlineTimers = new Map<string, NodeJS.Timeout>();
-    private friendRepo = new FriendRepository();
-    private userRepo = new UserRepository();
+    private friendRepo: PresenceFriendRepository;
+    private userRepo: PresenceUserRepository;
+    private offlineDelayMs: number;
+    private emitPresence: PresenceEmitter;
 
     /** Delay trước khi đánh dấu offline (ms) — tránh false offline khi refresh tab */
-    private static readonly OFFLINE_DELAY_MS = 5_000;
+    private static readonly DEFAULT_OFFLINE_DELAY_MS = 5_000;
 
-    private constructor(store?: PresenceStore) {
-        this.store = store ?? new InMemoryPresenceStore();
+    constructor(options: PresenceServiceOptions = {}) {
+        this.store = options.store ?? new InMemoryPresenceStore();
+        this.friendRepo = options.friendRepository ?? new FriendRepository();
+        this.userRepo = options.userRepository ?? new UserRepository();
+        this.offlineDelayMs =
+            options.offlineDelayMs ?? PresenceService.DEFAULT_OFFLINE_DELAY_MS;
+        this.emitPresence = options.emitPresence ?? emitUserPresence;
     }
 
     static getInstance(store?: PresenceStore): PresenceService {
         if (!PresenceService.instance) {
-            PresenceService.instance = new PresenceService(store);
+            PresenceService.instance = new PresenceService({ store });
         }
         return PresenceService.instance;
     }
@@ -98,6 +124,13 @@ export class PresenceService {
         return this.store.isOnline(userId);
     }
 
+    clearPendingOfflineTimers(): void {
+        for (const timer of this.offlineTimers.values()) {
+            clearTimeout(timer);
+        }
+        this.offlineTimers.clear();
+    }
+
     // ── Private helpers ────────────────────────────────────
 
     private scheduleOffline(userId: string): void {
@@ -122,7 +155,7 @@ export class PresenceService {
             } catch (err) {
                 console.error("Presence offline handler error:", err);
             }
-        }, PresenceService.OFFLINE_DELAY_MS);
+        }, this.offlineDelayMs);
 
         this.offlineTimers.set(userId, timer);
     }
@@ -142,7 +175,7 @@ export class PresenceService {
             );
 
             if (friendIds.length > 0) {
-                emitUserPresence(userId, isOnline, friendIds);
+                this.emitPresence(userId, isOnline, friendIds);
             }
         } catch (err) {
             console.error("Presence broadcast error:", err);

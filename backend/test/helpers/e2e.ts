@@ -39,7 +39,15 @@ export interface E2EContext {
 
 const originalConsoleWarn = console.warn.bind(console);
 const originalConsoleInfo = console.info.bind(console);
-let smtpLogsSuppressed = false;
+const originalConsoleError = console.error.bind(console);
+let expectedLogsSuppressed = false;
+
+const expectedConsoleErrorPrefixes = [
+    "Loi khi gui loi moi ket ban",
+    "Loi khi chinh sua post",
+    "Loi khi xoa post",
+    "Loi khi lay post",
+];
 
 export const testMongoUri = process.env.MONGODB_TEST_CONNECTIONSTRING;
 export const skipDbE2E = testMongoUri ? false : "MONGODB_TEST_CONNECTIONSTRING is required";
@@ -71,8 +79,8 @@ export const buildSuiteMongoUri = (suiteName: string): string => {
     return parsed.toString();
 };
 
-const suppressExpectedSmtpLogs = () => {
-    if (smtpLogsSuppressed) {
+const suppressExpectedLogs = () => {
+    if (expectedLogsSuppressed) {
         return;
     }
 
@@ -96,17 +104,27 @@ const suppressExpectedSmtpLogs = () => {
         originalConsoleInfo(...args);
     };
 
-    smtpLogsSuppressed = true;
+    console.error = (...args: unknown[]) => {
+        const message = String(args[0]);
+        if (expectedConsoleErrorPrefixes.some((prefix) => message.startsWith(prefix))) {
+            return;
+        }
+
+        originalConsoleError(...args);
+    };
+
+    expectedLogsSuppressed = true;
 };
 
 const restoreConsole = () => {
-    if (!smtpLogsSuppressed) {
+    if (!expectedLogsSuppressed) {
         return;
     }
 
     console.warn = originalConsoleWarn;
     console.info = originalConsoleInfo;
-    smtpLogsSuppressed = false;
+    console.error = originalConsoleError;
+    expectedLogsSuppressed = false;
 };
 
 export const cleanupDatabase = async () => {
@@ -123,7 +141,7 @@ export const startE2EApp = async (
     suiteName: string,
     options: { socket?: boolean } = {},
 ): Promise<E2EContext> => {
-    suppressExpectedSmtpLogs();
+    suppressExpectedLogs();
 
     const suiteMongoUri = buildSuiteMongoUri(suiteName);
     const [{ createApp }, db] = await Promise.all([

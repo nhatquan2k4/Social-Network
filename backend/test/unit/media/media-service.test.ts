@@ -7,6 +7,7 @@ import {
 } from "../../../src/routes/media/shared/media.errors.js";
 import { MediaService } from "../../../src/routes/media/upload/upload.service.js";
 
+
 interface PutObjectCall {
     bucket: string;
     objectKey: string;
@@ -41,9 +42,8 @@ const createService = (env: { maxFileSize?: string; maxFiles?: string } = {}) =>
         process.env.MEDIA_MAX_FILES = env.maxFiles;
     }
 
-    const service = new MediaService();
     const repository = new FakeMediaRepository();
-    (service as any).mediaRepository = repository;
+    const service = new MediaService(repository);
 
     return { service, repository };
 };
