@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // ── Thay bằng username Docker Hub của bạn ──
-        DOCKERHUB_USERNAME = 'nhatquan2k4'
+        DOCKERHUB_USERNAME = 'quan2k4'
         IMAGE_NAME         = "${DOCKERHUB_USERNAME}/social-network-backend"
         IMAGE_TAG          = "${BUILD_NUMBER}"
 

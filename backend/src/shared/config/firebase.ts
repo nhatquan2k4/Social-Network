@@ -1,14 +1,15 @@
-import * as admin from 'firebase-admin';
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getMessaging } from 'firebase-admin/messaging';
 import { createRequire } from 'module';
 
-// Tạo hàm require tương thích với môi trường ES Module
+// Tạo hàm require để nạp file JSON
 const require = createRequire(import.meta.url);
-
-// Nạp file json chứa khóa bí mật
 const serviceAccount = require('./firebase-service-account.json');
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+// Khởi tạo Firebase bằng cú pháp Modular mới
+initializeApp({
+  credential: cert(serviceAccount),
 });
 
-export const fcm = admin.messaging();
+// Xuất đối tượng messaging để sử dụng
+export const fcm = getMessaging();
