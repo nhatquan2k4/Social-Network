@@ -35,6 +35,23 @@ pipeline {
         }
 
         // ── Bước 3: Đẩy image lên kho lưu trữ ─────────────────
+        stage('Login Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-hub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                    docker logout || true
+                    rm -f ~/.docker/config.json || true
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    docker info | grep Username || true
+                '''
+                    }
+                }
+            }
+        }
         stage('Push to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(
