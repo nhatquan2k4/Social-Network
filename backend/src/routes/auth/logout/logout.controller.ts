@@ -6,7 +6,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 export const logout = async (req: Request, res: Response) => {
     try {
-        const token = req.cookies?.refreshToken;
+        const token = req.body?.refreshToken || req.cookies?.refreshToken;
 
         if (!token) {
             return res

@@ -5,6 +5,7 @@ import {
   markAllNotificationsAsRead,
   markNotificationAsRead,
   saveFcmToken,
+  removeFcmToken,
   testSendNotification,
 } from './notifications.controller.js';
 
@@ -121,5 +122,10 @@ router.patch('/read-all', protectedRoute, markAllNotificationsAsRead);
  *         description: Đã gửi thành công
  */
 router.post('/test-send', testSendNotification);
+
+// Trong file notifications.route.ts
+router.delete('/fcm-token', protectedRoute, removeFcmToken);
+// Thêm route này vào file định tuyến của bạn
+router.post('/remove-fcm-token', protectedRoute, removeFcmToken);
 
 export default router;

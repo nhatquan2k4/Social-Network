@@ -92,6 +92,36 @@ export class NotificationService {
 
     emitNotificationNew(params.recipientId.toString(), notification);
 
+    try {
+      const recipient = await UserModel.findById(params.recipientId).select('fcmTokens');
+      
+      if (recipient && recipient.fcmTokens && recipient.fcmTokens.length > 0) {
+        // 🔍 Bước 1: Tìm tên hiển thị của người tương tác (actor)
+        const actor = await UserModel.findById(params.actorId).select('displayName');
+        const actorName = actor?.displayName || 'Ai đó';
+
+        // ✍️ Bước 2: Ghép tên vào trước nội dung hành động gốc
+        const fullBody = `${actorName} ${params.body}`;
+
+        const sendPromises = recipient.fcmTokens.map((fcmTokenObj: any) => {
+          const message = {
+            notification: {
+              title: params.title,
+              body: fullBody, // 🎯 Sử dụng nội dung đầy đủ đã có tên ở đây
+            },
+            token: fcmTokenObj.token,
+          };
+          return fcm.send(message).catch((err) => {
+            console.error(`Lỗi gửi FCM đến token: ${fcmTokenObj.token}`, err);
+          });
+        });
+
+        await Promise.all(sendPromises);
+      }
+    } catch (fcmError) {
+      console.error('Lỗi khi xử lý gửi Push Notification:', fcmError);
+    }
+
     return notification;
   }
 
