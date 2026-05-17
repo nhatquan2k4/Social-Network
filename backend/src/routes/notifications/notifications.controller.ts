@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { NotificationService } from './notifications.service.js';
+import { UserModel } from '../auth/shared/auth.model.js';
 
 const notificationService = new NotificationService();
 
@@ -106,6 +107,29 @@ export const saveFcmToken = async (req: Request, res: Response) => {
     return res.status(500).json({
       message: 'Loi server khi luu FCM token',
     });
+  }
+};
+
+export const removeFcmToken = async (req: Request, res: Response) => {
+  try {
+    // Dùng ?. để lấy token an toàn. Nếu không có req.body, nó sẽ gán bằng undefined chứ không crash
+    const token = req.body?.token; 
+    
+    if (!token) {
+      return res.status(400).json({ message: "Không tìm thấy token để xóa" });
+    }
+
+    const userId = req.user!._id; 
+
+    await UserModel.findByIdAndUpdate(userId, {
+      // 👇 Sửa từ { fcmTokens: token } thành một Object chứa điều kiện lọc
+      $pull: { fcmTokens: { token: token } } 
+    });
+
+    res.status(200).json({ message: "Đã xóa FCM Token thành công" });
+  } catch (error) {
+    console.error("🚨 LỖI THỰC SỰ TẠI BACKEND LÀ:", error);
+    res.status(500).json({ message: "Lỗi khi xóa token" });
   }
 };
 

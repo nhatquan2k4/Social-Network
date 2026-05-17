@@ -3,31 +3,29 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy file quản lý thư viện và cài đặt (bao gồm devDependencies để có TypeScript)
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
-# Copy toàn bộ source code và tiến hành build TS -> JS
-COPY . .
+COPY tsconfig.json ./
+COPY src ./src
+
 RUN npm run build
 
-# ── Stage 2: Runtime (Production) ─────────────────────────
-FROM node:20-alpine
+
+# ── Stage 2: Runtime / Production ─────────────────────────
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Để root copy file và cài đặt thư viện
-COPY package*.json ./
-RUN npm install --omit=dev
+ENV NODE_ENV=production
 
-# Copy thư mục dist đã được build từ Stage 1 sang
+COPY package*.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+
 COPY --from=builder --chown=node:node /app/dist ./dist
 
-# Sau khi nhà cửa đã xây xong, mới giao lại quyền cho user 'node' để chạy app
 USER node
 
-# Mở port
 EXPOSE 3000
 
-# Chạy app
 CMD ["npm", "run", "serve"]
