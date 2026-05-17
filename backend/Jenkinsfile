@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // Must match the Docker Hub username stored in the docker-hub-creds credential.
-        DOCKERHUB_USERNAME = 'nhatquan2k4'
+        DOCKERHUB_USERNAME = 'quan2k4'
         IMAGE_NAME         = "${DOCKERHUB_USERNAME}/social-network-backend"
         IMAGE_TAG          = "${BUILD_NUMBER}"
         DOCKER_BUILDKIT    = '1'
