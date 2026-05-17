@@ -36,7 +36,7 @@ services:
 
   backend:
     # Jenkins sẽ build và push image này, VPS chỉ việc kéo về chạy
-    image: ${DOCKERHUB_USERNAME}/social-network-backend:latest
+    image: ${DOCKERHUB_USERNAME}/social-network-backend:${IMAGE_TAG:-latest}
     container_name: social-network-backend
     restart: unless-stopped
     ports:

@@ -2,12 +2,12 @@ pipeline {
     agent any
 
     environment {
-        // ── Thay bằng username Docker Hub của bạn ──
-        DOCKERHUB_USERNAME = 'quan2k4'
+        // Must match the Docker Hub username stored in the docker-hub-creds credential.
+        DOCKERHUB_USERNAME = 'nhatquan2k4'
         IMAGE_NAME         = "${DOCKERHUB_USERNAME}/social-network-backend"
         IMAGE_TAG          = "${BUILD_NUMBER}"
+        DOCKER_BUILDKIT    = '1'
 
-        // ── Thư mục chứa app trên VPS ──────────────────────────
         DEPLOY_DIR         = '/opt/mochi-app'
     }
 
@@ -18,24 +18,35 @@ pipeline {
     }
 
     stages {
-        // ── Bước 1: Kéo code mới nhất về ──────────────────────
         stage('Checkout') {
             steps {
                 checkout scm
-                echo "Checkout hoàn tất - Branch: ${env.GIT_BRANCH}"
+                echo "Checked out ${env.GIT_BRANCH}"
             }
         }
 
-        // ── Bước 2: Đóng gói ứng dụng ─────────────────────────
         stage('Build Docker Image') {
+            options {
+                timeout(time: 10, unit: 'MINUTES')
+            }
             steps {
-                sh "cd backend && docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
-                echo "Đã đóng gói Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
+                dir('backend') {
+                    sh '''
+                        set -eu
+                        docker build --progress=plain \
+                            -t "$IMAGE_NAME:$IMAGE_TAG" \
+                            -t "$IMAGE_NAME:latest" \
+                            .
+                    '''
+                }
+                echo "Built Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
 
-        // ── Bước 3: Đẩy image lên kho lưu trữ ─────────────────
         stage('Push to Docker Hub') {
+            options {
+                timeout(time: 10, unit: 'MINUTES')
+            }
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'docker-hub-creds',
@@ -43,34 +54,48 @@ pipeline {
                     passwordVariable: 'DOCKER_TOKEN'
                 )]) {
                     sh '''
-                        docker logout || true
-                        rm -f ~/.docker/config.json || true
+                        set -eu
+
+                        if [ "$DOCKER_USER" != "$DOCKERHUB_USERNAME" ]; then
+                            echo "Docker Hub credential user '$DOCKER_USER' does not match image owner '$DOCKERHUB_USERNAME'." >&2
+                            exit 1
+                        fi
+
                         echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                        docker push ${IMAGE_NAME}:latest
-                        docker logout
+                        docker push "$IMAGE_NAME:$IMAGE_TAG"
+                        docker push "$IMAGE_NAME:latest"
                     '''
                 }
             }
         }
 
-        // ── Bước 4: Chạy ứng dụng trên VPS ────────────────────
         stage('Deploy') {
+            options {
+                timeout(time: 8, unit: 'MINUTES')
+            }
             steps {
                 withCredentials([
                     file(credentialsId: 'prod-env-file', variable: 'ENV_FILE')
                 ]) {
-                    sh """
-                        mkdir -p ${DEPLOY_DIR}
-                        cp \${ENV_FILE} ${DEPLOY_DIR}/.env
-                        chmod 600 ${DEPLOY_DIR}/.env
-                    """
-                    sh "cp backend/docker-compose.yml ${DEPLOY_DIR}/docker-compose.yml"
-                    sh """
-                        docker compose -f ${DEPLOY_DIR}/docker-compose.yml pull backend
-                        docker compose -f ${DEPLOY_DIR}/docker-compose.yml up -d --force-recreate backend
+                    sh '''
+                        set -eu
+
+                        mkdir -p "$DEPLOY_DIR"
+                        cp "$ENV_FILE" "$DEPLOY_DIR/.env"
+                        chmod 600 "$DEPLOY_DIR/.env"
+                        cp backend/docker-compose.yml "$DEPLOY_DIR/docker-compose.yml"
+
+                        if ! grep -Eq '^(FIREBASE_SERVICE_ACCOUNT_BASE64|FIREBASE_SERVICE_ACCOUNT_JSON)=.+' "$DEPLOY_DIR/.env"; then
+                            echo "Missing Firebase service account config in production env file." >&2
+                            echo "Set FIREBASE_SERVICE_ACCOUNT_BASE64 or FIREBASE_SERVICE_ACCOUNT_JSON." >&2
+                            exit 1
+                        fi
+
+                        export DOCKERHUB_USERNAME IMAGE_TAG
+                        docker compose -f "$DEPLOY_DIR/docker-compose.yml" pull backend
+                        docker compose -f "$DEPLOY_DIR/docker-compose.yml" up -d --force-recreate backend
                         docker image prune -f
-                    """
+                    '''
                 }
             }
         }
@@ -78,7 +103,10 @@ pipeline {
 
     post {
         always {
-            sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
+            sh '''
+                docker rmi "$IMAGE_NAME:$IMAGE_TAG" || true
+                docker logout || true
+            '''
             cleanWs()
         }
     }
