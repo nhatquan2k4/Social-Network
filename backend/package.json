@@ -12,7 +12,8 @@
     "serve": "node dist/server.js",
     "start:prod": "npm run build && npm run serve",
     "docker:up": "docker-compose up --build",
-    "seed": "tsx src/scripts/seed.ts"
+    "seed": "tsx src/scripts/seed.ts",
+    "seed:prod": "node dist/scripts/seed.js"
   },
   "type": "module",
   "keywords": [],
