@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import { NotificationService } from "../../notifications/notifications.service.js";
+import { emitPostEngagement } from "../../../shared/socket/socket.emitter.js";
 import { PostRepository } from "../shared/posts.repo.js";
 import { POST_ERROR_MESSAGES } from "../shared/posts.constants.js";
 import {
@@ -95,6 +96,17 @@ export class CommentService {
                 },
             });
         }
+
+        emitPostEngagement({
+            postId,
+            actorId: authorId.toString(),
+            eventId: `${postId}:${authorId.toString()}:${latestComment._id.toString()}`,
+            type: "comment",
+            likeDelta: 0,
+            commentDelta: 1,
+            commentId: latestComment._id.toString(),
+            createdAt: new Date().toISOString(),
+        });
 
         return formatComment(latestComment as any);
     }
