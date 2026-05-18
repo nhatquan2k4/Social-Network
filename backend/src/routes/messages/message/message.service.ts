@@ -3,6 +3,7 @@ import { ConversationRepository } from "../../conversations/shared/conversations
 import { updateConversationAfterCreateMessage } from "../../../shared/utils/message.helper.js";
 import { MessageRepository } from "../shared/messages.repo.js";
 import { emitMessageNew } from "../../../shared/socket/socket.emitter.js";
+import { NotificationService } from "../../notifications/notifications.service.js";
 import {
     ConversationNotFoundError,
     MissingContentOrMediaError,
@@ -14,10 +15,12 @@ import { MessageMediaInput } from "./message.dto.js";
 export class MessageService {
     private conversationRepository: ConversationRepository;
     private messageRepository: MessageRepository;
+    private notificationService: NotificationService;
 
     constructor() {
         this.conversationRepository = new ConversationRepository();
         this.messageRepository = new MessageRepository();
+        this.notificationService = new NotificationService();
     }
 
     async sendDirectMessage(
@@ -64,6 +67,7 @@ export class MessageService {
         await conversation.save();
 
         emitMessageNew(conversation._id.toString(), enrichMessageMedia(message));
+        await this.notifyMessageRecipients(conversation, senderId, message);
 
         return enrichMessageMedia(message);
     }
@@ -99,7 +103,56 @@ export class MessageService {
         await conversation.save();
 
         emitMessageNew(conversation._id.toString(), enrichMessageMedia(message));
+        await this.notifyMessageRecipients(conversation, senderId, message);
 
         return enrichMessageMedia(message);
+    }
+
+    private async notifyMessageRecipients(conversation: any, senderId: Types.ObjectId, message: any) {
+        const participants = Array.isArray(conversation?.participants)
+            ? conversation.participants
+            : [];
+
+        const senderIdString = senderId.toString();
+        const recipientIds = new Set<string>(
+            participants
+                .map((participant: any) => {
+                    const userId = participant?.userId;
+                    if (!userId) return "";
+                    return typeof userId?.toString === "function"
+                        ? userId.toString()
+                        : String(userId);
+                })
+                .filter((id: string) => id && id !== senderIdString),
+        );
+
+        if (recipientIds.size === 0) {
+            return;
+        }
+
+        const isGroup = conversation?.type === "group";
+        const title = isGroup ? "Tin nhan nhom moi" : "Tin nhan moi";
+        const body = isGroup
+            ? "vua gui tin nhan trong nhom."
+            : "vua gui tin nhan cho ban.";
+
+        await Promise.all(
+            Array.from(recipientIds).map((recipientId: string) =>
+                this.notificationService.createNotification({
+                    recipientId: new Types.ObjectId(recipientId),
+                    actorId: senderId,
+                    type: "MESSAGE_NEW",
+                    title,
+                    body,
+                    entityType: "conversation",
+                    entityId: conversation?._id?.toString?.() || "",
+                    metadata: {
+                        conversationId: conversation?._id?.toString?.() || "",
+                        messageId: message?._id?.toString?.() || "",
+                        conversationType: conversation?.type || "direct",
+                    },
+                }),
+            ),
+        );
     }
 }

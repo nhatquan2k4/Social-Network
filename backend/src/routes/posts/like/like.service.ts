@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import { NotificationService } from "../../notifications/notifications.service.js";
+import { emitPostEngagement } from "../../../shared/socket/socket.emitter.js";
 import { PostRepository } from "../shared/posts.repo.js";
 import { POST_ERROR_MESSAGES } from "../shared/posts.constants.js";
 import { formatPost } from "../shared/posts.util.js";
@@ -43,6 +44,18 @@ export class LikeService {
                 body: "vừa thích bài viết của bạn.",
                 entityType: "post",
                 entityId: postId,
+            });
+        }
+
+        if (!hasLikedBefore && isLikedNow) {
+            emitPostEngagement({
+                postId,
+                actorId: userId.toString(),
+                eventId: `${postId}:${userId.toString()}:${Date.now()}`,
+                type: "like",
+                likeDelta: 1,
+                commentDelta: 0,
+                createdAt: new Date().toISOString(),
             });
         }
 

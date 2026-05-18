@@ -4,7 +4,7 @@ import { NotificationModel as Notification } from './notifications.model.js';
 interface CreateNotificationInput {
 	recipientId: Types.ObjectId;
 	actorId: Types.ObjectId;
-	type: 'FRIEND_REQUEST' | 'FRIEND_ACCEPTED' | 'POST_LIKED' | 'POST_COMMENTED' | 'COMMENT_REPLIED';
+	type: 'FRIEND_REQUEST' | 'FRIEND_ACCEPTED' | 'POST_LIKED' | 'POST_COMMENTED' | 'COMMENT_REPLIED' | 'MESSAGE_NEW';
 	title: string;
 	body: string;
 	entityType?: string;

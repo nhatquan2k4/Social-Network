@@ -6,6 +6,7 @@ export const SOCKET_EVENTS = {
     MESSAGE_SEEN: "message:seen",
     CONVERSATION_SEEN: "conversation:seen",
     NOTIFICATION_NEW: "notification:new",
+    POST_ENGAGEMENT: "post:engagement",
     USER_ONLINE: "user:online",
     USER_OFFLINE: "user:offline",
 } as const;
