@@ -177,7 +177,7 @@ export class NotificationService {
   async sendTestNotification(deviceToken: string) {
     const message = {
       notification: {
-        title: 'Thông báo từ Backend! 🚀',
+        title: 'Thông báo từ Backend! ',
         body: 'Cấu hình FCM đã thành công ',
       },
       token: deviceToken,
