@@ -9,7 +9,8 @@ export type NotificationType =
   | 'FRIEND_ACCEPTED'
   | 'POST_LIKED'
   | 'POST_COMMENTED'
-  | 'COMMENT_REPLIED';
+  | 'COMMENT_REPLIED'
+  | 'MESSAGE_NEW';
 
 interface CreateNotificationParams {
   recipientId: Types.ObjectId;
@@ -45,8 +46,9 @@ export class NotificationService {
         ? platform
         : 'android';
 
-    await UserModel.updateOne(
-      { _id: userId },
+    // Ensure this token is not attached to any other user (device re-login).
+    await UserModel.updateMany(
+      { 'fcmTokens.token': token },
       {
         $pull: {
           fcmTokens: {

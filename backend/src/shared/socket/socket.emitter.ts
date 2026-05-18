@@ -74,6 +74,24 @@ export const emitNotificationNew = (recipientId: string, notification: unknown) 
     });
 };
 
+export const emitPostEngagement = (payload: {
+    postId: string;
+    actorId: string;
+    eventId: string;
+    type: "like" | "comment";
+    likeDelta: number;
+    commentDelta: number;
+    commentId?: string;
+    createdAt: string;
+}) => {
+    withSocket((io) => {
+        io.to(SOCKET_ROOMS.user(payload.actorId)).emit(
+            SOCKET_EVENTS.POST_ENGAGEMENT,
+            payload,
+        );
+    });
+};
+
 export const emitMessageSeen = (payload: {
     conversationId: string;
     seenByUserId: string;
