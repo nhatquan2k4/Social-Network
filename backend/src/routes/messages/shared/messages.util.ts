@@ -1,6 +1,7 @@
 import { Request } from "express";
 import { buildMediaUrl } from "../../media/shared/media.repo.js";
 import { MediaService } from "../../media/upload/upload.service.js";
+import type { MediaServiceInterface } from "../../media/upload/upload.service.interface.js";
 
 interface MessageMediaInput {
     bucket: string;
@@ -9,7 +10,13 @@ interface MessageMediaInput {
     size: number;
 }
 
-const mediaService = new MediaService();
+type MessageMediaUploadService = Pick<MediaServiceInterface, 'uploadFiles'>;
+
+let mediaService: MessageMediaUploadService = new MediaService();
+
+export const setMessageMediaUploadService = (service: MessageMediaUploadService) => {
+    mediaService = service;
+};
 
 export const sanitizeMedia = (media?: MessageMediaInput[]) => {
     if (!Array.isArray(media) || media.length === 0) {

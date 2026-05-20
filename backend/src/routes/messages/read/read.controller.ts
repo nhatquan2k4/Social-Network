@@ -5,8 +5,9 @@ import {
 } from "../shared/messages.constants.js";
 import { InvalidCursorError, MessageNotFoundError } from "../shared/messages.errors.js";
 import { ReadService } from "./read.service.js";
+import type { ReadServiceInterface } from "./read.service.interface.js";
 
-const readService = new ReadService();
+const readService: ReadServiceInterface = new ReadService();
 
 export const getConversationMessages = async (req: Request, res: Response) => {
     try {

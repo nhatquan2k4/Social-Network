@@ -12,8 +12,9 @@ import {
     MissingFriendRecipientError,
 } from "../shared/friends.errors.js";
 import { RequestService } from "./request.service.js";
+import type { RequestServiceInterface } from "./request.service.interface.js";
 
-const requestService = new RequestService();
+const requestService: RequestServiceInterface = new RequestService();
 
 export const sendFriendRequest = async (req: Request, res: Response) => {
     try {

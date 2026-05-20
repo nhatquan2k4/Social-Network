@@ -2,14 +2,20 @@ import { Types } from "mongoose";
 import { PostRepository } from "../posts/shared/posts.repo.js";
 import { ReportRepository } from "../posts/shared/reports.repo.js";
 import { AppError } from "../../shared/errors/app-error.js";
+import type {
+    AdminPostRepository,
+    AdminReportRepository,
+    AdminServiceDependencies,
+    AdminServiceInterface,
+} from "./admin.service.interface.js";
 
-export class AdminService {
-    private postRepo: PostRepository;
-    private reportRepo: ReportRepository;
+export class AdminService implements AdminServiceInterface {
+    private postRepo: AdminPostRepository;
+    private reportRepo: AdminReportRepository;
 
-    constructor() {
-        this.postRepo = new PostRepository();
-        this.reportRepo = new ReportRepository();
+    constructor(dependencies: AdminServiceDependencies = {}) {
+        this.postRepo = dependencies.postRepository ?? new PostRepository();
+        this.reportRepo = dependencies.reportRepository ?? new ReportRepository();
     }
 
     /**

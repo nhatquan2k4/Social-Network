@@ -9,14 +9,21 @@ import {
 } from "./read.dto.js";
 import { ConversationRepository } from "../../conversations/shared/conversations.repo.js";
 import { emitMessageSeen } from "../../../shared/socket/socket.emitter.js";
+import type {
+    ReadConversationRepository,
+    ReadMessageRepository,
+    ReadServiceDependencies,
+    ReadServiceInterface,
+} from "./read.service.interface.js";
 
-export class ReadService {
-    private messageRepository: MessageRepository;
-    private conversationRepository: ConversationRepository;
+export class ReadService implements ReadServiceInterface {
+    private messageRepository: ReadMessageRepository;
+    private conversationRepository: ReadConversationRepository;
 
-    constructor() {
-        this.messageRepository = new MessageRepository();
-        this.conversationRepository = new ConversationRepository();
+    constructor(dependencies: ReadServiceDependencies = {}) {
+        this.messageRepository = dependencies.messageRepository ?? new MessageRepository();
+        this.conversationRepository =
+            dependencies.conversationRepository ?? new ConversationRepository();
     }
 
     private async getMessageOrThrow(messageId: string, conversationId: string) {

@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { RegisterService } from './register.service.js';
+import type { RegisterServiceInterface } from './register.service.interface.js';
 
-const registerService = new RegisterService();
+const registerService: RegisterServiceInterface = new RegisterService();
 
 export const register = async (req: Request, res: Response) => {
     try {

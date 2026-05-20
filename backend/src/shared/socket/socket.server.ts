@@ -2,7 +2,9 @@ import jwt from "jsonwebtoken";
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import { ConversationService } from "../../routes/conversations/conversation/conversation.service.js";
+import type { ConversationServiceInterface } from "../../routes/conversations/conversation/conversation.service.interface.js";
 import { UserRepository } from "../../routes/users/shared/users.repo.js";
+import type { UserRepositoryInterface } from "../../routes/users/shared/users.repo.interface.js";
 import { SOCKET_EVENTS, SOCKET_ROOMS } from "./socket.events.js";
 import { PresenceService } from "./presence.service.js";
 
@@ -14,8 +16,12 @@ type AccessTokenPayload = {
 };
 
 let io: Server | null = null;
-const conversationService = new ConversationService();
-const userRepository = new UserRepository();
+const conversationService: Pick<
+    ConversationServiceInterface,
+    'getUserConversationsForSocketIO'
+> = new ConversationService();
+const userRepository: Pick<UserRepositoryInterface, 'findByIdWithFields'> =
+    new UserRepository();
 
 const allowedOrigins = [
     "http://localhost:3000",

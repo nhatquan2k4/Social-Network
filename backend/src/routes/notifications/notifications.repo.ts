@@ -1,5 +1,6 @@
 ﻿import { Types } from 'mongoose';
 import { NotificationModel as Notification } from './notifications.model.js';
+import type { NotificationRepositoryInterface } from './notifications.repo.interface.js';
 
 interface CreateNotificationInput {
 	recipientId: Types.ObjectId;
@@ -12,7 +13,7 @@ interface CreateNotificationInput {
 	metadata?: Record<string, unknown>;
 }
 
-export class NotificationRepository {
+export class NotificationRepository implements NotificationRepositoryInterface {
 	async create(input: CreateNotificationInput) {
 		return Notification.create(input);
 	}

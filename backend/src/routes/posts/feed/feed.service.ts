@@ -2,14 +2,20 @@ import { Types } from "mongoose";
 import { FriendRepository } from "../../friends/shared/friends.repo.js";
 import { PostRepository } from "../shared/posts.repo.js";
 import { formatPost } from "../shared/posts.util.js";
+import type {
+    FeedFriendRepository,
+    FeedPostRepository,
+    FeedServiceDependencies,
+    FeedServiceInterface,
+} from "./feed.service.interface.js";
 
-export class FeedService {
-    private friendRepository: FriendRepository;
-    private postRepository: PostRepository;
+export class FeedService implements FeedServiceInterface {
+    private friendRepository: FeedFriendRepository;
+    private postRepository: FeedPostRepository;
 
-    constructor() {
-        this.friendRepository = new FriendRepository();
-        this.postRepository = new PostRepository();
+    constructor(dependencies: FeedServiceDependencies = {}) {
+        this.friendRepository = dependencies.friendRepository ?? new FriendRepository();
+        this.postRepository = dependencies.postRepository ?? new PostRepository();
     }
 
     async getFeed(userId: Types.ObjectId, page = 1, limit = 20) {

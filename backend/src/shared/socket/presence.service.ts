@@ -3,30 +3,18 @@ import { FriendRepository } from "../../routes/friends/shared/friends.repo.js";
 import { UserRepository } from "../../routes/users/shared/users.repo.js";
 import { InMemoryPresenceStore, type PresenceStore } from "./presence.store.js";
 import { emitUserPresence } from "./socket.emitter.js";
+import type {
+    PresenceEmitter,
+    PresenceFriendRepository,
+    PresenceServiceInterface,
+    PresenceServiceOptions,
+    PresenceUserRepository,
+} from "./presence.service.interface.js";
 
 export interface UserStatus {
     userId: string;
     isOnline: boolean;
     lastSeenAt: string | null;
-}
-
-type PresenceFriendRepository = Pick<FriendRepository, "getFriendIds">;
-type PresenceUserRepository = Pick<
-    UserRepository,
-    "getLastSeenBatch" | "updateLastSeenAt"
->;
-type PresenceEmitter = (
-    userId: string,
-    isOnline: boolean,
-    friendIds: string[],
-) => void;
-
-export interface PresenceServiceOptions {
-    store?: PresenceStore;
-    friendRepository?: PresenceFriendRepository;
-    userRepository?: PresenceUserRepository;
-    offlineDelayMs?: number;
-    emitPresence?: PresenceEmitter;
 }
 
 /**
@@ -37,7 +25,7 @@ export interface PresenceServiceOptions {
  * - Broadcast presence tới friends qua socket.
  * - Persist lastSeenAt khi user thực sự offline.
  */
-export class PresenceService {
+export class PresenceService implements PresenceServiceInterface {
     private static instance: PresenceService;
 
     private store: PresenceStore;

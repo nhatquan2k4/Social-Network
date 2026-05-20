@@ -2,14 +2,22 @@ import bcrypt from 'bcrypt';
 import { EmailVerificationTokenRepository, UserRepository } from '../shared/auth.repo.js';
 import { issueEmailVerification } from '../shared/auth.util.js';
 import { RegisterDto } from './register.dto.js';
+import type {
+    RegisterEmailVerificationTokenRepository,
+    RegisterServiceDependencies,
+    RegisterServiceInterface,
+    RegisterUserRepository,
+} from './register.service.interface.js';
 
-export class RegisterService {
-    private userRepository: UserRepository;
-    private emailVerificationTokenRepository: EmailVerificationTokenRepository;
+export class RegisterService implements RegisterServiceInterface {
+    private userRepository: RegisterUserRepository;
+    private emailVerificationTokenRepository: RegisterEmailVerificationTokenRepository;
 
-    constructor() {
-        this.userRepository = new UserRepository();
-        this.emailVerificationTokenRepository = new EmailVerificationTokenRepository();
+    constructor(dependencies: RegisterServiceDependencies = {}) {
+        this.userRepository = dependencies.userRepository ?? new UserRepository();
+        this.emailVerificationTokenRepository =
+            dependencies.emailVerificationTokenRepository ??
+            new EmailVerificationTokenRepository();
     }
 
     async execute(userData: RegisterDto) {

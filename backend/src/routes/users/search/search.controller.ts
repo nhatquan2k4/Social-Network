@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { SearchService } from './search.service.js';
+import type { SearchServiceInterface } from './search.service.interface.js';
 
-const searchService = new SearchService();
+const searchService: SearchServiceInterface = new SearchService();
 
 export const searchUsers = async (req: Request, res: Response) => {
     try {

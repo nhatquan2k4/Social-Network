@@ -10,8 +10,9 @@ import {
 } from "../shared/messages.errors.js";
 import { mergeMediaFromRequest } from "../shared/messages.util.js";
 import { MessageService } from "./message.service.js";
+import type { MessageServiceInterface } from "./message.service.interface.js";
 
-const messageService = new MessageService();
+const messageService: MessageServiceInterface = new MessageService();
 
 export const sendDirectTextMessage = async (req: Request, res: Response) => {
     try {

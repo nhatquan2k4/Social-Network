@@ -6,14 +6,20 @@ import {
     FriendUserNotFoundError,
     MissingBlockUserError,
 } from "../shared/friends.errors.js";
+import type {
+    BlockServiceDependencies,
+    BlockServiceInterface,
+    BlockServiceRepository,
+    BlockUserRepository,
+} from "./block.service.interface.js";
 
-export class BlockService {
-    private blockRepository: BlockRepository;
-    private userRepository: UserRepository;
+export class BlockService implements BlockServiceInterface {
+    private blockRepository: BlockServiceRepository;
+    private userRepository: BlockUserRepository;
 
-    constructor() {
-        this.blockRepository = new BlockRepository();
-        this.userRepository = new UserRepository();
+    constructor(dependencies: BlockServiceDependencies = {}) {
+        this.blockRepository = dependencies.blockRepository ?? new BlockRepository();
+        this.userRepository = dependencies.userRepository ?? new UserRepository();
     }
 
     async blockUser(blockerId: Types.ObjectId, targetUserId?: string) {
@@ -58,4 +64,3 @@ export class BlockService {
         return await this.blockRepository.findBlockedByUserId(blockerId);
     }
 }
-

@@ -4,8 +4,13 @@ import {
     UserBlockModel as UserBlock,
 } from "./friends.model.js";
 import { Types } from "mongoose";
+import type {
+    BlockRepositoryInterface,
+    FriendRepositoryInterface,
+    FriendRequestRepositoryInterface,
+} from "./friends.repo.interface.js";
 
-export class FriendRepository {
+export class FriendRepository implements FriendRepositoryInterface {
     async findByUsers(userA: string, userB: string) {
         return await Friend.findOne({ userA, userB });
     }
@@ -45,7 +50,7 @@ export class FriendRepository {
     }
 }
 
-export class FriendRequestRepository {
+export class FriendRequestRepository implements FriendRequestRepositoryInterface {
     async findBetweenUsers(from: Types.ObjectId, to: Types.ObjectId) {
         return await FriendRequest.findOne({
             $or: [{ from, to }, { from: to, to: from }],
@@ -75,7 +80,7 @@ export class FriendRequestRepository {
     }
 }
 
-export class BlockRepository {
+export class BlockRepository implements BlockRepositoryInterface {
     async findByUsers(blockerId: string | Types.ObjectId, blockedId: string | Types.ObjectId) {
         return await UserBlock.findOne({ blockerId, blockedId });
     }

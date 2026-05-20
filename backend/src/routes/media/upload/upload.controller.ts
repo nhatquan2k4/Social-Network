@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { type MediaPurpose } from '../shared/media.repo.js';
 import { MediaService } from './upload.service.js';
+import type { MediaServiceInterface } from './upload.service.interface.js';
 import { MEDIA_PURPOSES } from '../shared/media.constants.js';
 import {
     MediaFileTooLargeError,
@@ -8,7 +9,7 @@ import {
     UnsupportedMediaTypeError,
 } from '../shared/media.errors.js';
 
-const mediaService = new MediaService();
+const mediaService: MediaServiceInterface = new MediaService();
 
 export const uploadMedia = async (req: Request, res: Response) => {
     try {

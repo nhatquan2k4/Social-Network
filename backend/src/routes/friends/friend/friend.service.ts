@@ -1,11 +1,16 @@
 import { Types } from "mongoose";
 import { FriendRepository } from "../shared/friends.repo.js";
+import type {
+    FriendServiceDependencies,
+    FriendServiceInterface,
+    FriendServiceRepository,
+} from "./friend.service.interface.js";
 
-export class FriendService {
-    private friendRepository: FriendRepository;
+export class FriendService implements FriendServiceInterface {
+    private friendRepository: FriendServiceRepository;
 
-    constructor() {
-        this.friendRepository = new FriendRepository();
+    constructor(dependencies: FriendServiceDependencies = {}) {
+        this.friendRepository = dependencies.friendRepository ?? new FriendRepository();
     }
 
     async getAllFriends(userId: Types.ObjectId) {

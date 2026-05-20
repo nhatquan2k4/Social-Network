@@ -5,6 +5,7 @@ import {
     GetConversationsQuery,
 } from "./conversation.dto.js";
 import { ConversationService } from "./conversation.service.js";
+import type { ConversationServiceInterface } from "./conversation.service.interface.js";
 import {
     ConversationNotFoundError,
     ConversationTypeInvalidError,
@@ -13,7 +14,7 @@ import {
 } from "../shared/conversations.errors.js";
 import { emitConversationSeen } from "../../../shared/socket/socket.emitter.js";
 
-const conversationService = new ConversationService();
+const conversationService: ConversationServiceInterface = new ConversationService();
 
 export const createConversation = async (req: Request, res: Response) => {
     try {

@@ -4,14 +4,21 @@ import { generateRefreshToken } from '../shared/auth.util.js';
 import { ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from '../shared/auth.constants.js';
 import { InvalidRefreshTokenError } from '../shared/auth.errors.js';
 import { RefreshTokenDto } from './refresh-token.dto.js';
+import type {
+    RefreshSessionRepository,
+    RefreshTokenServiceDependencies,
+    RefreshTokenServiceInterface,
+    RefreshUserRepository,
+} from './refresh-token.service.interface.js';
 
-export class RefreshTokenService {
-    private sessionRepository: SessionRepository;
-    private userRepository: UserRepository;
+export class RefreshTokenService implements RefreshTokenServiceInterface {
+    private sessionRepository: RefreshSessionRepository;
+    private userRepository: RefreshUserRepository;
 
-    constructor() {
-        this.sessionRepository = new SessionRepository();
-        this.userRepository = new UserRepository();
+    constructor(dependencies: RefreshTokenServiceDependencies = {}) {
+        this.sessionRepository =
+            dependencies.sessionRepository ?? new SessionRepository();
+        this.userRepository = dependencies.userRepository ?? new UserRepository();
     }
 
     async execute(dto: RefreshTokenDto) {

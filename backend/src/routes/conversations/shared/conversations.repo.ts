@@ -1,7 +1,8 @@
 import { ConversationModel as Conversation } from "./conversations.model.js";
 import { Types } from "mongoose";
+import type { ConversationRepositoryInterface } from "./conversations.repo.interface.js";
 
-export class ConversationRepository {
+export class ConversationRepository implements ConversationRepositoryInterface {
     async findDirectConversation(userId: Types.ObjectId, participantId: Types.ObjectId) {
         return await Conversation.findOne({
             type: "direct",

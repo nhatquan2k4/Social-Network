@@ -10,8 +10,9 @@ import {
     MessageNotFoundError,
 } from "../shared/messages.errors.js";
 import { DeleteMessageService } from "./delete.service.js";
+import type { DeleteMessageServiceInterface } from "./delete.service.interface.js";
 
-const deleteMessageService = new DeleteMessageService();
+const deleteMessageService: DeleteMessageServiceInterface = new DeleteMessageService();
 
 export const deleteMessageForEveryone = async (req: Request, res: Response) => {
     try {
@@ -42,4 +43,3 @@ export const deleteMessageForEveryone = async (req: Request, res: Response) => {
         return res.status(500).json({ message: "Loi server" });
     }
 };
-

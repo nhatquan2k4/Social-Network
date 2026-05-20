@@ -4,14 +4,22 @@ import {
     UserRepository,
 } from '../../shared/auth.repo.js';
 import { issueEmailVerification } from '../../shared/auth.util.js';
+import type {
+    ResendEmailVerificationServiceDependencies,
+    ResendEmailVerificationServiceInterface,
+    ResendEmailVerificationTokenRepository,
+    ResendEmailVerificationUserRepository,
+} from './resend.service.interface.js';
 
-export class ResendEmailVerificationService {
-    private userRepository: UserRepository;
-    private emailVerificationTokenRepository: EmailVerificationTokenRepository;
+export class ResendEmailVerificationService implements ResendEmailVerificationServiceInterface {
+    private userRepository: ResendEmailVerificationUserRepository;
+    private emailVerificationTokenRepository: ResendEmailVerificationTokenRepository;
 
-    constructor() {
-        this.userRepository = new UserRepository();
-        this.emailVerificationTokenRepository = new EmailVerificationTokenRepository();
+    constructor(dependencies: ResendEmailVerificationServiceDependencies = {}) {
+        this.userRepository = dependencies.userRepository ?? new UserRepository();
+        this.emailVerificationTokenRepository =
+            dependencies.emailVerificationTokenRepository ??
+            new EmailVerificationTokenRepository();
     }
 
     async execute(email: string) {

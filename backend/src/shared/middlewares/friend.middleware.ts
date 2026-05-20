@@ -1,13 +1,23 @@
 import { Request, Response, NextFunction } from 'express';
 import { ConversationRepository } from '../../routes/conversations/shared/conversations.repo.js';
+import type { ConversationRepositoryInterface } from '../../routes/conversations/shared/conversations.repo.interface.js';
 import {
 	BlockRepository,
 	FriendRepository,
 } from '../../routes/friends/shared/friends.repo.js';
+import type {
+	BlockRepositoryInterface,
+	FriendRepositoryInterface,
+} from '../../routes/friends/shared/friends.repo.interface.js';
 
-const blockRepository = new BlockRepository();
-const conversationRepository = new ConversationRepository();
-const friendRepository = new FriendRepository();
+type FriendMiddlewareBlockRepository = Pick<BlockRepositoryInterface, 'findBetweenUsers'>;
+type FriendMiddlewareConversationRepository = Pick<ConversationRepositoryInterface, 'findById'>;
+type FriendMiddlewareFriendRepository = Pick<FriendRepositoryInterface, 'findByUsers'>;
+
+const blockRepository: FriendMiddlewareBlockRepository = new BlockRepository();
+const conversationRepository: FriendMiddlewareConversationRepository =
+	new ConversationRepository();
+const friendRepository: FriendMiddlewareFriendRepository = new FriendRepository();
 
 // Helper function to ensure consistent ordering of user IDs
 const pair = (userA: string, userB: string): [string, string] => {

@@ -3,14 +3,19 @@ import { Types } from 'mongoose';
 import { UserRepository } from '../shared/auth.repo.js';
 import { WrongCurrentPasswordError } from '../shared/auth.errors.js';
 import { ChangePasswordDto } from './change-password.dto.js';
+import type {
+    ChangePasswordServiceDependencies,
+    ChangePasswordServiceInterface,
+    ChangePasswordUserRepository,
+} from './change-password.service.interface.js';
 
 const SALT_ROUNDS = 10;
 
-export class ChangePasswordService {
-    private userRepository: UserRepository;
+export class ChangePasswordService implements ChangePasswordServiceInterface {
+    private userRepository: ChangePasswordUserRepository;
 
-    constructor() {
-        this.userRepository = new UserRepository();
+    constructor(dependencies: ChangePasswordServiceDependencies = {}) {
+        this.userRepository = dependencies.userRepository ?? new UserRepository();
     }
 
     async execute(userId: string | Types.ObjectId, dto: ChangePasswordDto) {

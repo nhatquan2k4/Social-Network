@@ -4,6 +4,11 @@ import { UserRepository } from '../shared/auth.repo.js';
 import { UserNotFoundByEmailError } from '../shared/auth.errors.js';
 import { sendForgotPasswordEmail } from '../../../shared/utils/email.service.js';
 import { ForgotPasswordDto } from './forgot-password.dto.js';
+import type {
+    ForgotPasswordServiceDependencies,
+    ForgotPasswordServiceInterface,
+    ForgotPasswordUserRepository,
+} from './forgot-password.service.interface.js';
 
 const SALT_ROUNDS = 10;
 const NEW_PASSWORD_LENGTH = 12;
@@ -17,11 +22,11 @@ const generateRandomPassword = (): string => {
         .join('');
 };
 
-export class ForgotPasswordService {
-    private userRepository: UserRepository;
+export class ForgotPasswordService implements ForgotPasswordServiceInterface {
+    private userRepository: ForgotPasswordUserRepository;
 
-    constructor() {
-        this.userRepository = new UserRepository();
+    constructor(dependencies: ForgotPasswordServiceDependencies = {}) {
+        this.userRepository = dependencies.userRepository ?? new UserRepository();
     }
 
     async execute(dto: ForgotPasswordDto) {

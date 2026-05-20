@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import { ForgotPasswordService } from './forgot-password.service.js';
+import type { ForgotPasswordServiceInterface } from './forgot-password.service.interface.js';
 import { UserNotFoundByEmailError } from '../shared/auth.errors.js';
 
-const forgotPasswordService = new ForgotPasswordService();
+const forgotPasswordService: ForgotPasswordServiceInterface = new ForgotPasswordService();
 
 export const forgotPassword = async (req: Request, res: Response) => {
     try {
