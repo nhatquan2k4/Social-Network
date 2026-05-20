@@ -8,14 +8,21 @@ import {
     MessageDeleteForbiddenError,
     MessageNotFoundError,
 } from "../shared/messages.errors.js";
+import type {
+    DeleteMessageConversationRepository,
+    DeleteMessageRepository,
+    DeleteMessageServiceDependencies,
+    DeleteMessageServiceInterface,
+} from "./delete.service.interface.js";
 
-export class DeleteMessageService {
-    private conversationRepository: ConversationRepository;
-    private messageRepository: MessageRepository;
+export class DeleteMessageService implements DeleteMessageServiceInterface {
+    private conversationRepository: DeleteMessageConversationRepository;
+    private messageRepository: DeleteMessageRepository;
 
-    constructor() {
-        this.conversationRepository = new ConversationRepository();
-        this.messageRepository = new MessageRepository();
+    constructor(dependencies: DeleteMessageServiceDependencies = {}) {
+        this.conversationRepository =
+            dependencies.conversationRepository ?? new ConversationRepository();
+        this.messageRepository = dependencies.messageRepository ?? new MessageRepository();
     }
 
     private isParticipant(conversation: any, userId: Types.ObjectId) {

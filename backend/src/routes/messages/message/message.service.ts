@@ -11,16 +11,25 @@ import {
 } from "../shared/messages.errors.js";
 import { enrichMessageMedia, sanitizeMedia } from "../shared/messages.util.js";
 import { MessageMediaInput } from "./message.dto.js";
+import type {
+    MessageConversationRepository,
+    MessageNotificationService,
+    MessageServiceDependencies,
+    MessageServiceInterface,
+    MessageServiceRepository,
+} from "./message.service.interface.js";
 
-export class MessageService {
-    private conversationRepository: ConversationRepository;
-    private messageRepository: MessageRepository;
-    private notificationService: NotificationService;
+export class MessageService implements MessageServiceInterface {
+    private conversationRepository: MessageConversationRepository;
+    private messageRepository: MessageServiceRepository;
+    private notificationService: MessageNotificationService;
 
-    constructor() {
-        this.conversationRepository = new ConversationRepository();
-        this.messageRepository = new MessageRepository();
-        this.notificationService = new NotificationService();
+    constructor(dependencies: MessageServiceDependencies = {}) {
+        this.conversationRepository =
+            dependencies.conversationRepository ?? new ConversationRepository();
+        this.messageRepository = dependencies.messageRepository ?? new MessageRepository();
+        this.notificationService =
+            dependencies.notificationService ?? new NotificationService();
     }
 
     async sendDirectMessage(

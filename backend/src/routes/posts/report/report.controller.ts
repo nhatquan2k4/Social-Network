@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { ReportService } from "./report.service.js";
+import type { ReportServiceInterface } from "./report.service.interface.js";
 import { POST_SUCCESS_MESSAGES } from "../shared/posts.constants.js";
 
-const reportService = new ReportService();
+const reportService: ReportServiceInterface = new ReportService();
 
 export const reportPost = async (
     req: Request,

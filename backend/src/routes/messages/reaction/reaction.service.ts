@@ -12,14 +12,21 @@ import {
     MessageNotFoundError,
 } from "../shared/messages.errors.js";
 import { enrichMessageMedia } from "../shared/messages.util.js";
+import type {
+    ReactionConversationRepository,
+    ReactionMessageRepository,
+    ReactionServiceDependencies,
+    ReactionServiceInterface,
+} from "./reaction.service.interface.js";
 
-export class ReactionService {
-    private conversationRepository: ConversationRepository;
-    private messageRepository: MessageRepository;
+export class ReactionService implements ReactionServiceInterface {
+    private conversationRepository: ReactionConversationRepository;
+    private messageRepository: ReactionMessageRepository;
 
-    constructor() {
-        this.conversationRepository = new ConversationRepository();
-        this.messageRepository = new MessageRepository();
+    constructor(dependencies: ReactionServiceDependencies = {}) {
+        this.conversationRepository =
+            dependencies.conversationRepository ?? new ConversationRepository();
+        this.messageRepository = dependencies.messageRepository ?? new MessageRepository();
     }
 
     private async resolveMessageContextOrThrow(messageId: string, userId: Types.ObjectId) {

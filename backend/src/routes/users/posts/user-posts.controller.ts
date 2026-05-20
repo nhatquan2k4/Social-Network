@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { UserPostsService } from './user-posts.service.js';
+import type { UserPostsServiceInterface } from './user-posts.service.interface.js';
 
-const userPostsService = new UserPostsService();
+const userPostsService: UserPostsServiceInterface = new UserPostsService();
 
 export const getUserPosts = async (req: Request, res: Response) => {
     try {

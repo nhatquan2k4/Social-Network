@@ -4,14 +4,21 @@ import { emitPostEngagement } from "../../../shared/socket/socket.emitter.js";
 import { PostRepository } from "../shared/posts.repo.js";
 import { POST_ERROR_MESSAGES } from "../shared/posts.constants.js";
 import { formatPost } from "../shared/posts.util.js";
+import type {
+    LikeNotificationService,
+    LikePostRepository,
+    LikeServiceDependencies,
+    LikeServiceInterface,
+} from "./like.service.interface.js";
 
-export class LikeService {
-    private postRepository: PostRepository;
-    private notificationService: NotificationService;
+export class LikeService implements LikeServiceInterface {
+    private postRepository: LikePostRepository;
+    private notificationService: LikeNotificationService;
 
-    constructor() {
-        this.postRepository = new PostRepository();
-        this.notificationService = new NotificationService();
+    constructor(dependencies: LikeServiceDependencies = {}) {
+        this.postRepository = dependencies.postRepository ?? new PostRepository();
+        this.notificationService =
+            dependencies.notificationService ?? new NotificationService();
     }
 
     async toggleLike(postId: string, userId: Types.ObjectId) {

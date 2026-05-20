@@ -8,14 +8,21 @@ import {
     collectDescendantCommentIds,
     formatComment,
 } from "../shared/posts.util.js";
+import type {
+    CommentNotificationService,
+    CommentPostRepository,
+    CommentServiceDependencies,
+    CommentServiceInterface,
+} from "./comment.service.interface.js";
 
-export class CommentService {
-    private postRepository: PostRepository;
-    private notificationService: NotificationService;
+export class CommentService implements CommentServiceInterface {
+    private postRepository: CommentPostRepository;
+    private notificationService: CommentNotificationService;
 
-    constructor() {
-        this.postRepository = new PostRepository();
-        this.notificationService = new NotificationService();
+    constructor(dependencies: CommentServiceDependencies = {}) {
+        this.postRepository = dependencies.postRepository ?? new PostRepository();
+        this.notificationService =
+            dependencies.notificationService ?? new NotificationService();
     }
 
     async addComment(

@@ -4,6 +4,7 @@ import {
     minioClient,
 } from '../../../shared/config/minio.js';
 import type { MediaPurpose } from '../../../shared/config/minio.js';
+import type { MediaRepositoryInterface } from './media.repo.interface.js';
 
 interface PutObjectInput {
     bucket: string;
@@ -12,7 +13,7 @@ interface PutObjectInput {
     mimeType: string;
 }
 
-export class MediaRepository {
+export class MediaRepository implements MediaRepositoryInterface {
     getBucketByPurpose(purpose: MediaPurpose): string {
         return getBucketByPurpose(purpose);
     }

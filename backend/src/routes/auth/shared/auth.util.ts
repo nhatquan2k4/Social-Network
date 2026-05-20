@@ -2,7 +2,10 @@ import crypto from 'crypto';
 import { Types } from 'mongoose';
 import { envConfig } from '../../../shared/config/env.js';
 import { sendEmailVerificationEmail } from '../../../shared/utils/email.service.js';
-import { EmailVerificationTokenRepository, UserRepository } from './auth.repo.js';
+import type {
+    EmailVerificationTokenRepositoryInterface,
+} from './auth.repo.interface.js';
+import type { UserRepositoryInterface } from '../../users/shared/users.repo.interface.js';
 import { ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from './auth.constants.js';
 
 export { ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL };
@@ -21,8 +24,11 @@ export const issueEmailVerification = async (
         displayName?: string;
     },
     deps: {
-        userRepository: UserRepository;
-        emailVerificationTokenRepository: EmailVerificationTokenRepository;
+        userRepository: Pick<UserRepositoryInterface, 'setEmailVerificationSentAt'>;
+        emailVerificationTokenRepository: Pick<
+            EmailVerificationTokenRepositoryInterface,
+            'consumeAllActiveByUserId' | 'create'
+        >;
     },
 ) => {
     await deps.emailVerificationTokenRepository.consumeAllActiveByUserId(user._id);

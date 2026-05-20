@@ -9,8 +9,9 @@ import {
     MissingBlockUserError,
 } from "../shared/friends.errors.js";
 import { BlockService } from "./block.service.js";
+import type { BlockServiceInterface } from "./block.service.interface.js";
 
-const blockService = new BlockService();
+const blockService: BlockServiceInterface = new BlockService();
 
 export const blockUser = async (req: Request, res: Response) => {
     try {
@@ -68,4 +69,3 @@ export const getBlockedUsers = async (req: Request, res: Response) => {
         return res.status(500).json({ message: "Loi server" });
     }
 };
-

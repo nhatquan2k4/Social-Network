@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { FeedService } from "./feed.service.js";
+import type { FeedServiceInterface } from "./feed.service.interface.js";
 
-const feedService = new FeedService();
+const feedService: FeedServiceInterface = new FeedService();
 
 export const getFeed = async (req: Request, res: Response) => {
     try {

@@ -1,8 +1,14 @@
 ﻿import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { UserRepository } from '../../routes/users/shared/users.repo.js';
+import type { UserRepositoryInterface } from '../../routes/users/shared/users.repo.interface.js';
 
-const userRepository = new UserRepository();
+type AuthMiddlewareUserRepository = Pick<
+	UserRepositoryInterface,
+	'findByIdWithoutPassword'
+>;
+
+const userRepository: AuthMiddlewareUserRepository = new UserRepository();
 
 // authorization middleware - xac minh user la ai
 export const protectedRoute = async ( req: Request, res: Response, next: NextFunction ) => {

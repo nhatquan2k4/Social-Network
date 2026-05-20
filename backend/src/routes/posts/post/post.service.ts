@@ -3,12 +3,17 @@ import { PostRepository, PostMediaInput } from "../shared/posts.repo.js";
 import { POST_ERROR_MESSAGES } from "../shared/posts.constants.js";
 import { formatPost } from "../shared/posts.util.js";
 import { UpdatePostPayload } from "./post.dto.js";
+import type {
+    PostServiceDependencies,
+    PostServiceInterface,
+    PostServicePostRepository,
+} from "./post.service.interface.js";
 
-export class PostService {
-    private postRepository: PostRepository;
+export class PostService implements PostServiceInterface {
+    private postRepository: PostServicePostRepository;
 
-    constructor() {
-        this.postRepository = new PostRepository();
+    constructor(dependencies: PostServiceDependencies = {}) {
+        this.postRepository = dependencies.postRepository ?? new PostRepository();
     }
 
     async createPost(authorId: Types.ObjectId, content?: string, media?: PostMediaInput[]) {

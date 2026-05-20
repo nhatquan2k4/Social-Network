@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import { PostModel as Post } from "./posts.model.js";
+import type { PostRepositoryInterface } from "./posts.repo.interface.js";
 
 export interface PostMediaInput {
     bucket: string;
@@ -8,7 +9,7 @@ export interface PostMediaInput {
     size: number;
 }
 
-export class PostRepository {
+export class PostRepository implements PostRepositoryInterface {
     async create(postData: {
         authorId: Types.ObjectId;
         content?: string;

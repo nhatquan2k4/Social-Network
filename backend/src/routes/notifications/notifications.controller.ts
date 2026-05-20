@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import { NotificationService } from './notifications.service.js';
+import type { NotificationServiceInterface } from './notifications.service.interface.js';
 import { UserModel } from '../auth/shared/auth.model.js';
 
-const notificationService = new NotificationService();
+const notificationService: NotificationServiceInterface = new NotificationService();
 
 const toBoolean = (value: unknown) => {
   if (typeof value !== 'string') {

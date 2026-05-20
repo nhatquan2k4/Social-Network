@@ -14,18 +14,28 @@ import {
     FriendSelfRequestError,
     FriendUserNotFoundError,
 } from "../shared/friends.errors.js";
+import type {
+    RequestFriendRepository,
+    RequestFriendRequestRepository,
+    RequestNotificationService,
+    RequestServiceDependencies,
+    RequestServiceInterface,
+    RequestUserRepository,
+} from "./request.service.interface.js";
 
-export class RequestService {
-    private friendRepository: FriendRepository;
-    private friendRequestRepository: FriendRequestRepository;
-    private userRepository: UserRepository;
-    private notificationService: NotificationService;
+export class RequestService implements RequestServiceInterface {
+    private friendRepository: RequestFriendRepository;
+    private friendRequestRepository: RequestFriendRequestRepository;
+    private userRepository: RequestUserRepository;
+    private notificationService: RequestNotificationService;
 
-    constructor() {
-        this.friendRepository = new FriendRepository();
-        this.friendRequestRepository = new FriendRequestRepository();
-        this.userRepository = new UserRepository();
-        this.notificationService = new NotificationService();
+    constructor(dependencies: RequestServiceDependencies = {}) {
+        this.friendRepository = dependencies.friendRepository ?? new FriendRepository();
+        this.friendRequestRepository =
+            dependencies.friendRequestRepository ?? new FriendRequestRepository();
+        this.userRepository = dependencies.userRepository ?? new UserRepository();
+        this.notificationService =
+            dependencies.notificationService ?? new NotificationService();
     }
 
     async sendFriendRequest(from: Types.ObjectId, to: string, message?: string) {

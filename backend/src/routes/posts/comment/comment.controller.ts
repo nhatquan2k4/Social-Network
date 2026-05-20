@@ -4,8 +4,9 @@ import {
     POST_SUCCESS_MESSAGES,
 } from "../shared/posts.constants.js";
 import { CommentService } from "./comment.service.js";
+import type { CommentServiceInterface } from "./comment.service.interface.js";
 
-const commentService = new CommentService();
+const commentService: CommentServiceInterface = new CommentService();
 
 export const createPostComment = async (req: Request, res: Response) => {
     try {

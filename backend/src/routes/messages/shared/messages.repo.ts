@@ -1,7 +1,8 @@
 import { MessageModel as Message } from "./messages.model.js";
 import { Types } from "mongoose";
+import type { MessageRepositoryInterface } from "./messages.repo.interface.js";
 
-export class MessageRepository {
+export class MessageRepository implements MessageRepositoryInterface {
     async create(messageData: {
         conversationId: Types.ObjectId;
         senderId: Types.ObjectId;

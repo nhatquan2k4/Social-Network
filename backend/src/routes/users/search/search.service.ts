@@ -1,12 +1,17 @@
 import { Types } from 'mongoose';
 import { UserRepository } from '../shared/users.repo.js';
 import { parseSearchLimit, parseSearchName, parseSearchPage } from './search.dto.js';
+import type {
+    SearchServiceDependencies,
+    SearchServiceInterface,
+    SearchUserRepository,
+} from './search.service.interface.js';
 
-export class SearchService {
-    private userRepository: UserRepository;
+export class SearchService implements SearchServiceInterface {
+    private userRepository: SearchUserRepository;
 
-    constructor() {
-        this.userRepository = new UserRepository();
+    constructor(dependencies: SearchServiceDependencies = {}) {
+        this.userRepository = dependencies.userRepository ?? new UserRepository();
     }
 
     async searchUsers(

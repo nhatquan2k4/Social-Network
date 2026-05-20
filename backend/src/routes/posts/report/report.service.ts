@@ -11,13 +11,20 @@ import { AppError } from "../../../shared/errors/app-error.js";
 /** Số report tối thiểu để tự động ẩn post */
 const AUTO_HIDE_THRESHOLD = 5;
 
-export class ReportService {
-    private postRepo: PostRepository;
-    private reportRepo: ReportRepository;
+import type {
+    ReportPostReportRepository,
+    ReportPostRepository,
+    ReportServiceDependencies,
+    ReportServiceInterface,
+} from "./report.service.interface.js";
 
-    constructor() {
-        this.postRepo = new PostRepository();
-        this.reportRepo = new ReportRepository();
+export class ReportService implements ReportServiceInterface {
+    private postRepo: ReportPostRepository;
+    private reportRepo: ReportPostReportRepository;
+
+    constructor(dependencies: ReportServiceDependencies = {}) {
+        this.postRepo = dependencies.postRepository ?? new PostRepository();
+        this.reportRepo = dependencies.reportRepository ?? new ReportRepository();
     }
 
     async reportPost(

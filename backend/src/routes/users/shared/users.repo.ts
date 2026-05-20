@@ -1,7 +1,8 @@
 import { UserModel as User } from './users.model.js';
 import { Types } from 'mongoose';
+import type { UserRepositoryInterface } from './users.repo.interface.js';
 
-export class UserRepository {
+export class UserRepository implements UserRepositoryInterface {
     async findByUsername(username: string) {
         return await User.findOne({ username });
     }
