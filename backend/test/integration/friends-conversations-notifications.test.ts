@@ -36,7 +36,7 @@ const createUser = async (prefix: string) => {
 
 describe("friends, conversations and notifications integration", { skip: skipDbE2E }, () => {
     before(async () => {
-        await connectDB(buildSuiteMongoUri("integration"));
+        await connectDB(await buildSuiteMongoUri("integration"));
         await FriendModel.syncIndexes();
         await cleanupDatabase();
     });
