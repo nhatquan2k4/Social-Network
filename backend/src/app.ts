@@ -47,6 +47,16 @@ export const createApp = () => {
 
     app.use(cors(corsOptions));
     app.use(express.json());
+    app.use((req, res, next) => {
+        console.log(`📡 [Express Request] ${req.method} ${req.url}`);
+        if (req.body && Object.keys(req.body).length > 0) {
+            console.log(`   Body: ${JSON.stringify(req.body)}`);
+        }
+        res.on('finish', () => {
+            console.log(`📡 [Express Response] ${req.method} ${req.url} - Status: ${res.statusCode}`);
+        });
+        next();
+    });
     app.use(cookieParser());
 
     app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

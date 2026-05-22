@@ -1,4 +1,4 @@
-﻿import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { AppError } from './app-error.js';
 
 export const errorHandler = (
@@ -15,8 +15,10 @@ export const errorHandler = (
   }
 
   if (error instanceof Error) {
+    console.error("❌ Internal Server Error:", error.stack || error.message);
     return res.status(500).json({ message: error.message });
   }
 
+  console.error("❌ Unknown Server Error:", error);
   return res.status(500).json({ message: 'Unknown server error' });
 };

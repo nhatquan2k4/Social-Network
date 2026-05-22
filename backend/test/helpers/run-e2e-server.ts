@@ -1,8 +1,10 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 import { createApp } from "../../src/app.js";
 import { connectDB } from "../../src/shared/db/mongoose.js";
 import { initializeSocketIO } from "../../src/shared/socket/socket.server.js";
+import { seed } from "../../src/scripts/seed.js";
 
 dotenv.config();
 
@@ -10,6 +12,7 @@ dotenv.config();
 process.env.SMTP_HOST = "";
 process.env.SMTP_USER = "";
 process.env.SMTP_PASS = "";
+process.env.IS_E2E = "true";
 
 async function startServer() {
     console.log("🚀 Starting In-Memory MongoDB Server...");
@@ -21,9 +24,32 @@ async function startServer() {
     await connectDB(mongoUri);
     console.log("✅ Mongoose connected successfully!");
 
+    console.log("🌱 Seeding in-memory database with test data...");
+    await seed(mongoUri);
+    console.log("✅ In-memory database seeded successfully!");
+
     console.log("⚡ Creating Express application...");
     const app = createApp();
-    
+
+    // Thêm endpoint reset database dành riêng cho E2E
+    app.post("/api/test/reset", async (req, res) => {
+        try {
+            console.log("🧹 E2E: Resetting in-memory database...");
+            const collections = mongoose.connection.collections;
+            for (const key in collections) {
+                const collection = collections[key];
+                await collection.deleteMany({});
+            }
+            console.log("🌱 E2E: Re-seeding in-memory database...");
+            await seed(mongoUri);
+            console.log("✅ E2E: In-memory database reset & seeded successfully!");
+            res.status(200).json({ message: "Database reset successfully" });
+        } catch (error) {
+            console.error("❌ E2E: Failed to reset database:", error);
+            res.status(500).json({ error: "Failed to reset database", details: error.toString() });
+        }
+    });
+
     const PORT = 5001;
     const server = app.listen(PORT, "0.0.0.0", () => {
         console.log(`\n===========================================`);
