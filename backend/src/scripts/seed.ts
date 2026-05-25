@@ -95,7 +95,7 @@ export async function seed(connString?: string) {
       console.log("Seed friend account inserted successfully.");
     }
 
-    // ── 4. Seed quan hệ bạn bè đã kết nối (accepted) ─────────────
+    // ── 4. Seed quan hệ bạn bè đã kết nối: seed_user ↔ seed_friend (accepted) ──
     if (seedUser && seedFriend) {
       const existingFriendship = await Friend.findOne({
         $or: [
@@ -115,7 +115,29 @@ export async function seed(connString?: string) {
       }
     }
 
-    // ── 5. Seed cuộc hội thoại direct ─────────────────────────────
+    // ── 4b. Seed quan hệ bạn bè: seed_user ↔ admin (accepted) ────────────────
+    // Cần thiết để Chat E2E flow luôn có ít nhất 1 friend accepted sẵn,
+    // vì lời mời kết bạn gửi từ user E2E đến admin chưa được accept.
+    if (seedUser && adminUser) {
+      const existingAdminFriendship = await Friend.findOne({
+        $or: [
+          { userA: seedUser._id, userB: adminUser._id },
+          { userA: adminUser._id, userB: seedUser._id }
+        ]
+      });
+
+      if (!existingAdminFriendship) {
+        await Friend.create({
+          userA: seedUser._id,
+          userB: adminUser._id
+        });
+        console.log("Friend relation between seed_user and admin created.");
+      } else {
+        console.log("Friend relation seed_user<->admin already exists, skipping.");
+      }
+    }
+
+    // ── 5. Seed cuộc hội thoại direct: seed_user ↔ seed_friend ────────────────
     if (seedUser && seedFriend) {
       let conversation = await Conversation.findOne({
         type: "direct",
@@ -141,7 +163,7 @@ export async function seed(connString?: string) {
         console.log("Conversation already exists, skipping.");
       }
 
-      // ── 6. Seed tin nhắn mẫu ──────────────────────────────────────
+      // ── 6. Seed tin nhắn mẫu: seed_friend -> seed_user ────────────────────
       if (conversation) {
         const existingMessage = await Message.findOne({ conversationId: conversation._id });
         if (!existingMessage) {
@@ -163,6 +185,57 @@ export async function seed(connString?: string) {
           console.log("Sample message inserted and conversation updated.");
         } else {
           console.log("Sample message already exists, skipping.");
+        }
+      }
+    }
+
+    // ── 5b. Seed cuộc hội thoại direct: seed_user ↔ admin ─────────────────────
+    // Đảm bảo Chat E2E flow của Flutter có conversation sẵn với admin
+    if (seedUser && adminUser) {
+      let adminConversation = await Conversation.findOne({
+        type: "direct",
+        "participants.userId": { $all: [seedUser._id, adminUser._id] }
+      });
+
+      if (!adminConversation) {
+        adminConversation = await Conversation.create({
+          type: "direct",
+          participants: [
+            { userId: seedUser._id },
+            { userId: adminUser._id }
+          ],
+          lastMessageAt: new Date(),
+          seenBy: [seedUser._id, adminUser._id],
+          unreadCounts: {
+            [seedUser._id.toString()]: 0,
+            [adminUser._id.toString()]: 0
+          }
+        });
+        console.log("Conversation between seed_user and admin created.");
+      } else {
+        console.log("Conversation seed_user<->admin already exists, skipping.");
+      }
+
+      // ── 6b. Seed tin nhắn mẫu: admin -> seed_user ─────────────────────────
+      if (adminConversation) {
+        const existingAdminMsg = await Message.findOne({ conversationId: adminConversation._id });
+        if (!existingAdminMsg) {
+          const adminMsg = await Message.create({
+            conversationId: adminConversation._id,
+            senderId: adminUser._id,
+            content: "📢 Xin chào! Admin đây. Mọi tính năng E2E đã sẵn sàng!",
+            readBy: [{ userId: seedUser._id }]
+          });
+          adminConversation.lastMessage = {
+            content: adminMsg.content,
+            senderId: adminMsg.senderId,
+            createdAt: adminMsg.createdAt
+          };
+          adminConversation.lastMessageAt = adminMsg.createdAt;
+          await adminConversation.save();
+          console.log("Admin sample message inserted.");
+        } else {
+          console.log("Admin conversation message already exists, skipping.");
         }
       }
     }

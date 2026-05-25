@@ -46,7 +46,7 @@ async function startServer() {
             res.status(200).json({ message: "Database reset successfully" });
         } catch (error) {
             console.error("❌ E2E: Failed to reset database:", error);
-            res.status(500).json({ error: "Failed to reset database", details: error.toString() });
+            res.status(500).json({ error: "Failed to reset database", details: (error instanceof Error) ? error.message : String(error) });
         }
     });
 
