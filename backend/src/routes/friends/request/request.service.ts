@@ -67,8 +67,8 @@ export class RequestService implements RequestServiceInterface {
             throw new FriendRequestPendingError();
         }
 
-        // Tự động kết bạn và tạo hội thoại trực tiếp nếu đang ở chế độ E2E
-        if (process.env.IS_E2E === "true") {
+        // Legacy escape hatch for manual test demos. Normal E2E tests should use seeded data.
+        if (process.env.E2E_AUTO_ACCEPT_FRIENDS === "true") {
             console.log(`🤖 E2E: Auto-accepting friend request between ${from} and ${to}`);
             await this.friendRepository.create(from, new Types.ObjectId(to));
 

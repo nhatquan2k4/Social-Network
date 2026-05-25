@@ -3,7 +3,16 @@ import { envConfig } from "../config/env.js";
 
 let transporterInstance: Transporter | null = null;
 
+const shouldUseMockEmail = () =>
+    process.env.E2E_EXTERNAL_SERVICES === "mock" ||
+    process.env.NODE_ENV === "test" ||
+    process.env.IS_E2E === "true";
+
 const getTransporter = (): Transporter | null => {
+    if (shouldUseMockEmail()) {
+        return null;
+    }
+
     if (transporterInstance) {
         return transporterInstance;
     }
@@ -36,6 +45,12 @@ export const sendEmailVerificationEmail = async (
     verificationToken: string,
 ) => {
     const verifyLink = appendTokenToUrl(envConfig.emailVerificationRedirectUrl, verificationToken);
+
+    if (shouldUseMockEmail()) {
+        console.info(`Mock verification link for ${recipientEmail}: ${verifyLink}`);
+        return { sent: true, verifyLink };
+    }
+
     const transporter = getTransporter();
 
     if (!transporter) {
@@ -70,6 +85,11 @@ export const sendForgotPasswordEmail = async (
     displayName: string,
     newPassword: string,
 ) => {
+    if (shouldUseMockEmail()) {
+        console.info(`Mock forgot-password email for ${recipientEmail}: ${newPassword}`);
+        return { sent: true };
+    }
+
     const transporter = getTransporter();
 
     if (!transporter) {
