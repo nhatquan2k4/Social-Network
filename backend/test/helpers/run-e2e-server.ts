@@ -1,74 +1,73 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { createApp } from "../../src/app.js";
-import { connectDB } from "../../src/shared/db/mongoose.js";
-import { initializeSocketIO } from "../../src/shared/socket/socket.server.js";
-import { seed } from "../../src/scripts/seed.js";
 
 dotenv.config();
 
-// Turn off real SMTP settings
+process.env.NODE_ENV = "test";
+process.env.E2E_TEST_API = "true";
+process.env.E2E_EXTERNAL_SERVICES = "mock";
+process.env.IS_E2E = "true";
 process.env.SMTP_HOST = "";
 process.env.SMTP_USER = "";
 process.env.SMTP_PASS = "";
-process.env.IS_E2E = "true";
 
 async function startServer() {
-    console.log("🚀 Starting In-Memory MongoDB Server...");
-    const mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    console.log(`📡 In-Memory MongoDB is running at: ${mongoUri}`);
+    console.log("Starting in-memory MongoDB for FE E2E...");
+    const mongoServer = await MongoMemoryServer.create({
+        instance: {
+            dbName: "social_network_e2e_test",
+        },
+    });
+    const mongoUri = mongoServer.getUri("social_network_e2e_test");
+    console.log(`In-memory MongoDB URI: ${mongoUri}`);
 
-    console.log("🔌 Connecting Mongoose to in-memory database...");
-    await connectDB(mongoUri);
-    console.log("✅ Mongoose connected successfully!");
+    const [{ createApp }, db, socket, seed] = await Promise.all([
+        import("../../src/app.js") as Promise<typeof import("../../src/app.js")>,
+        import("../../src/shared/db/mongoose.js") as Promise<
+            typeof import("../../src/shared/db/mongoose.js")
+        >,
+        import("../../src/shared/socket/socket.server.js") as Promise<
+            typeof import("../../src/shared/socket/socket.server.js")
+        >,
+        import("../../src/testing/e2e-seed.js") as Promise<
+            typeof import("../../src/testing/e2e-seed.js")
+        >,
+    ]);
 
-    console.log("🌱 Seeding in-memory database with test data...");
-    await seed(mongoUri);
-    console.log("✅ In-memory database seeded successfully!");
+    await db.connectDB(mongoUri);
+    console.log("Mongoose connected to in-memory database.");
 
-    console.log("⚡ Creating Express application...");
+    await seed.seedE2EDatabase({
+        runId: "server_start",
+        scenario: "bootstrap",
+        reset: true,
+    });
+    console.log("Initial E2E seed completed. FE tests can reseed via POST /api/test/seed.");
+
     const app = createApp();
-
-    // Thêm endpoint reset database dành riêng cho E2E
-    app.post("/api/test/reset", async (req, res) => {
-        try {
-            console.log("🧹 E2E: Resetting in-memory database...");
-            const collections = mongoose.connection.collections;
-            for (const key in collections) {
-                const collection = collections[key];
-                await collection.deleteMany({});
-            }
-            console.log("🌱 E2E: Re-seeding in-memory database...");
-            await seed(mongoUri);
-            console.log("✅ E2E: In-memory database reset & seeded successfully!");
-            res.status(200).json({ message: "Database reset successfully" });
-        } catch (error) {
-            console.error("❌ E2E: Failed to reset database:", error);
-            res.status(500).json({ error: "Failed to reset database", details: (error instanceof Error) ? error.message : String(error) });
-        }
+    const port = Number(process.env.E2E_PORT || 5001);
+    const server = app.listen(port, "0.0.0.0", () => {
+        console.log("");
+        console.log("===========================================");
+        console.log("LOCAL FE E2E BACKEND SERVER IS RUNNING");
+        console.log(`API endpoint: http://localhost:${port}/api`);
+        console.log(`Seed endpoint: http://localhost:${port}/api/test/seed`);
+        console.log(`Reset endpoint: http://localhost:${port}/api/test/reset`);
+        console.log(`WebSocket endpoint: ws://localhost:${port}`);
+        console.log("===========================================");
+        console.log("");
     });
 
-    const PORT = 5001;
-    const server = app.listen(PORT, "0.0.0.0", () => {
-        console.log(`\n===========================================`);
-        console.log(`🎉 LOCAL E2E BACKEND SERVER IS RUNNING 🎉`);
-        console.log(`🌐 API Endpoint: http://localhost:${PORT}/api`);
-        console.log(`🔌 WebSockets:  ws://localhost:${PORT}`);
-        console.log(`===========================================\n`);
-    });
+    socket.initializeSocketIO(server);
+    console.log("Socket.IO initialized.");
 
-    console.log("🔌 Initializing WebSockets (Socket.IO) server...");
-    initializeSocketIO(server);
-    console.log("✅ Socket.IO server initialized successfully!");
-
-    // Keep process alive and handle termination cleanly
     const shutdown = async () => {
-        console.log("\n🛑 Shutting down E2E backend server...");
-        server.close();
+        console.log("\nShutting down FE E2E backend server...");
+        await new Promise<void>((resolve) => server.close(() => resolve()));
+        await mongoose.disconnect().catch(() => undefined);
         await mongoServer.stop();
-        console.log("👋 Done. Goodbye!");
+        console.log("Done.");
         process.exit(0);
     };
 
@@ -77,6 +76,6 @@ async function startServer() {
 }
 
 startServer().catch((error) => {
-    console.error("❌ Failed to start E2E backend server:", error);
+    console.error("Failed to start FE E2E backend server:", error);
     process.exit(1);
 });

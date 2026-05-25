@@ -5,10 +5,21 @@ import {
   initializeApp,
   type ServiceAccount,
 } from 'firebase-admin/app';
-import { getMessaging } from 'firebase-admin/messaging';
+import { getMessaging, type Messaging } from 'firebase-admin/messaging';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
+
+const shouldUseMockFirebase = () =>
+  process.env.E2E_EXTERNAL_SERVICES === 'mock' ||
+  process.env.NODE_ENV === 'test' ||
+  process.env.IS_E2E === 'true';
+
+const createMockMessaging = (): Pick<Messaging, 'send'> => ({
+  async send() {
+    return 'mock-fcm-message-id';
+  },
+});
 
 const parseServiceAccountJson = (
   rawValue: string,
@@ -49,11 +60,28 @@ const loadServiceAccount = (): ServiceAccount => {
   }
 };
 
-const firebaseApp =
-  getApps().length > 0
-    ? getApp()
-    : initializeApp({
-        credential: cert(loadServiceAccount()),
-      });
+const createMessaging = (): Pick<Messaging, 'send'> => {
+  if (shouldUseMockFirebase()) {
+    return createMockMessaging();
+  }
 
-export const fcm = getMessaging(firebaseApp);
+  try {
+    const firebaseApp =
+      getApps().length > 0
+        ? getApp()
+        : initializeApp({
+            credential: cert(loadServiceAccount()),
+          });
+
+    return getMessaging(firebaseApp);
+  } catch (error) {
+    if (process.env.NODE_ENV === 'production') {
+      throw error;
+    }
+
+    console.warn(`Firebase is unavailable. Using mock FCM sender. ${(error as Error).message}`);
+    return createMockMessaging();
+  }
+};
+
+export const fcm = createMessaging();
