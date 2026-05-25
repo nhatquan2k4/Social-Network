@@ -3,6 +3,11 @@ import { NotificationRepository } from './notifications.repo.js';
 import { emitNotificationNew } from '../../shared/socket/socket.emitter.js';
 import { UserModel } from '../users/shared/users.model.js';
 import { fcm } from '../../shared/config/firebase.js';
+import type {
+  NotificationServiceDependencies,
+  NotificationServiceInterface,
+  NotificationServiceRepository,
+} from './notifications.service.interface.js';
 
 export type NotificationType =
   | 'FRIEND_REQUEST'
@@ -12,7 +17,7 @@ export type NotificationType =
   | 'COMMENT_REPLIED'
   | 'MESSAGE_NEW';
 
-interface CreateNotificationParams {
+export interface CreateNotificationParams {
   recipientId: Types.ObjectId;
   actorId: Types.ObjectId;
   type: NotificationType;
@@ -25,11 +30,12 @@ interface CreateNotificationParams {
 
 export type FcmPlatform = 'android' | 'ios' | 'web';
 
-export class NotificationService {
-  private notificationRepository: NotificationRepository;
+export class NotificationService implements NotificationServiceInterface {
+  private notificationRepository: NotificationServiceRepository;
 
-  constructor() {
-    this.notificationRepository = new NotificationRepository();
+  constructor(dependencies: NotificationServiceDependencies = {}) {
+    this.notificationRepository =
+      dependencies.notificationRepository ?? new NotificationRepository();
   }
 
   async saveFcmToken(
@@ -179,7 +185,7 @@ export class NotificationService {
   async sendTestNotification(deviceToken: string) {
     const message = {
       notification: {
-        title: 'Thông báo từ Backend! 🚀',
+        title: 'Thông báo từ Backend! ',
         body: 'Cấu hình FCM đã thành công ',
       },
       token: deviceToken,

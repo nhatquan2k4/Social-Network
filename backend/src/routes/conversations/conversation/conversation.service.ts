@@ -13,14 +13,21 @@ import {
     GroupOwnerNotFoundError,
 } from "../shared/conversations.errors.js";
 import { mapConversationParticipants } from "../shared/conversations.util.js";
+import type {
+    ConversationServiceConversationRepository,
+    ConversationServiceDependencies,
+    ConversationServiceInterface,
+    ConversationServiceMessageRepository,
+} from "./conversation.service.interface.js";
 
-export class ConversationService {
-    private conversationRepository: ConversationRepository;
-    private messageRepository: MessageRepository;
+export class ConversationService implements ConversationServiceInterface {
+    private conversationRepository: ConversationServiceConversationRepository;
+    private messageRepository: ConversationServiceMessageRepository;
 
-    constructor() {
-        this.conversationRepository = new ConversationRepository();
-        this.messageRepository = new MessageRepository();
+    constructor(dependencies: ConversationServiceDependencies = {}) {
+        this.conversationRepository =
+            dependencies.conversationRepository ?? new ConversationRepository();
+        this.messageRepository = dependencies.messageRepository ?? new MessageRepository();
     }
 
     private pickParticipantId(participant: any): string {

@@ -1,10 +1,16 @@
 import { SessionRepository } from '../shared/auth.repo.js';
+import type {
+    LogoutServiceDependencies,
+    LogoutServiceInterface,
+    LogoutSessionRepository,
+} from './logout.service.interface.js';
 
-export class LogoutService {
-    private sessionRepository: SessionRepository;
+export class LogoutService implements LogoutServiceInterface {
+    private sessionRepository: LogoutSessionRepository;
 
-    constructor() {
-        this.sessionRepository = new SessionRepository();
+    constructor(dependencies: LogoutServiceDependencies = {}) {
+        this.sessionRepository =
+            dependencies.sessionRepository ?? new SessionRepository();
     }
 
     async execute(refreshToken: string) {

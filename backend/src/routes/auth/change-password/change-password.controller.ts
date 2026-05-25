@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import { ChangePasswordService } from './change-password.service.js';
+import type { ChangePasswordServiceInterface } from './change-password.service.interface.js';
 import { WrongCurrentPasswordError } from '../shared/auth.errors.js';
 
-const changePasswordService = new ChangePasswordService();
+const changePasswordService: ChangePasswordServiceInterface = new ChangePasswordService();
 
 export const changePassword = async (req: Request, res: Response) => {
     try {

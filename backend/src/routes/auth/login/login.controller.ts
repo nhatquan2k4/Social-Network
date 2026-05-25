@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { LoginService } from './login.service.js';
+import type { LoginServiceInterface } from './login.service.interface.js';
 
-const loginService = new LoginService();
+const loginService: LoginServiceInterface = new LoginService();
 const isProduction = process.env.NODE_ENV === 'production';
 
 export const login = async (req: Request, res: Response) => {

@@ -4,8 +4,9 @@ import {
     POST_SUCCESS_MESSAGES,
 } from "../shared/posts.constants.js";
 import { LikeService } from "./like.service.js";
+import type { LikeServiceInterface } from "./like.service.interface.js";
 
-const likeService = new LikeService();
+const likeService: LikeServiceInterface = new LikeService();
 
 export const toggleLikePost = async (req: Request, res: Response) => {
     try {

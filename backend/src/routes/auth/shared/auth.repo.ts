@@ -3,10 +3,19 @@ import {
     EmailVerificationTokenModel as EmailVerificationToken,
     SessionModel as Session,
 } from './auth.model.js';
+import type {
+    EmailVerificationTokenRepositoryInterface,
+    SessionRepositoryInterface,
+} from './auth.repo.interface.js';
 
 export { UserRepository } from '../../users/shared/users.repo.js';
+export type { UserRepositoryInterface } from '../../users/shared/users.repo.interface.js';
+export type {
+    EmailVerificationTokenRepositoryInterface,
+    SessionRepositoryInterface,
+} from './auth.repo.interface.js';
 
-export class SessionRepository {
+export class SessionRepository implements SessionRepositoryInterface {
     async create(sessionData: {
         userId: Types.ObjectId;
         refreshToken: string;
@@ -24,7 +33,7 @@ export class SessionRepository {
     }
 }
 
-export class EmailVerificationTokenRepository {
+export class EmailVerificationTokenRepository implements EmailVerificationTokenRepositoryInterface {
     async create(tokenData: {
         userId: Types.ObjectId;
         tokenHash: string;

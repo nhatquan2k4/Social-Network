@@ -7,16 +7,23 @@ import { BlockedInteractionError } from '../../friends/shared/friends.errors.js'
 import { PostRepository } from '../../posts/shared/posts.repo.js';
 import { UserRepository } from '../shared/users.repo.js';
 import { ensureValidObjectId, normalizePagination } from '../shared/users.util.js';
+import type {
+    UserPostsBlockRepository,
+    UserPostsPostRepository,
+    UserPostsServiceDependencies,
+    UserPostsServiceInterface,
+    UserPostsUserRepository,
+} from './user-posts.service.interface.js';
 
-export class UserPostsService {
-    private userRepository: UserRepository;
-    private postRepository: PostRepository;
-    private blockRepository: BlockRepository;
+export class UserPostsService implements UserPostsServiceInterface {
+    private userRepository: UserPostsUserRepository;
+    private postRepository: UserPostsPostRepository;
+    private blockRepository: UserPostsBlockRepository;
 
-    constructor() {
-        this.userRepository = new UserRepository();
-        this.postRepository = new PostRepository();
-        this.blockRepository = new BlockRepository();
+    constructor(dependencies: UserPostsServiceDependencies = {}) {
+        this.userRepository = dependencies.userRepository ?? new UserRepository();
+        this.postRepository = dependencies.postRepository ?? new PostRepository();
+        this.blockRepository = dependencies.blockRepository ?? new BlockRepository();
     }
 
     async execute(userId: string, requesterId: Types.ObjectId, page: number, limit: number) {

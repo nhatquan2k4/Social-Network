@@ -1,8 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { PresenceService } from "../../../shared/socket/presence.service.js";
+import {
+    PresenceService,
+} from "../../../shared/socket/presence.service.js";
+import type { PresenceServiceInterface } from "../../../shared/socket/presence.service.interface.js";
 import { AppError } from "../../../shared/errors/app-error.js";
 
-const presenceService = PresenceService.getInstance();
+const presenceService: PresenceServiceInterface = PresenceService.getInstance();
 
 const MAX_BATCH_SIZE = 100;
 

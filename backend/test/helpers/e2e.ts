@@ -3,6 +3,7 @@ import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import { MongoMemoryServer } from "mongodb-memory-server";
 
 dotenv.config();
 
@@ -49,8 +50,45 @@ const expectedConsoleErrorPrefixes = [
     "Loi khi lay post",
 ];
 
+// Singleton in-memory server state
+let sharedMongoServer: MongoMemoryServer | null = null;
+let sharedMongoUri: string | null = null;
+let initializationPromise: Promise<string> | null = null;
+
+export const getMongoUri = async (): Promise<string> => {
+    if (process.env.USE_REAL_TEST_DB && process.env.MONGODB_TEST_CONNECTIONSTRING) {
+        return process.env.MONGODB_TEST_CONNECTIONSTRING;
+    }
+    if (initializationPromise) {
+        return initializationPromise;
+    }
+    if (sharedMongoUri) {
+        return sharedMongoUri;
+    }
+    initializationPromise = (async () => {
+        sharedMongoServer = await MongoMemoryServer.create();
+        const uri = sharedMongoServer.getUri();
+        sharedMongoUri = uri;
+        initializationPromise = null;
+        return uri;
+    })();
+    return initializationPromise;
+};
+
+export const stopSharedMongoServer = async () => {
+    if (sharedMongoServer) {
+        try {
+            await sharedMongoServer.stop();
+            sharedMongoServer = null;
+            sharedMongoUri = null;
+        } catch {
+            // Ignore error
+        }
+    }
+};
+
 export const testMongoUri = process.env.MONGODB_TEST_CONNECTIONSTRING;
-export const skipDbE2E = testMongoUri ? false : "MONGODB_TEST_CONNECTIONSTRING is required";
+export const skipDbE2E = false; // Always run db-based E2E tests since in-memory DB is always available
 
 const getDatabaseName = (connectionString: string): string => {
     const parsed = new URL(connectionString);
@@ -67,12 +105,16 @@ const assertSafeTestDatabase = (connectionString: string) => {
     }
 };
 
-export const buildSuiteMongoUri = (suiteName: string): string => {
-    assert.ok(testMongoUri, "MONGODB_TEST_CONNECTIONSTRING is required");
-    assertSafeTestDatabase(testMongoUri);
+export const buildSuiteMongoUri = async (suiteName: string): Promise<string> => {
+    const baseUri = await getMongoUri();
+    
+    // Only assert safe test DB if we are using the real configured test DB
+    if (process.env.USE_REAL_TEST_DB && process.env.MONGODB_TEST_CONNECTIONSTRING) {
+        assertSafeTestDatabase(baseUri);
+    }
 
-    const parsed = new URL(testMongoUri);
-    const databaseName = getDatabaseName(testMongoUri);
+    const parsed = new URL(baseUri);
+    const databaseName = decodeURIComponent(parsed.pathname.replace(/^\/+/, "")) || "test";
     const safeSuiteName = suiteName.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase();
 
     parsed.pathname = `/${databaseName}_${safeSuiteName}`;
@@ -143,7 +185,7 @@ export const startE2EApp = async (
 ): Promise<E2EContext> => {
     suppressExpectedLogs();
 
-    const suiteMongoUri = buildSuiteMongoUri(suiteName);
+    const suiteMongoUri = await buildSuiteMongoUri(suiteName);
     const [{ createApp }, db] = await Promise.all([
         import("../../src/app.js") as Promise<{ createApp: CreateApp }>,
         import("../../src/shared/db/mongoose.js") as Promise<{

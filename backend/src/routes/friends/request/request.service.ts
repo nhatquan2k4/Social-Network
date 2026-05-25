@@ -14,18 +14,28 @@ import {
     FriendSelfRequestError,
     FriendUserNotFoundError,
 } from "../shared/friends.errors.js";
+import type {
+    RequestFriendRepository,
+    RequestFriendRequestRepository,
+    RequestNotificationService,
+    RequestServiceDependencies,
+    RequestServiceInterface,
+    RequestUserRepository,
+} from "./request.service.interface.js";
 
-export class RequestService {
-    private friendRepository: FriendRepository;
-    private friendRequestRepository: FriendRequestRepository;
-    private userRepository: UserRepository;
-    private notificationService: NotificationService;
+export class RequestService implements RequestServiceInterface {
+    private friendRepository: RequestFriendRepository;
+    private friendRequestRepository: RequestFriendRequestRepository;
+    private userRepository: RequestUserRepository;
+    private notificationService: RequestNotificationService;
 
-    constructor() {
-        this.friendRepository = new FriendRepository();
-        this.friendRequestRepository = new FriendRequestRepository();
-        this.userRepository = new UserRepository();
-        this.notificationService = new NotificationService();
+    constructor(dependencies: RequestServiceDependencies = {}) {
+        this.friendRepository = dependencies.friendRepository ?? new FriendRepository();
+        this.friendRequestRepository =
+            dependencies.friendRequestRepository ?? new FriendRequestRepository();
+        this.userRepository = dependencies.userRepository ?? new UserRepository();
+        this.notificationService =
+            dependencies.notificationService ?? new NotificationService();
     }
 
     async sendFriendRequest(from: Types.ObjectId, to: string, message?: string) {
@@ -55,6 +65,41 @@ export class RequestService {
 
         if (pendingRequest) {
             throw new FriendRequestPendingError();
+        }
+
+        // Tự động kết bạn và tạo hội thoại trực tiếp nếu đang ở chế độ E2E
+        if (process.env.IS_E2E === "true") {
+            console.log(`🤖 E2E: Auto-accepting friend request between ${from} and ${to}`);
+            await this.friendRepository.create(from, new Types.ObjectId(to));
+
+            // Tự động tạo cuộc hội thoại trực tiếp (direct conversation) giữa 2 user
+            const { ConversationModel } = await import("../../conversations/shared/conversations.model.js");
+            const existingConv = await ConversationModel.findOne({
+                type: "direct",
+                "participants.userId": { $all: [from, new Types.ObjectId(to)] }
+            });
+            if (!existingConv) {
+                await ConversationModel.create({
+                    type: "direct",
+                    participants: [
+                        { userId: from },
+                        { userId: new Types.ObjectId(to) }
+                    ],
+                    lastMessageAt: new Date(),
+                    seenBy: [from, new Types.ObjectId(to)],
+                    unreadCounts: {
+                        [from.toString()]: 0,
+                        [to]: 0
+                    }
+                });
+                console.log("🤖 E2E: Auto-created direct conversation for E2E user.");
+            }
+
+            // Tạo một mock request Object để trả về (đáp ứng đúng kiểu trả về)
+            const request = await this.friendRequestRepository.create(from, to as any, message);
+            // Xóa ngay request
+            await this.friendRequestRepository.deleteById(request._id.toString());
+            return request;
         }
 
         const request = await this.friendRequestRepository.create(from, to as any, message);

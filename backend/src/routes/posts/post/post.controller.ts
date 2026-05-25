@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { MediaService } from "../../media/upload/upload.service.js";
+import type { MediaServiceInterface } from "../../media/upload/upload.service.interface.js";
 import {
     POST_ERROR_MESSAGES,
     POST_SUCCESS_MESSAGES,
@@ -9,9 +10,10 @@ import {
     parseManualMedia,
 } from "../shared/posts.util.js";
 import { PostService } from "./post.service.js";
+import type { PostServiceInterface } from "./post.service.interface.js";
 
-const postService = new PostService();
-const mediaService = new MediaService();
+const postService: PostServiceInterface = new PostService();
+const mediaService: MediaServiceInterface = new MediaService();
 
 export const createPost = async (req: Request, res: Response) => {
     try {

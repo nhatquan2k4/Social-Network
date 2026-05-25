@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { FriendService } from "./friend.service.js";
+import type { FriendServiceInterface } from "./friend.service.interface.js";
 
-const friendService = new FriendService();
+const friendService: FriendServiceInterface = new FriendService();
 
 export const getAllFriend = async (req: Request, res: Response) => {
     try {

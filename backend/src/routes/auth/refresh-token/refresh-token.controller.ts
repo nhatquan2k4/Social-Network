@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import { RefreshTokenService } from './refresh-token.service.js';
+import type { RefreshTokenServiceInterface } from './refresh-token.service.interface.js';
 import { InvalidRefreshTokenError } from '../shared/auth.errors.js';
 
-const refreshTokenService = new RefreshTokenService();
+const refreshTokenService: RefreshTokenServiceInterface = new RefreshTokenService();
 const isProduction = process.env.NODE_ENV === 'production';
 
 export const refreshToken = async (req: Request, res: Response) => {

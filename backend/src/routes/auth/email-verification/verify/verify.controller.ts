@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { VerifyEmailService } from './verify.service.js';
+import type { VerifyEmailServiceInterface } from './verify.service.interface.js';
 
-const verifyEmailService = new VerifyEmailService();
+const verifyEmailService: VerifyEmailServiceInterface = new VerifyEmailService();
 
 export const verifyEmail = async (req: Request, res: Response) => {
     try {

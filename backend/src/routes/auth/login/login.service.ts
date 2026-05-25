@@ -4,14 +4,20 @@ import { SessionRepository, UserRepository } from '../shared/auth.repo.js';
 import { generateRefreshToken } from '../shared/auth.util.js';
 import { ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from '../shared/auth.constants.js';
 import { LoginDto } from './login.dto.js';
+import type {
+    LoginServiceDependencies,
+    LoginServiceInterface,
+    LoginSessionRepository,
+    LoginUserRepository,
+} from './login.service.interface.js';
 
-export class LoginService {
-    private userRepository: UserRepository;
-    private sessionRepository: SessionRepository;
+export class LoginService implements LoginServiceInterface {
+    private userRepository: LoginUserRepository;
+    private sessionRepository: LoginSessionRepository;
 
-    constructor() {
-        this.userRepository = new UserRepository();
-        this.sessionRepository = new SessionRepository();
+    constructor(dependencies: LoginServiceDependencies = {}) {
+        this.userRepository = dependencies.userRepository ?? new UserRepository();
+        this.sessionRepository = dependencies.sessionRepository ?? new SessionRepository();
     }
 
     async execute(loginData: LoginDto) {

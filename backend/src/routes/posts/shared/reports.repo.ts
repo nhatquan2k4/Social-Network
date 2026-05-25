@@ -1,7 +1,8 @@
 import { Types } from "mongoose";
 import { ReportModel as Report } from "./reports.model.js";
+import type { ReportRepositoryInterface } from "./reports.repo.interface.js";
 
-export class ReportRepository {
+export class ReportRepository implements ReportRepositoryInterface {
     async create(data: {
         postId: Types.ObjectId;
         reporterId: Types.ObjectId;

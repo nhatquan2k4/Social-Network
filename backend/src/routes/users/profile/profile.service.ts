@@ -10,20 +10,29 @@ import { UserRepository } from '../shared/users.repo.js';
 import { ensureValidObjectId } from '../shared/users.util.js';
 import { UserNotFoundError } from '../shared/users.errors.js';
 import { UpdateProfileDto } from './profile.dto.js';
+import type {
+    ProfileBlockRepository,
+    ProfileFriendRepository,
+    ProfileMediaService,
+    ProfilePostRepository,
+    ProfileServiceDependencies,
+    ProfileServiceInterface,
+    ProfileUserRepository,
+} from './profile.service.interface.js';
 
-export class ProfileService {
-    private userRepository: UserRepository;
-    private postRepository: PostRepository;
-    private friendRepository: FriendRepository;
-    private blockRepository: BlockRepository;
-    private mediaService: MediaService;
+export class ProfileService implements ProfileServiceInterface {
+    private userRepository: ProfileUserRepository;
+    private postRepository: ProfilePostRepository;
+    private friendRepository: ProfileFriendRepository;
+    private blockRepository: ProfileBlockRepository;
+    private mediaService: ProfileMediaService;
 
-    constructor() {
-        this.userRepository = new UserRepository();
-        this.postRepository = new PostRepository();
-        this.friendRepository = new FriendRepository();
-        this.blockRepository = new BlockRepository();
-        this.mediaService = new MediaService();
+    constructor(dependencies: ProfileServiceDependencies = {}) {
+        this.userRepository = dependencies.userRepository ?? new UserRepository();
+        this.postRepository = dependencies.postRepository ?? new PostRepository();
+        this.friendRepository = dependencies.friendRepository ?? new FriendRepository();
+        this.blockRepository = dependencies.blockRepository ?? new BlockRepository();
+        this.mediaService = dependencies.mediaService ?? new MediaService();
     }
 
     getMe(user: Express.Request["user"]) {

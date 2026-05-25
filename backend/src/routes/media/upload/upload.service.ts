@@ -1,13 +1,17 @@
 import { randomUUID } from 'crypto';
 import path from 'path';
 import sharp from 'sharp';
-import { MediaRepository, type MediaPurpose } from '../shared/media.repo.js';
+import {
+    MediaRepository,
+    type MediaPurpose,
+} from '../shared/media.repo.js';
 import { ALLOWED_MEDIA_MIME_TYPES } from '../shared/media.constants.js';
 import {
     MediaFileTooLargeError,
     MediaFilesLimitExceededError,
     UnsupportedMediaTypeError,
 } from '../shared/media.errors.js';
+import type { MediaServiceInterface, MediaStorage } from './upload.service.interface.js';
 
 export interface UploadedMedia {
     bucket: string;
@@ -25,14 +29,9 @@ export interface UploadPathContext {
     conversationId?: string;
 }
 
-export type MediaStorage = Pick<
-    MediaRepository,
-    "getBucketByPurpose" | "buildMediaUrl" | "putObject"
->;
-
 const ALLOWED_MIME_TYPES = new Set(ALLOWED_MEDIA_MIME_TYPES);
 
-export class MediaService {
+export class MediaService implements MediaServiceInterface {
     private readonly mediaRepository: MediaStorage;
     private readonly maxFileSize: number;
     private readonly maxFiles: number;

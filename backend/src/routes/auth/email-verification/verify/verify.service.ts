@@ -1,13 +1,21 @@
 import { EmailVerificationTokenRepository, UserRepository } from '../../shared/auth.repo.js';
 import { hashVerificationToken } from '../../shared/auth.util.js';
+import type {
+    VerifyEmailServiceDependencies,
+    VerifyEmailServiceInterface,
+    VerifyEmailTokenRepository,
+    VerifyEmailUserRepository,
+} from './verify.service.interface.js';
 
-export class VerifyEmailService {
-    private userRepository: UserRepository;
-    private emailVerificationTokenRepository: EmailVerificationTokenRepository;
+export class VerifyEmailService implements VerifyEmailServiceInterface {
+    private userRepository: VerifyEmailUserRepository;
+    private emailVerificationTokenRepository: VerifyEmailTokenRepository;
 
-    constructor() {
-        this.userRepository = new UserRepository();
-        this.emailVerificationTokenRepository = new EmailVerificationTokenRepository();
+    constructor(dependencies: VerifyEmailServiceDependencies = {}) {
+        this.userRepository = dependencies.userRepository ?? new UserRepository();
+        this.emailVerificationTokenRepository =
+            dependencies.emailVerificationTokenRepository ??
+            new EmailVerificationTokenRepository();
     }
 
     async execute(rawToken: string) {

@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { AdminService } from "./admin.service.js";
+import type { AdminServiceInterface } from "./admin.service.interface.js";
 import { AppError } from "../../shared/errors/app-error.js";
 
-const adminService = new AdminService();
+const adminService: AdminServiceInterface = new AdminService();
 
 /** GET /api/admin/reports — Danh sách reports pending */
 export const getPendingReports = async (

@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "src/server.js",
-"scripts": {
+  "scripts": {
     "test": "npm run test:e2e",
-    "test:e2e": "tsx --test \"test/**/*.test.ts\"",
+    "test:e2e": "tsx --test test/all.test.ts",
+    "start:e2e": "tsx test/helpers/run-e2e-server.ts",
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
     "build": "tsc && copyfiles -u 1 \"src/**/*.json\" dist",
@@ -51,8 +52,10 @@
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.6",
     "copyfiles": "^2.4.1",
+    "mongodb-memory-server": "^11.1.0",
     "nodemon": "^3.1.11",
     "socket.io-client": "^4.8.3",
+    "start-server-and-test": "^3.0.5",
     "ts-node": "^1.7.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"

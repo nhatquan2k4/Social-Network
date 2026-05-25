@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { ResendEmailVerificationService } from './resend.service.js';
+import type { ResendEmailVerificationServiceInterface } from './resend.service.interface.js';
 
-const resendEmailVerificationService = new ResendEmailVerificationService();
+const resendEmailVerificationService: ResendEmailVerificationServiceInterface =
+    new ResendEmailVerificationService();
 
 export const resendEmailVerification = async (req: Request, res: Response) => {
     try {

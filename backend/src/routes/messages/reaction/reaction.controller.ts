@@ -10,8 +10,9 @@ import {
     MessageNotFoundError,
 } from "../shared/messages.errors.js";
 import { ReactionService } from "./reaction.service.js";
+import type { ReactionServiceInterface } from "./reaction.service.interface.js";
 
-const reactionService = new ReactionService();
+const reactionService: ReactionServiceInterface = new ReactionService();
 
 export const addOrUpdateMessageReaction = async (req: Request, res: Response) => {
     try {

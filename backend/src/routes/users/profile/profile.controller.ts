@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { ProfileService } from './profile.service.js';
+import type { ProfileServiceInterface } from './profile.service.interface.js';
 
-const profileService = new ProfileService();
+const profileService: ProfileServiceInterface = new ProfileService();
 
 export const getMe = async (req: Request, res: Response) => {
     try {
