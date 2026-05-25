@@ -4,6 +4,10 @@ import { envConfig } from "../config/env.js";
 let transporterInstance: Transporter | null = null;
 
 const getTransporter = (): Transporter | null => {
+    if (process.env.IS_E2E === "true") {
+        return null;
+    }
+
     if (transporterInstance) {
         return transporterInstance;
     }
