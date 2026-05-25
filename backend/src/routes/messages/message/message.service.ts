@@ -131,10 +131,10 @@ export class MessageService {
         }
 
         const isGroup = conversation?.type === "group";
-        const title = isGroup ? "Tin nhan nhom moi" : "Tin nhan moi";
+        const title = isGroup ? "Tin nhắn nhóm mới" : "Tin nhắn mới";
         const body = isGroup
-            ? "vua gui tin nhan trong nhom."
-            : "vua gui tin nhan cho ban.";
+            ? "vừa gửi tin nhắn trong nhóm."
+            : "vừa gửi tin nhắn cho bạn.";
 
         await Promise.all(
             Array.from(recipientIds).map((recipientId: string) =>
