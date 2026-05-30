@@ -23,11 +23,7 @@ export class MediaRepository implements MediaRepositoryInterface {
     }
 
     async putObject(input: PutObjectInput): Promise<void> {
-        if (
-            process.env.E2E_EXTERNAL_SERVICES === 'mock' ||
-            process.env.NODE_ENV === 'test' ||
-            process.env.IS_E2E === 'true'
-        ) {
+        if (process.env.E2E_EXTERNAL_SERVICES !== 'real') {
             return;
         }
 

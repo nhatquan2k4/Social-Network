@@ -6,11 +6,14 @@ dotenv.config();
 
 process.env.NODE_ENV = "test";
 process.env.E2E_TEST_API = "true";
-process.env.E2E_EXTERNAL_SERVICES = "mock";
 process.env.IS_E2E = "true";
 process.env.SMTP_HOST = "";
 process.env.SMTP_USER = "";
 process.env.SMTP_PASS = "";
+
+if (!process.env.E2E_EXTERNAL_SERVICES) {
+    process.env.E2E_EXTERNAL_SERVICES = "mock";
+}
 
 async function startServer() {
     console.log("Starting in-memory MongoDB for FE E2E...");
