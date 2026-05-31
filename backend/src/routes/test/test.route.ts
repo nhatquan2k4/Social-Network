@@ -7,20 +7,24 @@ import {
 
 const router = express.Router();
 
-router.use((_req, res, next) => {
-    try {
-        assertE2ETestApiEnabled();
-        next();
-    } catch {
-        res.status(404).json({ message: 'Not found' });
-    }
-});
-
 router.get('/health', (_req, res) => {
     res.status(200).json({
         ok: true,
         mode: 'e2e-test',
     });
+});
+
+router.use((req, res, next) => {
+    try {
+        assertE2ETestApiEnabled();
+        const secret = req.headers['x-e2e-secret'];
+        if (secret !== process.env.E2E_API_SECRET) {
+            return res.status(404).json({ message: 'Not found' });
+        }
+        next();
+    } catch {
+        res.status(404).json({ message: 'Not found' });
+    }
 });
 
 router.post('/reset', async (_req, res, next) => {

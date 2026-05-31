@@ -1,0 +1,41 @@
+# .dockerignore cho Dockerfile.e2e (E2E Test Server)
+#
+# Docker BuildKit tự động dùng file này khi build với:
+#   docker build -f Dockerfile.e2e ...
+#
+# Quy tắc: loại trừ những gì KHÔNG cần cho E2E server,
+# giữ lại thư mục test/ (khác với .dockerignore của production).
+
+node_modules
+dist
+
+# Không copy .env vào image — env đến từ docker-compose.e2e.yml
+.env
+.env.*
+!.env.example
+
+**/firebase-service-account.json
+
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+Dockerfile*
+docker-compose*.yml
+
+.git
+.gitignore
+.gitattributes
+
+build
+coverage
+
+# LƯU Ý: Không loại trừ thư mục test/ ở đây
+# vì Dockerfile.e2e cần copy test/helpers/run-e2e-server.ts
+
+README.md
+Jenkinsfile
+.vscode
+.idea
+.claude
+.agents

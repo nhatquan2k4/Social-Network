@@ -266,9 +266,9 @@ export const authHeaders = (accessToken: string) => ({
     authorization: `Bearer ${accessToken}`,
 });
 
-const uniqueId = () => `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+const uniqueId = () => `${Math.random().toString(36).slice(2, 12)}`;
 
-export const createTestUser = (prefix = "e2e_user"): TestUserInput => {
+export const createTestUser = (prefix = "e2e"): TestUserInput => {
     const id = uniqueId();
 
     return {

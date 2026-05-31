@@ -35,8 +35,8 @@ const makeRunId = (value?: string) => {
 const getDatabaseName = () => mongoose.connection.db?.databaseName || '';
 
 export const assertE2ETestApiEnabled = () => {
-    if (process.env.E2E_TEST_API !== 'true') {
-        throw new Error('E2E test API is disabled');
+    if (!process.env.E2E_API_SECRET) {
+        throw new Error('E2E API secret is not configured');
     }
 };
 
