@@ -9,7 +9,7 @@ const shouldUseMockEmail = () =>
     process.env.IS_E2E === "true";
 
 const getTransporter = (): Transporter | null => {
-    if (shouldUseMockEmail()) {
+    if (process.env.IS_E2E === "true") {
         return null;
     }
 
