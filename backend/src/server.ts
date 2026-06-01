@@ -10,7 +10,8 @@ const httpServer = createServer(app);
 const PORT = envConfig.port;
 const failOnMediaBootstrapError =
     envConfig.nodeEnv === "production" ||
-    process.env.MINIO_STRICT_STARTUP === "true";
+    process.env.MINIO_STRICT_STARTUP === "true" ||
+    process.env.IS_E2E === "true";
 
 const startHttpServer = () => {
     httpServer.listen(PORT, () => {
@@ -28,24 +29,29 @@ const bootstrap = async () => {
 
         await ensureMediaBuckets().catch((error) => {
             if (failOnMediaBootstrapError) {
+                // E2E hoặc production: bucket PHẢI tồn tại, không cho phép bỏ qua
                 throw error;
             }
-
+            // Dev mode: cảnh báo nhưng vẫn chạy (MinIO có thể chưa start)
             console.warn(
                 "MinIO is unavailable. Media features may fail until MinIO is running.",
             );
         });
 
-        console.log("Media storage bootstrap completed");
+        console.log("Media storage bootstrap completed (buckets ready)");
 
         initializeSocketIO(httpServer);
         console.log("Socket.IO initialized");
 
         startHttpServer();
     } catch (error) {
-        console.error("Server bootstrap failed (continuing to start HTTP server):", error);
-        // Start the HTTP server anyway so developers can access routes like /api-docs
-        // while DB or MinIO is unavailable. Guard or remove this in production.
+        console.error("Server bootstrap failed:", error);
+        if (process.env.IS_E2E === "true") {
+            // E2E: không cho phép chạy với MinIO hỏng — thoát hẳn để Docker restart
+            console.error("[E2E] Exiting because MinIO bucket setup failed.");
+            process.exit(1);
+        }
+        // Dev: vẫn start HTTP để dev có thể debug /api-docs
         startHttpServer();
     }
 };

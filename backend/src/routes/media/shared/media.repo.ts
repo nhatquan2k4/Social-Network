@@ -23,6 +23,10 @@ export class MediaRepository implements MediaRepositoryInterface {
     }
 
     async putObject(input: PutObjectInput): Promise<void> {
+        if (process.env.E2E_EXTERNAL_SERVICES !== 'real') {
+            return;
+        }
+
         await minioClient.putObject(
             input.bucket,
             input.objectKey,

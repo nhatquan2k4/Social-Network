@@ -1,5 +1,6 @@
 .env.dev
 .env
+.env.e2e
 node_modules
 dist
 .env.prod

@@ -119,23 +119,25 @@ export class UserRepository implements UserRepositoryInterface {
         page: number,
         limit: number,
     ) {
-        const regex = new RegExp(name, 'i');
+        const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(escapedName, 'i');
         const skip = (page - 1) * limit;
+        const searchQuery = {
+            $or: [
+                { displayName: { $regex: regex } },
+                { username: { $regex: regex } },
+            ],
+            _id: { $ne: currentUserId },
+        };
 
         const [users, total] = await Promise.all([
-            User.find({
-                displayName: { $regex: regex },
-                _id: { $ne: currentUserId },
-            })
+            User.find(searchQuery)
                 .select('_id username displayName avatarUrl bio')
                 .sort({ displayName: 1, _id: 1 })
                 .skip(skip)
                 .limit(limit)
                 .lean(),
-            User.countDocuments({
-                displayName: { $regex: regex },
-                _id: { $ne: currentUserId },
-            }),
+            User.countDocuments(searchQuery),
         ]);
 
         return { users, total };

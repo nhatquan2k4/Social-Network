@@ -1,0 +1,41 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Dockerfile.e2e  —  Backend E2E test server
+#
+# Mục đích: Chạy run-e2e-server.ts (seed DB + khởi động Express) trong Docker.
+# Khi E2E_MONGO_URI được truyền vào từ docker-compose, sẽ dùng MongoDB container
+# thay vì MongoDB In-Memory (mongodb-memory-server).
+#
+# Sử dụng:
+#   docker compose -f docker-compose.e2e.yml up --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+FROM node:20-alpine
+
+# Tắt việc tải xuống MongoDB binary của mongodb-memory-server trong quá trình
+# npm ci (không cần thiết khi dùng MongoDB container thật).
+ENV MONGOMS_DISABLE_POSTINSTALL=1
+
+WORKDIR /app
+
+# ── 1. Cài dependencies (layer caching: chỉ rebuild khi package*.json thay đổi) ──
+COPY package*.json ./
+RUN npm ci --no-audit --fund=false
+
+# ── 2. Copy source code ────────────────────────────────────────────────────────
+COPY tsconfig.json ./
+COPY src/  ./src/
+COPY test/ ./test/
+
+# ── 3. Cổng server E2E ─────────────────────────────────────────────────────────
+EXPOSE 5001
+
+# ── 4. Healthcheck nội bộ — được dùng bởi docker-compose depends_on ──────────
+HEALTHCHECK \
+  --interval=5s \
+  --timeout=4s \
+  --start-period=40s \
+  --retries=24 \
+  CMD wget -qO /dev/null http://localhost:5001/api/test/health || exit 1
+
+# ── 5. Khởi động E2E server (seed DB → start Express) ─────────────────────────
+CMD ["npm", "run", "start:e2e"]

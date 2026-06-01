@@ -1,0 +1,108 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.e2e.yml  —  E2E Test Stack (Backend + MongoDB + MinIO)
+#
+# Cách dùng (từ thư mục Social-Network/backend/):
+#   docker compose -f docker-compose.e2e.yml up --build -d
+#   docker compose -f docker-compose.e2e.yml down
+#
+# Hoặc dùng script tự động từ thư mục gốc dự án:
+#   run_e2e.bat
+#
+# Port mapping (để tránh xung đột với môi trường dev):
+#   mongodb-e2e  → localhost:27019  (dev dùng 27018)
+#   minio-e2e    → localhost:9002   (dev dùng 9000)
+#   backend-e2e  → localhost:5001
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: social-network-e2e
+
+networks:
+  e2e-net:
+    driver: bridge
+
+services:
+
+  # ── MongoDB E2E ──────────────────────────────────────────────────────────────
+  mongodb-e2e:
+    image: mongo:7
+    container_name: social-network-mongodb-e2e
+    networks:
+      - e2e-net
+    # Ràng buộc localhost (127.0.0.1) để triệt tiêu việc public cổng ra ngoài mạng
+    ports:
+      - "127.0.0.1:27019:27017"
+    environment:
+      MONGO_INITDB_DATABASE: social_network_e2e_test
+    volumes:
+      # Volume tạm — bị xóa khi `docker compose down -v`
+      - mongodb_e2e_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  # ── MinIO E2E ────────────────────────────────────────────────────────────────
+  minio-e2e:
+    image: minio/minio:latest
+    container_name: social-network-minio-e2e
+    networks:
+      - e2e-net
+    # Ràng buộc localhost (127.0.0.1) bảo mật tuyệt đối cho lưu trữ E2E
+    ports:
+      - "127.0.0.1:9002:9000"   # S3 API
+      - "127.0.0.1:9003:9001"   # Web console
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_e2e_data:/data
+    healthcheck:
+      # minio/minio:latest dùng Red Hat UBI Micro — có curl, KHÔNG có wget
+      # /minio/health/live trả về 200 khi server sẵn sàng nhận request
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+
+  # ── Backend E2E ──────────────────────────────────────────────────────────────
+  backend-e2e:
+    build:
+      context: .
+      dockerfile: Dockerfile.e2e
+    container_name: social-network-backend-e2e
+    networks:
+      - e2e-net
+    # Backend cần mở 0.0.0.0 để Android emulator (dùng 10.0.2.2) có thể kết nối.
+    # Bảo mật được đảm bảo bởi E2E_API_SECRET header trên tất cả API nhạy cảm.
+    # MongoDB và MinIO vẫn giữ 127.0.0.1 vì chỉ Backend (trong Docker network) cần truy cập.
+    ports:
+      - "5001:5001"
+    # Đọc biến môi trường cơ bản từ .env, ghi đè bằng cấu hình E2E riêng biệt từ .env.e2e
+    env_file:
+      - .env
+      - .env.e2e
+    depends_on:
+      mongodb-e2e:
+        condition: service_healthy
+      minio-e2e:
+        # Backend PHẢI đợi MinIO healthy trước khi start.
+        # ensureMediaBuckets() trong server.ts sẽ tạo bucket ngay khi bootstrap.
+        # resetE2EDatabase() trong e2e-seed.ts sẽ đảm bảo lại bucket trước mỗi test run.
+        condition: service_healthy
+
+    # Healthcheck: chờ route /api/test/health trả về 200
+    # Flutter E2E script sẽ poll endpoint này trước khi chạy test
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:5001/api/test/health || exit 1"]
+      interval: 5s
+      timeout: 4s
+      retries: 24
+      start_period: 40s
+
+volumes:
+  mongodb_e2e_data:
+  minio_e2e_data:

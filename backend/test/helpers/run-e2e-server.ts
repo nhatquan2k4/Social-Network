@@ -1,74 +1,101 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { createApp } from "../../src/app.js";
-import { connectDB } from "../../src/shared/db/mongoose.js";
-import { initializeSocketIO } from "../../src/shared/socket/socket.server.js";
-import { seed } from "../../src/scripts/seed.js";
+import path from "path";
 
-dotenv.config();
+// Khi chạy local: nạp .env.e2e trước (nếu có), sau đó .env gốc làm dự phòng
+// Khi chạy trong Docker: docker-compose.e2e.yml đã inject sẵn qua env_file → dotenv không nạp được gì thêm (bình thường)
+dotenv.config({ path: path.resolve(process.cwd(), ".env.e2e"), override: false });
+dotenv.config({ override: false });
 
-// Turn off real SMTP settings
-process.env.SMTP_HOST = "";
-process.env.SMTP_USER = "";
-process.env.SMTP_PASS = "";
-process.env.IS_E2E = "true";
+// Nếu các biến môi trường thiết yếu chưa được nạp, gán mặc định dự phòng để tránh crash hệ thống
+if (!process.env.E2E_EXTERNAL_SERVICES) {
+    process.env.E2E_EXTERNAL_SERVICES = "mock";
+}
 
 async function startServer() {
-    console.log("🚀 Starting In-Memory MongoDB Server...");
-    const mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    console.log(`📡 In-Memory MongoDB is running at: ${mongoUri}`);
+    // ── Xác định URI MongoDB ────────────────────────────────────────────────────
+    //
+    // Chế độ 1 — Docker E2E:
+    //   E2E_MONGO_URI được set bởi docker-compose.e2e.yml.
+    //   Dùng MongoDB container thật (mongodb-e2e:27017). Không tạo In-Memory server.
+    //
+    // Chế độ 2 — Local (mặc định):
+    //   E2E_MONGO_URI không được set.
+    //   Tạo MongoDB In-Memory (mongodb-memory-server) để không cần cài MongoDB.
+    //
+    let mongoUri: string;
+    let mongoServer: MongoMemoryServer | undefined;
 
-    console.log("🔌 Connecting Mongoose to in-memory database...");
-    await connectDB(mongoUri);
-    console.log("✅ Mongoose connected successfully!");
+    const externalMongoUri = process.env.E2E_MONGO_URI?.trim();
 
-    console.log("🌱 Seeding in-memory database with test data...");
-    await seed(mongoUri);
-    console.log("✅ In-memory database seeded successfully!");
+    if (externalMongoUri) {
+        // ── Chế độ Docker E2E: dùng URI MongoDB từ biến môi trường ───────────
+        mongoUri = externalMongoUri;
+        console.log(`[E2E] Chế độ Docker — Kết nối MongoDB tại: ${mongoUri}`);
+    } else {
+        // ── Chế độ Local: tạo MongoDB In-Memory ──────────────────────────────
+        console.log("[E2E] Chế độ Local — Khởi động MongoDB In-Memory...");
+        mongoServer = await MongoMemoryServer.create({
+            instance: {
+                dbName: "social_network_e2e_test",
+            },
+        });
+        mongoUri = mongoServer.getUri("social_network_e2e_test");
+        console.log(`[E2E] MongoDB In-Memory URI: ${mongoUri}`);
+    }
 
-    console.log("⚡ Creating Express application...");
+    const [{ createApp }, db, socket, seed] = await Promise.all([
+        import("../../src/app.js") as Promise<typeof import("../../src/app.js")>,
+        import("../../src/shared/db/mongoose.js") as Promise<
+            typeof import("../../src/shared/db/mongoose.js")
+        >,
+        import("../../src/shared/socket/socket.server.js") as Promise<
+            typeof import("../../src/shared/socket/socket.server.js")
+        >,
+        import("../../src/testing/e2e-seed.js") as Promise<
+            typeof import("../../src/testing/e2e-seed.js")
+        >,
+    ]);
+
+    await db.connectDB(mongoUri);
+    console.log("[E2E] Mongoose đã kết nối database.");
+
+    await seed.seedE2EDatabase({
+        runId: "server_start",
+        scenario: "bootstrap",
+        reset: true,
+    });
+    console.log("[E2E] Seed dữ liệu khởi động hoàn tất. Flutter có thể reseed qua POST /api/test/seed.");
+
     const app = createApp();
+    const port = Number(process.env.E2E_PORT || 5001);
 
-    // Thêm endpoint reset database dành riêng cho E2E
-    app.post("/api/test/reset", async (req, res) => {
-        try {
-            console.log("🧹 E2E: Resetting in-memory database...");
-            const collections = mongoose.connection.collections;
-            for (const key in collections) {
-                const collection = collections[key];
-                await collection.deleteMany({});
-            }
-            console.log("🌱 E2E: Re-seeding in-memory database...");
-            await seed(mongoUri);
-            console.log("✅ E2E: In-memory database reset & seeded successfully!");
-            res.status(200).json({ message: "Database reset successfully" });
-        } catch (error) {
-            console.error("❌ E2E: Failed to reset database:", error);
-            res.status(500).json({ error: "Failed to reset database", details: (error instanceof Error) ? error.message : String(error) });
-        }
+    const server = app.listen(port, "0.0.0.0", () => {
+        console.log("");
+        console.log("===========================================");
+        console.log("  FE E2E BACKEND SERVER ĐANG CHẠY");
+        console.log(`  API:       http://localhost:${port}/api`);
+        console.log(`  Seed:      http://localhost:${port}/api/test/seed`);
+        console.log(`  Reset:     http://localhost:${port}/api/test/reset`);
+        console.log(`  Health:    http://localhost:${port}/api/test/health`);
+        console.log(`  WebSocket: ws://localhost:${port}`);
+        console.log("===========================================");
+        console.log("");
     });
 
-    const PORT = 5001;
-    const server = app.listen(PORT, "0.0.0.0", () => {
-        console.log(`\n===========================================`);
-        console.log(`🎉 LOCAL E2E BACKEND SERVER IS RUNNING 🎉`);
-        console.log(`🌐 API Endpoint: http://localhost:${PORT}/api`);
-        console.log(`🔌 WebSockets:  ws://localhost:${PORT}`);
-        console.log(`===========================================\n`);
-    });
+    socket.initializeSocketIO(server);
+    console.log("[E2E] Socket.IO đã khởi tạo.");
 
-    console.log("🔌 Initializing WebSockets (Socket.IO) server...");
-    initializeSocketIO(server);
-    console.log("✅ Socket.IO server initialized successfully!");
-
-    // Keep process alive and handle termination cleanly
     const shutdown = async () => {
-        console.log("\n🛑 Shutting down E2E backend server...");
-        server.close();
-        await mongoServer.stop();
-        console.log("👋 Done. Goodbye!");
+        console.log("\n[E2E] Đang tắt server...");
+        await new Promise<void>((resolve) => server.close(() => resolve()));
+        await mongoose.disconnect().catch(() => undefined);
+        if (mongoServer) {
+            await mongoServer.stop();
+            console.log("[E2E] MongoDB In-Memory đã dừng.");
+        }
+        console.log("[E2E] Server đã tắt hoàn toàn.");
         process.exit(0);
     };
 
@@ -77,6 +104,6 @@ async function startServer() {
 }
 
 startServer().catch((error) => {
-    console.error("❌ Failed to start E2E backend server:", error);
+    console.error("[E2E] Khởi động server thất bại:", error);
     process.exit(1);
 });

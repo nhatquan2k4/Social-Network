@@ -11,6 +11,7 @@ import mediaRoutes from "./routes/media/media.route.js";
 import postRoutes from "./routes/posts/posts.route.js";
 import notificationRoutes from "./routes/notifications/notifications.route.js";
 import adminRoutes from "./routes/admin/admin.route.js";
+import testRoutes from "./routes/test/test.route.js";
 import { envConfig } from "./shared/config/env.js";
 import { swaggerSpec } from "./shared/config/swagger.js";
 import { errorHandler } from "./shared/errors/error-handler.js";
@@ -73,6 +74,9 @@ export const createApp = () => {
     app.use("/api/posts", postRoutes);
     app.use("/api/notifications", notificationRoutes);
     app.use("/api/admin", adminRoutes);
+    if (process.env.E2E_API_SECRET) {
+        app.use("/api/test", testRoutes);
+    }
 
     app.get("/", (_req, res) => {
         res.send("Hello World!");
