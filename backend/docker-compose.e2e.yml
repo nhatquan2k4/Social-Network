@@ -60,11 +60,13 @@ services:
     volumes:
       - minio_e2e_data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      # minio/minio:latest dùng Red Hat UBI Micro — có curl, KHÔNG có wget
+      # /minio/health/live trả về 200 khi server sẵn sàng nhận request
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/minio/health/live"]
       interval: 5s
       timeout: 3s
       retries: 20
-      start_period: 10s
+      start_period: 15s
 
   # ── Backend E2E ──────────────────────────────────────────────────────────────
   backend-e2e:
@@ -87,6 +89,9 @@ services:
       mongodb-e2e:
         condition: service_healthy
       minio-e2e:
+        # Backend PHẢI đợi MinIO healthy trước khi start.
+        # ensureMediaBuckets() trong server.ts sẽ tạo bucket ngay khi bootstrap.
+        # resetE2EDatabase() trong e2e-seed.ts sẽ đảm bảo lại bucket trước mỗi test run.
         condition: service_healthy
 
     # Healthcheck: chờ route /api/test/health trả về 200

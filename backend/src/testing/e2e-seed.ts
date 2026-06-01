@@ -6,7 +6,7 @@ import { ConversationModel } from '../routes/conversations/shared/conversations.
 import { MessageModel } from '../routes/messages/shared/messages.model.js';
 import { PostModel } from '../routes/posts/shared/posts.model.js';
 import { NotificationModel } from '../routes/notifications/notifications.model.js';
-import { minioClient, minioConfig } from '../shared/config/minio.js';
+import { minioClient, minioConfig, ensureMediaBuckets } from '../shared/config/minio.js';
 
 const TEST_PASSWORD = 'Password123!';
 
@@ -57,6 +57,14 @@ export const resetE2EDatabase = async () => {
     const collections = Object.values(mongoose.connection.collections);
     await Promise.all(collections.map((collection) => collection.deleteMany({})));
     await resetE2EStorage();
+
+    // Đảm bảo các bucket MinIO tồn tại sau mỗi lần reset.
+    // Cần thiết vì container MinIO E2E mới khởi động sẽ hoàn toàn trống.
+    if (process.env.E2E_EXTERNAL_SERVICES === 'real') {
+        await ensureMediaBuckets().catch((err) => {
+            console.warn('[E2E] ensureMediaBuckets trong reset thất bại (bỏ qua):', err?.message);
+        });
+    }
 };
 
 export const resetE2EStorage = async () => {
