@@ -108,26 +108,101 @@ describe("auth api e2e", { skip: skipDbE2E }, () => {
         assert.deepEqual(duplicateEmailBody, { message: "Email da ton tai" });
     });
 
+    const invalidRegistrationData = [
+        {
+            desc: "empty email",
+            overrides: { email: "" },
+            expectedMessage: "Vui long cung cap day du thong tin",
+        },
+        {
+            desc: "invalid email format",
+            overrides: { email: "notanemail" },
+            expectedMessage: "Email khong dung dinh dang",
+        },
+        {
+            desc: "password too short",
+            overrides: { password: "123" },
+            expectedMessage: "Mat khau phai co it nhat 6 ky tu",
+        },
+        {
+            desc: "username too short",
+            overrides: { username: "ab" },
+            expectedMessage: "Username tu 3 den 30 ky tu va khong chua ky tu dac biet",
+        },
+        {
+            desc: "username with special characters",
+            overrides: { username: "user@name!" },
+            expectedMessage: "Username tu 3 den 30 ky tu va khong chua ky tu dac biet",
+        },
+    ];
+
+    for (const testCase of invalidRegistrationData) {
+        it(`rejects registration with ${testCase.desc}`, async () => {
+            const user = {
+                ...createAuthUser("invalid_reg"),
+                ...testCase.overrides,
+            };
+
+            const response = await requestJson(context, "/api/auth/register", {
+                body: user,
+            });
+            const body = await readJson<{ message: string }>(response);
+
+            assert.equal(response.status, 400);
+            assert.deepEqual(body, { message: testCase.expectedMessage });
+        });
+    }
+
     it("logs in with valid credentials", async () => {
         const user = await registerUser();
 
         await loginUser(user);
     });
 
-    it("rejects login with an invalid password", async () => {
-        const user = await registerUser();
+    const invalidLoginData = [
+        {
+            desc: "empty username",
+            body: { username: "", password: "Password123!" },
+            expectedStatus: 400, // Or whatever your login controller returns for missing data
+        },
+        {
+            desc: "empty password",
+            body: { username: "someuser", password: "" },
+            expectedStatus: 400,
+        },
+        {
+            desc: "wrong password",
+            body: { username: "validuser", password: "WrongPassword123!" },
+            expectedStatus: 401,
+            expectedMessage: "Sai ten dang nhap hoac mat khau",
+        },
+        {
+            desc: "non-existent user",
+            body: { username: "doesnotexist", password: "Password123!" },
+            expectedStatus: 401,
+            expectedMessage: "Sai ten dang nhap hoac mat khau",
+        },
+    ];
 
-        const response = await requestJson(context, "/api/auth/login", {
-            body: {
-                username: user.username,
-                password: "WrongPassword123!",
-            },
+    for (const testCase of invalidLoginData) {
+        it(`rejects login with ${testCase.desc}`, async () => {
+            let actualBody = testCase.body;
+            if (testCase.desc === "wrong password") {
+                const user = await registerUser();
+                actualBody = { username: user.username, password: testCase.body.password };
+            }
+            
+            const response = await requestJson(context, "/api/auth/login", {
+                body: actualBody,
+            });
+            const body = await readJson<{ message: string }>(response);
+
+            assert.equal(response.status, testCase.expectedStatus);
+            if (testCase.expectedMessage) {
+                assert.deepEqual(body, { message: testCase.expectedMessage });
+            }
         });
-        const body = await readJson<{ message: string }>(response);
-
-        assert.equal(response.status, 401);
-        assert.deepEqual(body, { message: "Sai ten dang nhap hoac mat khau" });
-    });
+    }
 
     it("refreshes an access token and rotates the refresh token", async () => {
         const user = await registerUser();

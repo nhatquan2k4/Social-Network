@@ -6,6 +6,7 @@ import { ConversationModel } from '../routes/conversations/shared/conversations.
 import { MessageModel } from '../routes/messages/shared/messages.model.js';
 import { PostModel } from '../routes/posts/shared/posts.model.js';
 import { NotificationModel } from '../routes/notifications/notifications.model.js';
+import { minioClient, minioConfig, ensureMediaBuckets } from '../shared/config/minio.js';
 
 const TEST_PASSWORD = 'Password123!';
 
@@ -34,8 +35,8 @@ const makeRunId = (value?: string) => {
 const getDatabaseName = () => mongoose.connection.db?.databaseName || '';
 
 export const assertE2ETestApiEnabled = () => {
-    if (process.env.E2E_TEST_API !== 'true') {
-        throw new Error('E2E test API is disabled');
+    if (!process.env.E2E_API_SECRET) {
+        throw new Error('E2E API secret is not configured');
     }
 };
 
@@ -55,6 +56,43 @@ export const resetE2EDatabase = async () => {
 
     const collections = Object.values(mongoose.connection.collections);
     await Promise.all(collections.map((collection) => collection.deleteMany({})));
+    await resetE2EStorage();
+
+    // Đảm bảo các bucket MinIO tồn tại sau mỗi lần reset.
+    // Cần thiết vì container MinIO E2E mới khởi động sẽ hoàn toàn trống.
+    if (process.env.E2E_EXTERNAL_SERVICES === 'real') {
+        await ensureMediaBuckets().catch((err) => {
+            console.warn('[E2E] ensureMediaBuckets trong reset thất bại (bỏ qua):', err?.message);
+        });
+    }
+};
+
+export const resetE2EStorage = async () => {
+    assertE2ETestApiEnabled();
+
+    if (process.env.E2E_EXTERNAL_SERVICES !== 'real') {
+        return;
+    }
+
+    const buckets = Object.values(minioConfig.buckets);
+
+    for (const bucket of buckets) {
+        const exists = await minioClient.bucketExists(bucket).catch(() => false);
+        if (!exists) {
+            continue;
+        }
+
+        const objectNames: string[] = [];
+        for await (const item of minioClient.listObjectsV2(bucket, '', true)) {
+            if (item?.name) {
+                objectNames.push(item.name);
+            }
+        }
+
+        for (const objectName of objectNames) {
+            await minioClient.removeObject(bucket, objectName);
+        }
+    }
 };
 
 const createUser = async (input: {
