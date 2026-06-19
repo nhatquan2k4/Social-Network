@@ -14,6 +14,7 @@ export interface E2ESeedOptions {
     runId?: string;
     scenario?: string;
     reset?: boolean;
+    skipApiSecretCheck?: boolean;
 }
 
 const normalizeSeedPart = (value: string | undefined, fallback: string) => {
@@ -51,12 +52,26 @@ const assertSafeDatabase = () => {
     }
 };
 
-export const resetE2EDatabase = async () => {
-    assertSafeDatabase();
+/** Chỉ kiểm tra tên database, không yêu cầu E2E_API_SECRET — dùng khi gọi trực tiếp từ test runner */
+const assertSafeDatabaseDirect = () => {
+    const databaseName = getDatabaseName().toLowerCase();
+    if (databaseName && !databaseName.includes('test') && !databaseName.includes('e2e')) {
+        throw new Error(
+            `Refusing to mutate non-test database "${databaseName || '<unknown>'}"`,
+        );
+    }
+};
+
+export const resetE2EDatabase = async (options?: { skipApiSecretCheck?: boolean }) => {
+    if (options?.skipApiSecretCheck) {
+        assertSafeDatabaseDirect();
+    } else {
+        assertSafeDatabase();
+    }
 
     const collections = Object.values(mongoose.connection.collections);
     await Promise.all(collections.map((collection) => collection.deleteMany({})));
-    await resetE2EStorage();
+    await resetE2EStorage(options);
 
     // Đảm bảo các bucket MinIO tồn tại sau mỗi lần reset.
     // Cần thiết vì container MinIO E2E mới khởi động sẽ hoàn toàn trống.
@@ -67,8 +82,10 @@ export const resetE2EDatabase = async () => {
     }
 };
 
-export const resetE2EStorage = async () => {
-    assertE2ETestApiEnabled();
+export const resetE2EStorage = async (options?: { skipApiSecretCheck?: boolean }) => {
+    if (!options?.skipApiSecretCheck) {
+        assertE2ETestApiEnabled();
+    }
 
     if (process.env.E2E_EXTERNAL_SERVICES !== 'real') {
         return;
@@ -118,22 +135,25 @@ const createUser = async (input: {
 };
 
 export const seedE2EDatabase = async (options: E2ESeedOptions = {}) => {
-    assertSafeDatabase();
-
-    if (options.reset !== false) {
-        await resetE2EDatabase();
+    if (options.skipApiSecretCheck) {
+        assertSafeDatabaseDirect();
+    } else {
+        assertSafeDatabase();
     }
 
-    const scenario = normalizeSeedPart(options.scenario, 'social_network');
-    const runId = makeRunId(options.runId);
-    const prefix = `e2e_${scenario}_${runId}`;
+    if (options.reset !== false) {
+        await resetE2EDatabase({ skipApiSecretCheck: options.skipApiSecretCheck });
+    }
+
+    // Prefix cố định — frontend biết trước username/password để chạy test đồng thời
+    const prefix = 'e2e';
     const hashedPassword = await bcrypt.hash(TEST_PASSWORD, 10);
     const now = new Date();
 
     const primaryUser = await createUser({
         username: `${prefix}_user`,
         email: `${prefix}.user@example.test`,
-        displayName: `E2E User ${runId}`,
+        displayName: 'E2E User',
         hashedPassword,
         bio: 'Primary E2E account',
     });
@@ -141,7 +161,7 @@ export const seedE2EDatabase = async (options: E2ESeedOptions = {}) => {
     const adminUser = await createUser({
         username: `${prefix}_admin`,
         email: `${prefix}.admin@example.test`,
-        displayName: `E2E Admin ${runId}`,
+        displayName: 'E2E Admin',
         hashedPassword,
         role: 'admin',
         bio: 'Admin target for E2E search and friend request flow',
@@ -150,7 +170,7 @@ export const seedE2EDatabase = async (options: E2ESeedOptions = {}) => {
     const friendUser = await createUser({
         username: `${prefix}_friend`,
         email: `${prefix}.friend@example.test`,
-        displayName: `E2E Friend ${runId}`,
+        displayName: 'E2E Friend',
         hashedPassword,
         bio: 'Accepted friend for E2E chat flow',
     });
@@ -158,7 +178,7 @@ export const seedE2EDatabase = async (options: E2ESeedOptions = {}) => {
     const requesterUser = await createUser({
         username: `${prefix}_requester`,
         email: `${prefix}.requester@example.test`,
-        displayName: `E2E Requester ${runId}`,
+        displayName: 'E2E Requester',
         hashedPassword,
         bio: 'Pending requester for notifications flow',
     });
@@ -200,12 +220,12 @@ export const seedE2EDatabase = async (options: E2ESeedOptions = {}) => {
 
     const friendPost = await PostModel.create({
         authorId: friendUser._id,
-        content: `Seeded E2E feed post ${runId}`,
+        content: 'Seeded E2E feed post',
         likes: [],
         comments: [
             {
                 authorId: primaryUser._id,
-                content: `Seeded E2E comment ${runId}`,
+                content: 'Seeded E2E comment',
                 createdAt: now,
                 updatedAt: now,
             },
@@ -215,7 +235,7 @@ export const seedE2EDatabase = async (options: E2ESeedOptions = {}) => {
 
     const adminPost = await PostModel.create({
         authorId: adminUser._id,
-        content: `Seeded admin announcement ${runId}`,
+        content: 'Seeded admin announcement',
         likes: [],
         comments: [],
     });
@@ -223,7 +243,7 @@ export const seedE2EDatabase = async (options: E2ESeedOptions = {}) => {
     const pendingRequest = await FriendRequestModel.create({
         from: requesterUser._id,
         to: primaryUser._id,
-        message: `Please accept E2E request ${runId}`,
+        message: 'Please accept E2E request',
     });
 
     await NotificationModel.create([
@@ -263,8 +283,8 @@ export const seedE2EDatabase = async (options: E2ESeedOptions = {}) => {
     ]);
 
     return {
-        runId,
-        scenario,
+        runId: 'auto',
+        scenario: 'social_network',
         password: TEST_PASSWORD,
         database: getDatabaseName(),
         users: {

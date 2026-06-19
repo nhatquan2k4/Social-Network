@@ -35,6 +35,7 @@ export interface AuthenticatedUser {
 export interface E2EContext {
     baseUrl: string;
     cleanupDatabase: () => Promise<void>;
+    seedData: Awaited<ReturnType<typeof import("../../src/testing/e2e-seed.js").seedE2EDatabase>> | null;
     close: () => Promise<void>;
 }
 
@@ -181,7 +182,7 @@ export const cleanupDatabase = async () => {
 
 export const startE2EApp = async (
     suiteName: string,
-    options: { socket?: boolean } = {},
+    options: { socket?: boolean; seed?: boolean } = {},
 ): Promise<E2EContext> => {
     suppressExpectedLogs();
 
@@ -196,6 +197,12 @@ export const startE2EApp = async (
 
     await db.connectDB(suiteMongoUri);
     await cleanupDatabase();
+
+    let seedData: Awaited<ReturnType<typeof import("../../src/testing/e2e-seed.js").seedE2EDatabase>> | null = null;
+    if (options.seed) {
+        const { seedE2EDatabase } = await import("../../src/testing/e2e-seed.js");
+        seedData = await seedE2EDatabase({ reset: false, skipApiSecretCheck: true });
+    }
 
     const app = createApp();
     const server: Server = app.listen(0);
@@ -220,6 +227,7 @@ export const startE2EApp = async (
     return {
         baseUrl: `http://127.0.0.1:${(address as AddressInfo).port}`,
         cleanupDatabase,
+        seedData,
         close: async () => {
             if (socketServer) {
                 await new Promise<void>((resolve) => {

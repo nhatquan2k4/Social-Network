@@ -62,9 +62,8 @@ async function startServer() {
     console.log("[E2E] Mongoose đã kết nối database.");
 
     await seed.seedE2EDatabase({
-        runId: "server_start",
-        scenario: "bootstrap",
         reset: true,
+        skipApiSecretCheck: true,
     });
     console.log("[E2E] Seed dữ liệu khởi động hoàn tất. Flutter có thể reseed qua POST /api/test/seed.");
 
@@ -76,8 +75,6 @@ async function startServer() {
         console.log("===========================================");
         console.log("  FE E2E BACKEND SERVER ĐANG CHẠY");
         console.log(`  API:       http://localhost:${port}/api`);
-        console.log(`  Seed:      http://localhost:${port}/api/test/seed`);
-        console.log(`  Reset:     http://localhost:${port}/api/test/reset`);
         console.log(`  Health:    http://localhost:${port}/api/test/health`);
         console.log(`  WebSocket: ws://localhost:${port}`);
         console.log("===========================================");

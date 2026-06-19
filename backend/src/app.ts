@@ -74,9 +74,7 @@ export const createApp = () => {
     app.use("/api/posts", postRoutes);
     app.use("/api/notifications", notificationRoutes);
     app.use("/api/admin", adminRoutes);
-    if (process.env.E2E_API_SECRET) {
-        app.use("/api/test", testRoutes);
-    }
+    app.use("/api/test", testRoutes);
 
     app.get("/", (_req, res) => {
         res.send("Hello World!");
